@@ -21,6 +21,11 @@ from nourish_nest.food_schemas import (
     RecipeUpdate,
 )
 from nourish_nest.food_services import UnsupportedConversionError
+from nourish_nest.grocery_requirement_schemas import (
+    GroceryRequirementsRequest,
+    GroceryRequirementsResponse,
+)
+from nourish_nest.grocery_requirement_services import GroceryRequirementsService
 from nourish_nest.grocery_schemas import (
     GroceryItemCreate,
     GroceryItemResponse,
@@ -199,6 +204,16 @@ async def database_failure(request: Request, exc: SQLAlchemyError) -> JSONRespon
         code="internal_error", message="Internal server error", request_id=request.state.request_id
     )
     return JSONResponse(status_code=500, content=body.model_dump())
+
+
+@app.post(
+    "/v1/households/{household_id}/grocery-requirements/preview",
+    response_model=GroceryRequirementsResponse,
+)
+def preview_grocery_requirements(
+    household_id: uuid.UUID, data: GroceryRequirementsRequest, db: Session = DB_DEPENDENCY
+):
+    return GroceryRequirementsService(db).preview(household_id, data)
 
 
 @app.get("/health")
