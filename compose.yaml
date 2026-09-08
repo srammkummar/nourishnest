@@ -1,0 +1,16 @@
+services:
+  api:
+    build: .
+    command: uvicorn nourish_nest.api:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: development
+  ui:
+    build: .
+    command: streamlit run streamlit_app.py --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      APP_ENV: development
+
