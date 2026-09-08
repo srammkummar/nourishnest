@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 from nourish_nest.domain import NutritionProfile
 from nourish_nest.food_schemas import FoodFields, RecipeFields
 from nourish_nest.food_services import calculate_recipe_nutrition
-from nourish_nest.models import Food, Household, HouseholdMember, Recipe
+from nourish_nest.models import Food, FoodSourceType, Household, HouseholdMember, Recipe
 from nourish_nest.nutrition import calculate_nutrition_plan
+from nourish_nest.providers import FoodDataProvider, ProviderFood
 from nourish_nest.repositories import (
     FoodRepository,
     HouseholdRepository,
@@ -126,6 +127,57 @@ class FoodService:
             raise ConflictError("Food is used by a recipe and cannot be deleted")
         self.session.delete(food)
         self.session.commit()
+
+    def import_usda(self, provider: FoodDataProvider, fdc_id: int) -> Food:
+        external_id = str(fdc_id)
+        if self.foods.get_by_source("usda_fdc", external_id) is not None:
+            raise ConflictError("USDA food has already been imported")
+        provider_food = provider.get_food(fdc_id)
+        food = self.foods.create(self._provider_fields(provider_food))
+        self._apply_provider_metadata(food, provider_food)
+        self.session.commit()
+        return self.foods.get(food.id)
+
+    def refresh_usda(self, provider: FoodDataProvider, food_id: uuid.UUID) -> Food:
+        food = self.get(food_id)
+        if (
+            food.source_type != FoodSourceType.EXTERNAL
+            or food.source_provider != "usda_fdc"
+            or not food.external_source_identifier
+        ):
+            raise ConflictError("Food is not a USDA import")
+        provider_food = provider.get_food(int(food.external_source_identifier))
+        self.foods.update(food, self._provider_fields(provider_food))
+        self._apply_provider_metadata(food, provider_food)
+        self.session.commit()
+        return self.foods.get(food.id)
+
+    @staticmethod
+    def _provider_fields(provider_food: ProviderFood) -> FoodFields:
+        return FoodFields(
+            name=provider_food.description,
+            brand=provider_food.brand_name or provider_food.brand_owner,
+            description=provider_food.description,
+            source_type=FoodSourceType.EXTERNAL,
+            source_provider="usda_fdc",
+            external_source_identifier=str(provider_food.fdc_id),
+            serving_quantity=provider_food.serving_quantity,
+            serving_unit=provider_food.serving_unit,
+            grams_per_serving=provider_food.grams_per_serving,
+            calories_per_serving=provider_food.calories_per_serving,
+            protein_g=provider_food.protein_g,
+            carbohydrate_g=provider_food.carbohydrate_g,
+            fat_g=provider_food.fat_g,
+            fiber_g=provider_food.fiber_g,
+            sugar_g=provider_food.sugar_g,
+            sodium_mg=provider_food.sodium_mg,
+        )
+
+    @staticmethod
+    def _apply_provider_metadata(food: Food, provider_food: ProviderFood) -> None:
+        food.source_data_type = provider_food.data_type
+        food.source_attribution = provider_food.source_attribution
+        food.source_retrieved_at = provider_food.retrieved_at
 
 
 class RecipeService:

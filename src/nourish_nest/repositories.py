@@ -95,6 +95,13 @@ class FoodRepository:
         )
         return self.session.scalars(statement).one_or_none()
 
+    def get_by_source(self, source_provider: str, external_id: str) -> Food | None:
+        statement = select(Food).where(
+            Food.source_provider == source_provider,
+            Food.external_source_identifier == external_id,
+        )
+        return self.session.scalars(statement).one_or_none()
+
     def list(self, query: str | None = None) -> list[Food]:
         statement = select(Food).options(
             selectinload(Food.allergens), selectinload(Food.dietary_tags)

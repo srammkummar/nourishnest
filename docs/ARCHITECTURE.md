@@ -81,16 +81,33 @@ allergens, and the intersection of ingredient dietary tags, then scales totals b
 recipe servings. Development fixtures are explicit, opt-in, and unavailable in
 production.
 
+## Decision 7: external food providers
+
+External food sources implement the `FoodDataProvider` contract. The USDA provider
+uses only the official FoodData Central API, typed response normalization, a central
+HTTP client with timeouts, safe-GET retries, rate-limit handling, and a TTL cache.
+Provider search and detail calls are read-only; import and refresh are explicit
+database mutations. The application selects `fake` or `usda` through configuration,
+and tests inject `FakeFoodDataProvider` or mocked HTTP transports. API keys are never
+logged, cached, returned, or committed.
+
+Food provenance keeps `source_type` as the broad classification and uses the nullable
+`source_provider` plus `external_source_identifier` as the external identity. External
+foods require both fields; USDA imports use `source_provider=usda_fdc`. This permits
+different providers to use the same external identifier without collisions.
+
 ## Next vertical slice
 
 1. **Database Phase 1 complete:** household/member persistence with Alembic migrations,
    structured dietary preferences and allergies, and repository/service boundaries.
 2. **Database Phase 2 complete:** food and recipe persistence, deterministic units,
    recipe nutrition, allergen propagation, and dietary compatibility.
-3. Seven-day meal planner that meets calorie/macro bounds.
-4. Consolidated grocery list generated from recipe ingredients minus pantry inventory.
-5. Streamlit review and approval workflow.
-6. Golden evaluation dataset covering nutrition constraints, allergies, missing data, and budget conflicts.
+3. **USDA provider complete:** FoodData Central search, detail, import, refresh,
+   typed normalization, retries, rate limits, and caching.
+4. Seven-day meal planner that meets calorie/macro bounds.
+5. Consolidated grocery list generated from recipe ingredients minus pantry inventory.
+6. Streamlit review and approval workflow.
+7. Golden evaluation dataset covering nutrition constraints, allergies, missing data, and budget conflicts.
 
 Database migrations use `uv run alembic upgrade head` to upgrade and
 `uv run alembic downgrade -1` to roll back one revision. Local development uses

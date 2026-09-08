@@ -21,6 +21,17 @@ from nourish_nest.food_schemas import (
 )
 from nourish_nest.food_services import UnsupportedConversionError
 from nourish_nest.nutrition import UnsupportedProfileError, calculate_nutrition_plan
+from nourish_nest.providers import (
+    ExternalFoodNotFoundError,
+    FoodDataProvider,
+    InvalidProviderResponseError,
+    ProviderFood,
+    ProviderNotConfiguredError,
+    ProviderRateLimitedError,
+    ProviderSearchResponse,
+    ProviderUnavailableError,
+    get_food_data_provider,
+)
 from nourish_nest.schemas import (
     HouseholdCreate,
     HouseholdResponse,
@@ -39,6 +50,7 @@ from nourish_nest.services import (
 
 app = FastAPI(title="NourishNest API", version=__version__)
 DB_DEPENDENCY = Depends(get_db)
+PROVIDER_DEPENDENCY = Depends(get_food_data_provider)
 
 
 @app.middleware("http")
@@ -95,6 +107,36 @@ async def conflict(request: Request, exc: ConflictError) -> JSONResponse:
 async def unsupported_conversion(request: Request, exc: UnsupportedConversionError) -> JSONResponse:
     body = ErrorBody(code="unsupported_conversion", message=str(exc), request_id=request.state.request_id)
     return JSONResponse(status_code=422, content=body.model_dump())
+
+
+def _provider_error(code: str, message: str, request: Request, status_code: int) -> JSONResponse:
+    body = ErrorBody(code=code, message=message, request_id=request.state.request_id)
+    return JSONResponse(status_code=status_code, content=body.model_dump())
+
+
+@app.exception_handler(ProviderNotConfiguredError)
+async def provider_not_configured(request: Request, exc: ProviderNotConfiguredError) -> JSONResponse:
+    return _provider_error(exc.code, str(exc), request, 503)
+
+
+@app.exception_handler(ProviderUnavailableError)
+async def provider_unavailable(request: Request, exc: ProviderUnavailableError) -> JSONResponse:
+    return _provider_error(exc.code, str(exc), request, 503)
+
+
+@app.exception_handler(ProviderRateLimitedError)
+async def provider_rate_limited(request: Request, exc: ProviderRateLimitedError) -> JSONResponse:
+    return _provider_error(exc.code, str(exc), request, 429)
+
+
+@app.exception_handler(ExternalFoodNotFoundError)
+async def external_food_not_found(request: Request, exc: ExternalFoodNotFoundError) -> JSONResponse:
+    return _provider_error(exc.code, str(exc), request, 404)
+
+
+@app.exception_handler(InvalidProviderResponseError)
+async def invalid_provider_response(request: Request, exc: InvalidProviderResponseError) -> JSONResponse:
+    return _provider_error(exc.code, str(exc), request, 502)
 
 
 @app.exception_handler(SQLAlchemyError)
@@ -255,3 +297,31 @@ def recipe_nutrition(
     household_id: uuid.UUID, recipe_id: uuid.UUID, db: Session = DB_DEPENDENCY
 ) -> RecipeNutritionResponse:
     return RecipeService(db).nutrition(household_id, recipe_id)
+
+
+@app.get("/v1/providers/usda/search", response_model=ProviderSearchResponse)
+def usda_search(
+    q: str, page_size: int = 25, provider: FoodDataProvider = PROVIDER_DEPENDENCY
+):
+    return provider.search(q, page_size)
+
+
+@app.get("/v1/providers/usda/foods/{fdc_id}", response_model=ProviderFood)
+def usda_food(fdc_id: int, provider: FoodDataProvider = PROVIDER_DEPENDENCY):
+    return provider.get_food(fdc_id)
+
+
+@app.post("/v1/foods/import/usda/{fdc_id}", response_model=FoodResponse, status_code=status.HTTP_201_CREATED)
+def import_usda_food(
+    fdc_id: int, db: Session = DB_DEPENDENCY, provider: FoodDataProvider = PROVIDER_DEPENDENCY
+) -> FoodResponse:
+    return FoodService(db).import_usda(provider, fdc_id)
+
+
+@app.post("/v1/foods/{food_id}/refresh/usda", response_model=FoodResponse)
+def refresh_usda_food(
+    food_id: uuid.UUID,
+    db: Session = DB_DEPENDENCY,
+    provider: FoodDataProvider = PROVIDER_DEPENDENCY,
+) -> FoodResponse:
+    return FoodService(db).refresh_usda(provider, food_id)

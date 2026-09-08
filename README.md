@@ -79,6 +79,28 @@ uv run python -m nourish_nest.seed_data
 
 Fixture values are illustrative and are not authoritative production nutrition data.
 
+## USDA FoodData Central
+
+Phase 3 provides an isolated USDA FoodData Central provider. Obtain an API key
+from the [official USDA FoodData Central API documentation](https://fdc.nal.usda.gov/api-guide.html), then configure it in
+your local `.env` file. Never commit the key:
+
+```bash
+APP_FOOD_DATA_PROVIDER=usda
+APP_USDA_API_KEY=your-local-key
+APP_USDA_BASE_URL=https://api.nal.usda.gov/fdc/v1
+APP_USDA_TIMEOUT_SECONDS=10
+APP_USDA_MAX_RETRIES=2
+APP_USDA_CACHE_TTL_SECONDS=300
+```
+
+Search and detail requests do not persist foods. Import and refresh requests do.
+Imported records retain USDA FDC ID, data type, attribution, and retrieval time,
+with `source_provider=usda_fdc`; refreshing preserves the NourishNest food UUID.
+Manual foods may leave `source_provider` and external identifiers empty. Local development and tests use
+the fake provider; automated tests never call USDA. USDA credentials are sent only
+to the provider request and are not included in logs or API responses.
+
 ## Docker
 
 ```bash

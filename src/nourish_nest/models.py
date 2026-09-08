@@ -3,7 +3,18 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, Integer, Numeric, String, Text, Uuid
+from sqlalchemy import (
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+    Uuid,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nourish_nest.database import Base
@@ -127,6 +138,9 @@ class Allergy(Base):
 
 class Food(Base):
     __tablename__ = "foods"
+    __table_args__ = (
+        UniqueConstraint("source_provider", "external_source_identifier", name="uq_food_source_identifier"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -137,6 +151,10 @@ class Food(Base):
         Enum(FoodSourceType, native_enum=False, length=32), nullable=False
     )
     external_source_identifier: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    source_provider: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    source_data_type: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    source_attribution: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    source_retrieved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     serving_quantity: Mapped[Decimal] = mapped_column(Numeric(12, 3), nullable=False)
     serving_unit: Mapped[str] = mapped_column(String(32), nullable=False)
     grams_per_serving: Mapped[Decimal | None] = mapped_column(Numeric(12, 3), nullable=True)

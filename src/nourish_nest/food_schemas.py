@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from nourish_nest.models import (
     FoodAllergenRelationship,
@@ -40,6 +40,7 @@ class FoodFields(BaseModel):
     description: str | None = Field(default=None, max_length=4000)
     source_type: FoodSourceType = FoodSourceType.MANUAL
     external_source_identifier: str | None = Field(default=None, max_length=200)
+    source_provider: str | None = Field(default=None, max_length=64)
     serving_quantity: Decimal = Field(gt=0, max_digits=12, decimal_places=3)
     serving_unit: str = Field(min_length=1, max_length=32)
     grams_per_serving: Decimal | None = Field(default=None, gt=0, max_digits=12, decimal_places=3)
@@ -52,6 +53,16 @@ class FoodFields(BaseModel):
     sodium_mg: Decimal | None = Field(default=None, ge=0, max_digits=12, decimal_places=3)
     allergens: list[FoodAllergenInput] = Field(default_factory=list)
     dietary_tags: list[FoodDietaryTagInput] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_source_provenance(self) -> "FoodFields":
+        if self.source_type == FoodSourceType.EXTERNAL and (
+            not self.source_provider or not self.external_source_identifier
+        ):
+            raise ValueError(
+                "source_provider and external_source_identifier are required for external foods"
+            )
+        return self
 
 
 class FoodCreate(FoodFields):
@@ -67,8 +78,12 @@ class FoodResponse(FoodFields):
 
     id: uuid.UUID
     normalized_name: str
+    source_provider: str | None = None
     created_at: datetime
     updated_at: datetime
+    source_data_type: str | None = None
+    source_attribution: str | None = None
+    source_retrieved_at: datetime | None = None
     allergens: list[FoodAllergenResponse] = Field(default_factory=list)
     dietary_tags: list[FoodDietaryTagResponse] = Field(default_factory=list)
 
