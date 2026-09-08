@@ -21,6 +21,24 @@ from nourish_nest.food_schemas import (
 )
 from nourish_nest.food_services import UnsupportedConversionError
 from nourish_nest.nutrition import UnsupportedProfileError, calculate_nutrition_plan
+from nourish_nest.pantry_schemas import (
+    PantryAdjustment,
+    PantryConsumeRequest,
+    PantryDiscard,
+    PantryItemCreate,
+    PantryItemResponse,
+    PantryItemUpdate,
+    PantryLocationCreate,
+    PantryLocationResponse,
+    PantryStockRuleFields,
+    PantryStockRuleResponse,
+    PantrySummaryResponse,
+    PantryTransferRequest,
+)
+from nourish_nest.pantry_services import (
+    PantryError,
+    PantryService,
+)
 from nourish_nest.providers import (
     ExternalFoodNotFoundError,
     FoodDataProvider,
@@ -91,6 +109,12 @@ async def missing_record(request: Request, exc: NotFoundError) -> JSONResponse:
     return JSONResponse(status_code=404, content=body.model_dump())
 
 
+@app.exception_handler(LookupError)
+async def missing_pantry_record(request: Request, exc: LookupError) -> JSONResponse:
+    body = ErrorBody(code="not_found", message=str(exc), request_id=request.state.request_id)
+    return JSONResponse(status_code=404, content=body.model_dump())
+
+
 @app.exception_handler(ForbiddenError)
 async def forbidden(request: Request, exc: ForbiddenError) -> JSONResponse:
     body = ErrorBody(code="forbidden", message=str(exc), request_id=request.state.request_id)
@@ -137,6 +161,21 @@ async def external_food_not_found(request: Request, exc: ExternalFoodNotFoundErr
 @app.exception_handler(InvalidProviderResponseError)
 async def invalid_provider_response(request: Request, exc: InvalidProviderResponseError) -> JSONResponse:
     return _provider_error(exc.code, str(exc), request, 502)
+
+
+@app.exception_handler(PantryError)
+async def pantry_error(request: Request, exc: PantryError) -> JSONResponse:
+    status_codes = {
+        "insufficient_inventory": 409,
+        "incompatible_units": 422,
+        "unsupported_conversion": 422,
+        "stale_inventory_version": 409,
+        "duplicate_idempotency_key": 409,
+        "pantry_location_not_empty": 409,
+        "expired_inventory": 409,
+        "invalid_transfer": 422,
+    }
+    return _provider_error(exc.code, str(exc), request, status_codes.get(exc.code, 409))
 
 
 @app.exception_handler(SQLAlchemyError)
@@ -325,3 +364,115 @@ def refresh_usda_food(
     provider: FoodDataProvider = PROVIDER_DEPENDENCY,
 ) -> FoodResponse:
     return FoodService(db).refresh_usda(provider, food_id)
+
+
+def pantry_service(db: Session) -> PantryService:
+    from nourish_nest.config import get_settings
+
+    return PantryService(db, get_settings().pantry_expiring_soon_days)
+
+
+@app.post("/v1/households/{household_id}/pantry/locations", response_model=PantryLocationResponse, status_code=201)
+def create_pantry_location(household_id: uuid.UUID, data: PantryLocationCreate, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).create_location(household_id, data)
+
+
+@app.get("/v1/households/{household_id}/pantry/locations", response_model=list[PantryLocationResponse])
+def list_pantry_locations(household_id: uuid.UUID, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).list_locations(household_id)
+
+
+@app.put("/v1/households/{household_id}/pantry/locations/{location_id}", response_model=PantryLocationResponse)
+def update_pantry_location(household_id: uuid.UUID, location_id: uuid.UUID, data: PantryLocationCreate, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).update_location(household_id, location_id, data)
+
+
+@app.delete("/v1/households/{household_id}/pantry/locations/{location_id}", status_code=204)
+def delete_pantry_location(household_id: uuid.UUID, location_id: uuid.UUID, db: Session = DB_DEPENDENCY):
+    pantry_service(db).delete_location(household_id, location_id)
+    return Response(status_code=204)
+
+
+@app.post("/v1/households/{household_id}/pantry/items", response_model=PantryItemResponse, status_code=201)
+def create_pantry_item(household_id: uuid.UUID, data: PantryItemCreate, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).create_item(household_id, data)
+
+
+@app.get("/v1/households/{household_id}/pantry/items", response_model=list[PantryItemResponse])
+def list_pantry_items(household_id: uuid.UUID, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).list_items(household_id)
+
+
+@app.get("/v1/households/{household_id}/pantry/items/{item_id}", response_model=PantryItemResponse)
+def get_pantry_item(household_id: uuid.UUID, item_id: uuid.UUID, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).get_item(household_id, item_id)
+
+
+@app.put("/v1/households/{household_id}/pantry/items/{item_id}", response_model=PantryItemResponse)
+def update_pantry_item(household_id: uuid.UUID, item_id: uuid.UUID, data: PantryItemUpdate, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).update_item(household_id, item_id, data)
+
+
+@app.post("/v1/households/{household_id}/pantry/items/{item_id}/adjust", response_model=PantryItemResponse)
+def adjust_pantry_item(household_id: uuid.UUID, item_id: uuid.UUID, data: PantryAdjustment, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).adjust(household_id, item_id, data)
+
+
+@app.post("/v1/households/{household_id}/pantry/items/{item_id}/discard", response_model=PantryItemResponse)
+def discard_pantry_item(household_id: uuid.UUID, item_id: uuid.UUID, data: PantryDiscard, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).discard(household_id, item_id, data)
+
+
+@app.post("/v1/households/{household_id}/pantry/consume", response_model=list[PantryItemResponse])
+def consume_pantry(household_id: uuid.UUID, data: PantryConsumeRequest, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).consume(household_id, data)
+
+
+@app.post("/v1/households/{household_id}/pantry/transfer", response_model=PantryItemResponse)
+def transfer_pantry(household_id: uuid.UUID, data: PantryTransferRequest, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).transfer(household_id, data)
+
+
+@app.get("/v1/households/{household_id}/pantry/expiring", response_model=list[PantryItemResponse])
+def expiring_pantry(household_id: uuid.UUID, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).expiring(household_id)
+
+
+@app.get("/v1/households/{household_id}/pantry/expired", response_model=list[PantryItemResponse])
+def expired_pantry(household_id: uuid.UUID, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).expired(household_id)
+
+
+@app.get("/v1/households/{household_id}/pantry/low-stock", response_model=list[PantryStockRuleResponse])
+def low_stock_pantry(household_id: uuid.UUID, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).low_stock(household_id)
+
+
+@app.get("/v1/households/{household_id}/pantry/summary", response_model=PantrySummaryResponse)
+def pantry_summary(household_id: uuid.UUID, db: Session = DB_DEPENDENCY):
+    counts, low_stock = pantry_service(db).summary(household_id)
+    from nourish_nest.models import PantryItemStatus
+
+    return PantrySummaryResponse(
+        active_items=counts[PantryItemStatus.ACTIVE],
+        depleted_items=counts[PantryItemStatus.DEPLETED],
+        expired_items=counts[PantryItemStatus.EXPIRED],
+        discarded_items=counts[PantryItemStatus.DISCARDED],
+        low_stock_food_ids=low_stock,
+    )
+
+
+@app.put("/v1/households/{household_id}/pantry/stock-rules/{food_id}", response_model=PantryStockRuleResponse)
+def upsert_stock_rule(household_id: uuid.UUID, food_id: uuid.UUID, data: PantryStockRuleFields, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).upsert_stock_rule(household_id, food_id, data)
+
+
+@app.get("/v1/households/{household_id}/pantry/stock-rules", response_model=list[PantryStockRuleResponse])
+def list_stock_rules(household_id: uuid.UUID, db: Session = DB_DEPENDENCY):
+    return pantry_service(db).list_stock_rules(household_id)
+
+
+@app.delete("/v1/households/{household_id}/pantry/stock-rules/{food_id}", status_code=204)
+def delete_stock_rule(household_id: uuid.UUID, food_id: uuid.UUID, db: Session = DB_DEPENDENCY):
+    pantry_service(db).delete_stock_rule(household_id, food_id)
+    return Response(status_code=204)

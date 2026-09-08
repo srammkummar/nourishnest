@@ -96,6 +96,22 @@ Food provenance keeps `source_type` as the broad classification and uses the nul
 foods require both fields; USDA imports use `source_provider=usda_fdc`. This permits
 different providers to use the same external identifier without collisions.
 
+## Decision 8: pantry inventory
+
+Pantry inventory is modeled as household-owned lots rather than one aggregate row,
+so expiration dates and package history remain available. Quantities use Decimal
+arithmetic and the shared deterministic unit converter. Consumption uses
+first-expiring-first-out, refuses incompatible or unsupported units, prevents
+negative stock, and records append-only transactions. Transfers, adjustments,
+consumption, and discards commit atomically; idempotency keys and optimistic versions
+protect retries and stale writes. Expiration and low-stock queries are indexed and
+the expiring-soon window is configurable. SQLAlchemy emits version-qualified updates
+and PostgreSQL executions use `SELECT FOR UPDATE` for consumption and item mutations.
+SQLite does not provide row-level locks and instead serializes database writers; it is
+appropriate for local development but PostgreSQL is the production concurrency target.
+Transactions are never updated or deleted by pantry services. Household deletion
+cascades lots and their audit history because audit rows are household-owned.
+
 ## Next vertical slice
 
 1. **Database Phase 1 complete:** household/member persistence with Alembic migrations,
@@ -104,10 +120,12 @@ different providers to use the same external identifier without collisions.
    recipe nutrition, allergen propagation, and dietary compatibility.
 3. **USDA provider complete:** FoodData Central search, detail, import, refresh,
    typed normalization, retries, rate limits, and caching.
-4. Seven-day meal planner that meets calorie/macro bounds.
-5. Consolidated grocery list generated from recipe ingredients minus pantry inventory.
-6. Streamlit review and approval workflow.
-7. Golden evaluation dataset covering nutrition constraints, allergies, missing data, and budget conflicts.
+4. **Pantry Phase 4 complete:** household inventory lots, FEFO consumption,
+   expiration, low-stock rules, transfers, and audit transactions.
+5. Seven-day meal planner that meets calorie/macro bounds.
+6. Consolidated grocery list generated from recipe ingredients minus pantry inventory.
+7. Streamlit review and approval workflow.
+8. Golden evaluation dataset covering nutrition constraints, allergies, missing data, and budget conflicts.
 
 Database migrations use `uv run alembic upgrade head` to upgrade and
 `uv run alembic downgrade -1` to roll back one revision. Local development uses

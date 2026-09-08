@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     usda_timeout_seconds: float = 10.0
     usda_max_retries: int = 2
     usda_cache_ttl_seconds: int = 300
+    pantry_expiring_soon_days: int = 3
 
 
 @lru_cache

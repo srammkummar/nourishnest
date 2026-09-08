@@ -1,7 +1,8 @@
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import ClassVar
 
 from sqlalchemy import (
     DateTime,
@@ -61,6 +62,30 @@ class FoodDietaryTag(StrEnum):
     NO_PORK = "no_pork"
 
 
+class PantryLocationType(StrEnum):
+    PANTRY = "pantry"
+    REFRIGERATOR = "refrigerator"
+    FREEZER = "freezer"
+    CABINET = "cabinet"
+    CUSTOM = "custom"
+
+
+class PantryItemStatus(StrEnum):
+    ACTIVE = "active"
+    DEPLETED = "depleted"
+    EXPIRED = "expired"
+    DISCARDED = "discarded"
+
+
+class PantryTransactionType(StrEnum):
+    RESTOCK = "restock"
+    CONSUME = "consume"
+    ADJUST = "adjust"
+    TRANSFER = "transfer"
+    DISCARD = "discard"
+    EXPIRE = "expire"
+
+
 class Household(Base):
     __tablename__ = "households"
 
@@ -74,6 +99,15 @@ class Household(Base):
         back_populates="household", cascade="all, delete-orphan", passive_deletes=True
     )
     recipes: Mapped[list["Recipe"]] = relationship(
+        back_populates="household", cascade="all, delete-orphan", passive_deletes=True
+    )
+    pantry_locations: Mapped[list["PantryLocation"]] = relationship(
+        back_populates="household", cascade="all, delete-orphan", passive_deletes=True
+    )
+    pantry_items: Mapped[list["PantryItem"]] = relationship(
+        back_populates="household", cascade="all, delete-orphan", passive_deletes=True
+    )
+    pantry_stock_rules: Mapped[list["PantryStockRule"]] = relationship(
         back_populates="household", cascade="all, delete-orphan", passive_deletes=True
     )
 
@@ -176,6 +210,7 @@ class Food(Base):
         back_populates="food", cascade="all, delete-orphan", passive_deletes=True
     )
     recipe_ingredients: Mapped[list["RecipeIngredient"]] = relationship(back_populates="food")
+    pantry_items: Mapped[list["PantryItem"]] = relationship(back_populates="food")
 
 
 class FoodAllergen(Base):
@@ -264,3 +299,115 @@ class RecipeInstruction(Base):
     instruction: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     recipe: Mapped[Recipe] = relationship(back_populates="instructions")
+
+
+class PantryLocation(Base):
+    __tablename__ = "pantry_locations"
+    __table_args__ = (UniqueConstraint("household_id", "name", name="uq_pantry_location_name"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    household_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("households.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    location_type: Mapped[PantryLocationType] = mapped_column(
+        Enum(PantryLocationType, native_enum=False, length=32), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
+    )
+    household: Mapped[Household] = relationship(back_populates="pantry_locations")
+    items: Mapped[list["PantryItem"]] = relationship(back_populates="location")
+
+
+class PantryItem(Base):
+    __tablename__ = "pantry_items"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    household_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("households.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    location_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("pantry_locations.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    food_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("foods.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    quantity: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
+    unit: Mapped[str] = mapped_column(String(32), nullable=False)
+    canonical_quantity: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)
+    canonical_unit: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    purchase_date: Mapped[date | None] = mapped_column(nullable=True)
+    opened_date: Mapped[date | None] = mapped_column(nullable=True)
+    expiration_date: Mapped[date | None] = mapped_column(nullable=True, index=True)
+    best_before_date: Mapped[date | None] = mapped_column(nullable=True)
+    lot_note: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    status: Mapped[PantryItemStatus] = mapped_column(
+        Enum(PantryItemStatus, native_enum=False, length=16), nullable=False, default=PantryItemStatus.ACTIVE, index=True
+    )
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
+    )
+    household: Mapped[Household] = relationship(back_populates="pantry_items")
+    location: Mapped[PantryLocation] = relationship(back_populates="items")
+    food: Mapped[Food] = relationship(back_populates="pantry_items")
+    transactions: Mapped[list["PantryTransaction"]] = relationship(
+        back_populates="pantry_item", cascade="all, delete-orphan", passive_deletes=True
+    )
+    __mapper_args__: ClassVar[dict[str, object]] = {"version_id_col": version}
+
+
+class PantryStockRule(Base):
+    __tablename__ = "pantry_stock_rules"
+    __table_args__ = (UniqueConstraint("household_id", "food_id", name="uq_pantry_stock_rule_food"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    household_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("households.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    food_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("foods.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    threshold_quantity: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
+    threshold_unit: Mapped[str] = mapped_column(String(32), nullable=False)
+    preferred_reorder_quantity: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
+    preferred_reorder_unit: Mapped[str] = mapped_column(String(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
+    )
+    household: Mapped[Household] = relationship(back_populates="pantry_stock_rules")
+    food: Mapped[Food] = relationship()
+
+
+class PantryTransaction(Base):
+    __tablename__ = "pantry_transactions"
+    __table_args__ = (
+        UniqueConstraint(
+            "household_id",
+            "transaction_type",
+            "idempotency_key",
+            name="uq_pantry_transaction_idempotency",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    household_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("households.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    pantry_item_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("pantry_items.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    transaction_type: Mapped[PantryTransactionType] = mapped_column(
+        Enum(PantryTransactionType, native_enum=False, length=16), nullable=False
+    )
+    quantity_change: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
+    unit: Mapped[str] = mapped_column(String(32), nullable=False)
+    canonical_quantity_change: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)
+    reason: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    pantry_item: Mapped[PantryItem] = relationship(back_populates="transactions")

@@ -79,6 +79,36 @@ uv run python -m nourish_nest.seed_data
 
 Fixture values are illustrative and are not authoritative production nutrition data.
 
+## Pantry Phase 4
+
+Pantry inventory is household-scoped and supports separate lots for the same food,
+location management, expiration tracking, low-stock rules, Decimal quantities,
+FEFO consumption, atomic transfers, optimistic item versions, and append-only
+transaction history. Mass, volume, and count use the existing deterministic unit
+conversion service; density-dependent conversions are rejected rather than guessed.
+Expiring-soon behavior defaults to three days and is configurable with
+`APP_PANTRY_EXPIRING_SOON_DAYS`.
+
+Pantry item versions use SQLAlchemy optimistic concurrency and mutations use
+database transactions. PostgreSQL uses row locks for concurrent consumption;
+SQLite serializes writers at the database level and does not provide equivalent
+row-level locking. Pantry transactions are append-only during normal operation.
+Deleting a household cascades its pantry lots and their audit history because the
+history has no meaning outside that household.
+
+Example workflow:
+
+```bash
+uv run alembic upgrade head
+curl -X POST http://localhost:8000/v1/households/{household_id}/pantry/locations \
+	-H 'content-type: application/json' \
+	-d '{"name":"Refrigerator","location_type":"refrigerator"}'
+curl http://localhost:8000/v1/households/{household_id}/pantry/expiring
+curl http://localhost:8000/v1/households/{household_id}/pantry/low-stock
+```
+
+Pantry operations never place store orders or perform external mutations.
+
 ## USDA FoodData Central
 
 Phase 3 provides an isolated USDA FoodData Central provider. Obtain an API key
