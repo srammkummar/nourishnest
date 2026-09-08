@@ -9,6 +9,17 @@ from sqlalchemy.orm import Session
 from nourish_nest import __version__
 from nourish_nest.database import get_db
 from nourish_nest.domain import ErrorBody, NutritionPlan, NutritionProfile
+from nourish_nest.food_schemas import (
+    FoodCreate,
+    FoodResponse,
+    FoodSearchResponse,
+    FoodUpdate,
+    RecipeCreate,
+    RecipeNutritionResponse,
+    RecipeResponse,
+    RecipeUpdate,
+)
+from nourish_nest.food_services import UnsupportedConversionError
 from nourish_nest.nutrition import UnsupportedProfileError, calculate_nutrition_plan
 from nourish_nest.schemas import (
     HouseholdCreate,
@@ -17,7 +28,14 @@ from nourish_nest.schemas import (
     MemberResponse,
     MemberUpdate,
 )
-from nourish_nest.services import HouseholdService, NotFoundError
+from nourish_nest.services import (
+    ConflictError,
+    FoodService,
+    ForbiddenError,
+    HouseholdService,
+    NotFoundError,
+    RecipeService,
+)
 
 app = FastAPI(title="NourishNest API", version=__version__)
 DB_DEPENDENCY = Depends(get_db)
@@ -59,6 +77,24 @@ async def invalid_request(request: Request, exc: RequestValidationError) -> JSON
 async def missing_record(request: Request, exc: NotFoundError) -> JSONResponse:
     body = ErrorBody(code="not_found", message=str(exc), request_id=request.state.request_id)
     return JSONResponse(status_code=404, content=body.model_dump())
+
+
+@app.exception_handler(ForbiddenError)
+async def forbidden(request: Request, exc: ForbiddenError) -> JSONResponse:
+    body = ErrorBody(code="forbidden", message=str(exc), request_id=request.state.request_id)
+    return JSONResponse(status_code=403, content=body.model_dump())
+
+
+@app.exception_handler(ConflictError)
+async def conflict(request: Request, exc: ConflictError) -> JSONResponse:
+    body = ErrorBody(code="conflict", message=str(exc), request_id=request.state.request_id)
+    return JSONResponse(status_code=409, content=body.model_dump())
+
+
+@app.exception_handler(UnsupportedConversionError)
+async def unsupported_conversion(request: Request, exc: UnsupportedConversionError) -> JSONResponse:
+    body = ErrorBody(code="unsupported_conversion", message=str(exc), request_id=request.state.request_id)
+    return JSONResponse(status_code=422, content=body.model_dump())
 
 
 @app.exception_handler(SQLAlchemyError)
@@ -132,3 +168,90 @@ def delete_member(member_id: uuid.UUID, db: Session = DB_DEPENDENCY) -> Response
 @app.post("/v1/members/{member_id}/nutrition/calculate", response_model=NutritionPlan)
 def calculate_saved_member(member_id: uuid.UUID, db: Session = DB_DEPENDENCY) -> NutritionPlan:
     return HouseholdService(db).calculate_member_nutrition(member_id)
+
+
+@app.post("/v1/foods", response_model=FoodResponse, status_code=status.HTTP_201_CREATED)
+def create_food(data: FoodCreate, db: Session = DB_DEPENDENCY) -> FoodResponse:
+    return FoodService(db).create(data)
+
+
+@app.get("/v1/foods", response_model=FoodSearchResponse)
+def list_foods(q: str | None = None, db: Session = DB_DEPENDENCY) -> FoodSearchResponse:
+    return FoodSearchResponse(foods=FoodService(db).list(q))
+
+
+@app.get("/v1/foods/search", response_model=FoodSearchResponse)
+def search_foods(q: str, db: Session = DB_DEPENDENCY) -> FoodSearchResponse:
+    return FoodSearchResponse(foods=FoodService(db).list(q))
+
+
+@app.get("/v1/foods/{food_id}", response_model=FoodResponse)
+def get_food(food_id: uuid.UUID, db: Session = DB_DEPENDENCY) -> FoodResponse:
+    return FoodService(db).get(food_id)
+
+
+@app.put("/v1/foods/{food_id}", response_model=FoodResponse)
+def update_food(
+    food_id: uuid.UUID, data: FoodUpdate, db: Session = DB_DEPENDENCY
+) -> FoodResponse:
+    return FoodService(db).update(food_id, data)
+
+
+@app.delete("/v1/foods/{food_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_food(food_id: uuid.UUID, db: Session = DB_DEPENDENCY) -> Response:
+    FoodService(db).delete(food_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.post(
+    "/v1/households/{household_id}/recipes",
+    response_model=RecipeResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_recipe(
+    household_id: uuid.UUID, data: RecipeCreate, db: Session = DB_DEPENDENCY
+) -> RecipeResponse:
+    return RecipeService(db).create(household_id, data)
+
+
+@app.get("/v1/households/{household_id}/recipes", response_model=list[RecipeResponse])
+def list_recipes(household_id: uuid.UUID, db: Session = DB_DEPENDENCY) -> list[RecipeResponse]:
+    return RecipeService(db).list(household_id)
+
+
+@app.get("/v1/households/{household_id}/recipes/{recipe_id}", response_model=RecipeResponse)
+def get_recipe(
+    household_id: uuid.UUID, recipe_id: uuid.UUID, db: Session = DB_DEPENDENCY
+) -> RecipeResponse:
+    return RecipeService(db).get(household_id, recipe_id)
+
+
+@app.put("/v1/households/{household_id}/recipes/{recipe_id}", response_model=RecipeResponse)
+def update_recipe(
+    household_id: uuid.UUID,
+    recipe_id: uuid.UUID,
+    data: RecipeUpdate,
+    db: Session = DB_DEPENDENCY,
+) -> RecipeResponse:
+    return RecipeService(db).update(household_id, recipe_id, data)
+
+
+@app.delete(
+    "/v1/households/{household_id}/recipes/{recipe_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_recipe(
+    household_id: uuid.UUID, recipe_id: uuid.UUID, db: Session = DB_DEPENDENCY
+) -> Response:
+    RecipeService(db).delete(household_id, recipe_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.get(
+    "/v1/households/{household_id}/recipes/{recipe_id}/nutrition",
+    response_model=RecipeNutritionResponse,
+)
+def recipe_nutrition(
+    household_id: uuid.UUID, recipe_id: uuid.UUID, db: Session = DB_DEPENDENCY
+) -> RecipeNutritionResponse:
+    return RecipeService(db).nutrition(household_id, recipe_id)

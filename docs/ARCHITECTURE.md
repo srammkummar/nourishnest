@@ -70,11 +70,23 @@ Initial evaluation targets:
 
 External dependencies sit behind interfaces. Development uses deterministic fixtures or mocks. Production adapters can later connect to USDA nutrition data, grocery catalogs, calendars, notification services, vector stores, and rerankers without changing core domain logic.
 
+## Decision 6: food and recipe calculations
+
+Food and recipe records use SQLAlchemy models separate from Pydantic API schemas.
+Nutrition quantities are stored as precise numeric values. Deterministic conversion
+uses grams as the canonical mass unit, milliliters as the canonical volume unit, and
+items as the canonical count unit. Volume-to-mass conversion requires known density;
+the system never guesses it. Recipe nutrition aggregates ingredient nutrition,
+allergens, and the intersection of ingredient dietary tags, then scales totals by
+recipe servings. Development fixtures are explicit, opt-in, and unavailable in
+production.
+
 ## Next vertical slice
 
 1. **Database Phase 1 complete:** household/member persistence with Alembic migrations,
    structured dietary preferences and allergies, and repository/service boundaries.
-2. Food and recipe schema with allergens and dietary tags.
+2. **Database Phase 2 complete:** food and recipe persistence, deterministic units,
+   recipe nutrition, allergen propagation, and dietary compatibility.
 3. Seven-day meal planner that meets calorie/macro bounds.
 4. Consolidated grocery list generated from recipe ingredients minus pantry inventory.
 5. Streamlit review and approval workflow.

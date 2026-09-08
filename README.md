@@ -61,6 +61,24 @@ uv run alembic downgrade -1
 
 Database tests use temporary SQLite files and do not write to the development database.
 
+## Database Phase 2
+
+Food and recipe persistence is available through the `/v1/foods` and household
+recipe endpoints. Recipe nutrition is deterministic and uses `recipe-nutrition-v1`.
+Mass calculations use grams internally; volume uses milliliters; count uses items.
+Known conversions include grams, kilograms, ounces, pounds, milliliters, liters,
+cups, tablespoons, teaspoons, and item/count. Volume-to-mass conversion is never
+guessed without density data. Unknown units return `unsupported_conversion`, while
+known units with missing density produce a nutrition warning.
+
+Development-only fixtures are opt-in and blocked when `APP_ENV=production`:
+
+```bash
+uv run python -m nourish_nest.seed_data
+```
+
+Fixture values are illustrative and are not authoritative production nutrition data.
+
 ## Docker
 
 ```bash
