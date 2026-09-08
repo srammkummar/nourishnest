@@ -35,6 +35,8 @@ from nourish_nest.grocery_schemas import (
     GroceryListUpdate,
 )
 from nourish_nest.grocery_services import GroceryService, StaleGroceryVersionError
+from nourish_nest.grocery_shortage_schemas import GroceryShortageResponse
+from nourish_nest.grocery_shortage_services import GroceryShortageService
 from nourish_nest.nutrition import UnsupportedProfileError, calculate_nutrition_plan
 from nourish_nest.pantry_schemas import (
     PantryAdjustment,
@@ -214,6 +216,16 @@ def preview_grocery_requirements(
     household_id: uuid.UUID, data: GroceryRequirementsRequest, db: Session = DB_DEPENDENCY
 ):
     return GroceryRequirementsService(db).preview(household_id, data)
+
+
+@app.post(
+    "/v1/households/{household_id}/grocery-requirements/shortage-preview",
+    response_model=GroceryShortageResponse,
+)
+def preview_grocery_shortage(
+    household_id: uuid.UUID, data: GroceryRequirementsRequest, db: Session = DB_DEPENDENCY
+):
+    return GroceryShortageService(db).preview(household_id, data)
 
 
 @app.get("/health")
