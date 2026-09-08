@@ -1,6 +1,7 @@
 import uuid
+from typing import Annotated
 
-from fastapi import Depends, FastAPI, Request, Response, status
+from fastapi import Depends, FastAPI, Query, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
@@ -20,6 +21,15 @@ from nourish_nest.food_schemas import (
     RecipeUpdate,
 )
 from nourish_nest.food_services import UnsupportedConversionError
+from nourish_nest.grocery_schemas import (
+    GroceryItemCreate,
+    GroceryItemResponse,
+    GroceryItemUpdate,
+    GroceryListCreate,
+    GroceryListResponse,
+    GroceryListUpdate,
+)
+from nourish_nest.grocery_services import GroceryService, StaleGroceryVersionError
 from nourish_nest.nutrition import UnsupportedProfileError, calculate_nutrition_plan
 from nourish_nest.pantry_schemas import (
     PantryAdjustment,
@@ -176,6 +186,11 @@ async def pantry_error(request: Request, exc: PantryError) -> JSONResponse:
         "invalid_transfer": 422,
     }
     return _provider_error(exc.code, str(exc), request, status_codes.get(exc.code, 409))
+
+
+@app.exception_handler(StaleGroceryVersionError)
+async def stale_grocery(request: Request, exc: StaleGroceryVersionError) -> JSONResponse:
+    return _provider_error(exc.code, str(exc), request, 409)
 
 
 @app.exception_handler(SQLAlchemyError)
@@ -475,4 +490,76 @@ def list_stock_rules(household_id: uuid.UUID, db: Session = DB_DEPENDENCY):
 @app.delete("/v1/households/{household_id}/pantry/stock-rules/{food_id}", status_code=204)
 def delete_stock_rule(household_id: uuid.UUID, food_id: uuid.UUID, db: Session = DB_DEPENDENCY):
     pantry_service(db).delete_stock_rule(household_id, food_id)
+    return Response(status_code=204)
+
+
+@app.post("/v1/households/{household_id}/grocery-lists", response_model=GroceryListResponse, status_code=201)
+def create_grocery_list(
+    household_id: uuid.UUID, data: GroceryListCreate, db: Session = DB_DEPENDENCY
+):
+    return GroceryService(db).create_list(household_id, data)
+
+
+@app.get("/v1/households/{household_id}/grocery-lists", response_model=list[GroceryListResponse])
+def list_grocery_lists(
+    household_id: uuid.UUID, db: Session = DB_DEPENDENCY
+):
+    return GroceryService(db).list_lists(household_id)
+
+
+@app.get("/v1/households/{household_id}/grocery-lists/{list_id}", response_model=GroceryListResponse)
+def get_grocery_list(
+    household_id: uuid.UUID, list_id: uuid.UUID, db: Session = DB_DEPENDENCY
+):
+    return GroceryService(db).get_list(household_id, list_id)
+
+
+@app.put("/v1/households/{household_id}/grocery-lists/{list_id}", response_model=GroceryListResponse)
+def update_grocery_list(
+    household_id: uuid.UUID, list_id: uuid.UUID, data: GroceryListUpdate, db: Session = DB_DEPENDENCY
+):
+    return GroceryService(db).update_list(household_id, list_id, data)
+
+
+@app.delete("/v1/households/{household_id}/grocery-lists/{list_id}", status_code=204)
+def delete_grocery_list(
+    household_id: uuid.UUID, list_id: uuid.UUID, expected_version: Annotated[int, Query(ge=1)], db: Session = DB_DEPENDENCY
+):
+    GroceryService(db).delete_list(household_id, list_id, expected_version)
+    return Response(status_code=204)
+
+
+@app.post("/v1/households/{household_id}/grocery-lists/{list_id}/items", response_model=GroceryItemResponse, status_code=201)
+def create_grocery_item(
+    household_id: uuid.UUID, list_id: uuid.UUID, data: GroceryItemCreate, db: Session = DB_DEPENDENCY
+):
+    return GroceryService(db).create_item(household_id, list_id, data)
+
+
+@app.get("/v1/households/{household_id}/grocery-lists/{list_id}/items", response_model=list[GroceryItemResponse])
+def list_grocery_items(
+    household_id: uuid.UUID, list_id: uuid.UUID, db: Session = DB_DEPENDENCY
+):
+    return GroceryService(db).list_items(household_id, list_id)
+
+
+@app.get("/v1/households/{household_id}/grocery-lists/{list_id}/items/{item_id}", response_model=GroceryItemResponse)
+def get_grocery_item(
+    household_id: uuid.UUID, list_id: uuid.UUID, item_id: uuid.UUID, db: Session = DB_DEPENDENCY
+):
+    return GroceryService(db).get_item(household_id, list_id, item_id)
+
+
+@app.put("/v1/households/{household_id}/grocery-lists/{list_id}/items/{item_id}", response_model=GroceryItemResponse)
+def update_grocery_item(
+    household_id: uuid.UUID, list_id: uuid.UUID, item_id: uuid.UUID, data: GroceryItemUpdate, db: Session = DB_DEPENDENCY
+):
+    return GroceryService(db).update_item(household_id, list_id, item_id, data)
+
+
+@app.delete("/v1/households/{household_id}/grocery-lists/{list_id}/items/{item_id}", status_code=204)
+def delete_grocery_item(
+    household_id: uuid.UUID, list_id: uuid.UUID, item_id: uuid.UUID, expected_version: Annotated[int, Query(ge=1)], db: Session = DB_DEPENDENCY
+):
+    GroceryService(db).delete_item(household_id, list_id, item_id, expected_version)
     return Response(status_code=204)
