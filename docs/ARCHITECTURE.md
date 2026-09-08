@@ -112,6 +112,27 @@ appropriate for local development but PostgreSQL is the production concurrency t
 Transactions are never updated or deleted by pantry services. Household deletion
 cascades lots and their audit history because audit rows are household-owned.
 
+## Decision 9: grocery database foundation (Phase 5A)
+
+`GroceryList` belongs to one required household; `GroceryListItem` inherits ownership
+through its required list. Future access must scope lists by household and items
+through that list; this schema does not implement authorization or PostgreSQL RLS.
+Household deletion cascades lists, and list deletion cascades items. Optional food
+references restrict food deletion. Source references are nullable UUID metadata,
+without a polymorphic foreign key or source-household validation at this stage.
+
+Quantities use Python Decimal and `NUMERIC(18, 6)` with nonnegative checks. Status
+and source values have database checks; purchased quantity defaults to zero and
+checked defaults to false. Composite household/status and list/checked indexes,
+plus status and food indexes, support future scoped queries. Both models use
+`version_id_col` for ORM update/delete conflicts; bulk SQL bypasses this protection,
+and item changes do not increment the parent list version. Timestamps are maintained
+by the ORM. SQLite NUMERIC affinity does not provide PostgreSQL's exact decimal
+storage guarantees, so SQLite remains a development target.
+
+Migration `20260908_0005` adds only these two tables. Grocery calculation, pantry
+subtraction, services, API/UI, agents, and RAG remain future work.
+
 ## Next vertical slice
 
 1. **Database Phase 1 complete:** household/member persistence with Alembic migrations,

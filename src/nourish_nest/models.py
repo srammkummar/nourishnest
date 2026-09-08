@@ -5,16 +5,20 @@ from enum import StrEnum
 from typing import ClassVar
 
 from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
     DateTime,
     Enum,
     Float,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
     Text,
     UniqueConstraint,
     Uuid,
+    false,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -86,6 +90,91 @@ class PantryTransactionType(StrEnum):
     EXPIRE = "expire"
 
 
+class GroceryListStatus(StrEnum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    ARCHIVED = "archived"
+
+
+class GroceryItemSourceType(StrEnum):
+    MANUAL = "manual"
+    RECIPE = "recipe"
+    LOW_STOCK = "low_stock"
+
+
+class GroceryList(Base):
+    __tablename__ = "grocery_lists"
+    __table_args__ = (
+        Index("ix_grocery_lists_household_status", "household_id", "status"),
+        CheckConstraint("version >= 1", name="ck_grocery_lists_version"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    household_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("households.id", ondelete="CASCADE"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    status: Mapped[GroceryListStatus] = mapped_column(
+        Enum(GroceryListStatus, values_callable=lambda cls: [e.value for e in cls],
+             native_enum=False, create_constraint=True, name="grocery_list_status", length=16),
+        nullable=False, default=GroceryListStatus.DRAFT, server_default="draft", index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
+    )
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    household: Mapped["Household"] = relationship(back_populates="grocery_lists")
+    items: Mapped[list["GroceryListItem"]] = relationship(
+        back_populates="grocery_list", cascade="all, delete-orphan", passive_deletes=True
+    )
+    __mapper_args__: ClassVar[dict[str, object]] = {"version_id_col": version}
+
+
+class GroceryListItem(Base):
+    __tablename__ = "grocery_list_items"
+    __table_args__ = (
+        Index("ix_grocery_list_items_list_checked", "grocery_list_id", "checked"),
+        CheckConstraint("required_quantity >= 0", name="ck_grocery_items_required_quantity"),
+        CheckConstraint("purchased_quantity >= 0", name="ck_grocery_items_purchased_quantity"),
+        CheckConstraint("version >= 1", name="ck_grocery_items_version"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    grocery_list_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("grocery_lists.id", ondelete="CASCADE"), nullable=False
+    )
+    food_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("foods.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
+    display_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    required_quantity: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
+    required_unit: Mapped[str] = mapped_column(String(32), nullable=False)
+    purchased_quantity: Mapped[Decimal] = mapped_column(
+        Numeric(18, 6), nullable=False, default=Decimal(0), server_default="0"
+    )
+    category: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    source_type: Mapped[GroceryItemSourceType] = mapped_column(
+        Enum(GroceryItemSourceType, values_callable=lambda cls: [e.value for e in cls],
+             native_enum=False, create_constraint=True, name="grocery_item_source_type", length=16),
+        nullable=False, default=GroceryItemSourceType.MANUAL, server_default="manual",
+    )
+    source_reference_id: Mapped[uuid.UUID | None] = mapped_column(Uuid(as_uuid=True), nullable=True)
+    checked: Mapped[bool] = mapped_column(
+        Boolean(create_constraint=True, name="grocery_item_checked"),
+        nullable=False, default=False, server_default=false(),
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
+    )
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    grocery_list: Mapped[GroceryList] = relationship(back_populates="items")
+    food: Mapped["Food | None"] = relationship()
+    __mapper_args__: ClassVar[dict[str, object]] = {"version_id_col": version}
+
+
 class Household(Base):
     __tablename__ = "households"
 
@@ -108,6 +197,9 @@ class Household(Base):
         back_populates="household", cascade="all, delete-orphan", passive_deletes=True
     )
     pantry_stock_rules: Mapped[list["PantryStockRule"]] = relationship(
+        back_populates="household", cascade="all, delete-orphan", passive_deletes=True
+    )
+    grocery_lists: Mapped[list["GroceryList"]] = relationship(
         back_populates="household", cascade="all, delete-orphan", passive_deletes=True
     )
 
