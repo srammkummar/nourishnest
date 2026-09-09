@@ -47,6 +47,9 @@ class HouseholdService:
             raise NotFoundError("Household not found")
         return household
 
+    def list_households(self) -> list[Household]:
+        return self.households.list()
+
     def delete_household(self, household_id: uuid.UUID) -> None:
         household = self.get_household(household_id)
         self.session.delete(household)

@@ -1,0 +1,184 @@
+"""Streamlit presentation layer; all application data arrives through HTTP."""
+
+import streamlit as st
+
+from nourish_nest.api_client import (
+    APIClient,
+    APIError,
+    DashboardCounts,
+    Household,
+    create_api_client,
+)
+from nourish_nest.ui_state import (
+    PAGES,
+    navigate,
+    remember_created_household,
+    sync_household_selection,
+)
+
+PLACEHOLDERS = {
+    "Nutrition": "Calculate calorie and macro targets for household members and review their nutrition plans.",
+    "Recipes": "Browse household and shared recipes, review ingredients, and scale servings.",
+    "Pantry": "Manage inventory lots, storage locations, expiration dates, and stock levels.",
+    "Grocery Lists": "Create grocery lists, calculate recipe shortages, and record purchases with optional pantry intake.",
+}
+
+
+def show_error(error: APIError) -> None:
+    st.error(error.message)
+    st.caption(f"Error code: {error.code}")
+    if error.request_id:
+        st.text(f"Request ID: {error.request_id}")
+
+
+def create_household_form(api: APIClient) -> None:
+    with st.form("create_household"):
+        name = st.text_input("Household name", max_chars=200, key="new_household_name")
+        left, right = st.columns(2)
+        timezone = left.text_input("Timezone", value="UTC", max_chars=64)
+        currency = right.text_input(
+            "Currency", value="USD", max_chars=3, help="Three-letter currency code"
+        )
+        submitted = st.form_submit_button("Create household", type="primary")
+    if submitted:
+        if not name.strip() or not timezone.strip() or len(currency.strip()) != 3:
+            st.error("Enter a household name, timezone, and three-letter currency code.")
+            return
+        try:
+            with st.spinner("Creating your household…"):
+                household = api.create_household(name, timezone, currency)
+            remember_created_household(st.session_state, household)
+            st.rerun()
+        except APIError as error:
+            show_error(error)
+            st.info(
+                "This request was not retried automatically. Refresh the household list before submitting again."
+            )
+
+
+def quick_actions() -> None:
+    st.subheader("Quick actions")
+    actions = [
+        ("Add member", "Household"),
+        ("Add pantry item", "Pantry"),
+        ("Create grocery list", "Grocery Lists"),
+        ("Calculate nutrition", "Nutrition"),
+    ]
+    for column, (label, page) in zip(st.columns(4), actions, strict=True):
+        column.button(
+            label,
+            key=f"action_{page}",
+            on_click=navigate,
+            args=(st.session_state, page, label),
+            use_container_width=True,
+        )
+    st.caption("These management workflows are coming in Phase 6B.")
+
+
+def dashboard_cards(counts: DashboardCounts) -> None:
+    cards = [
+        ("Household members", counts.members, "People in your household"),
+        ("Recipes", counts.recipes, "Household and shared recipes"),
+        ("Active pantry items", counts.active_pantry_items, "Active inventory lots"),
+        ("Expiring items", counts.expiring_items, "Upcoming expiration"),
+        ("Low-stock items", counts.low_stock_items, "Below saved stock thresholds"),
+        ("Active grocery lists", counts.active_grocery_lists, "Lists marked active"),
+    ]
+    for start in (0, 3):
+        for column, (label, value, caption) in zip(
+            st.columns(3), cards[start : start + 3], strict=True
+        ):
+            with column.container(border=True):
+                st.metric(label, value)
+                st.caption(caption)
+    if not any(counts.model_dump().values()):
+        st.info(
+            "Your household is ready. There is no dashboard data yet. Member, recipe, pantry, and grocery workflows arrive in Phase 6B."
+        )
+
+
+def selected_page(api: APIClient, household: Household) -> None:
+    st.caption(f"{household.name} · {household.timezone} · {household.currency}")
+    page = st.session_state["page"]
+    if page == "Dashboard":
+        st.write("Your household at a glance. Refresh to retrieve the latest API data.")
+        st.button("Refresh dashboard")
+        try:
+            with st.spinner("Loading household overview…"):
+                dashboard_cards(api.dashboard(household.id))
+        except APIError as error:
+            show_error(error)
+            st.info("The overview could not be loaded. Refresh to try again.")
+        quick_actions()
+    elif page == "Household":
+        with st.container(border=True):
+            st.subheader(household.name)
+            st.write(f"Timezone: {household.timezone} · Currency: {household.currency}")
+        st.subheader("Household members")
+        st.info("Phase 6B will add member profiles, dietary preferences, and allergies here.")
+        with st.expander(
+            "Create another household", expanded=st.session_state.get("intent") == "New household"
+        ):
+            create_household_form(api)
+    else:
+        with st.container(border=True):
+            st.subheader(page)
+            st.write(PLACEHOLDERS[page])
+            st.info("Coming in Phase 6B. This page is a preview of the planned workflow.")
+        if st.session_state.get("intent"):
+            st.caption(f"Selected action: {st.session_state['intent']}")
+        st.button("Back to dashboard", on_click=navigate, args=(st.session_state, "Dashboard"))
+
+
+def main() -> None:
+    st.set_page_config(page_title="NourishNest", page_icon="🌿", layout="wide")
+    st.session_state.setdefault("page", "Dashboard")
+    if "pending_page" in st.session_state:
+        navigate(st.session_state, st.session_state.pop("pending_page"))
+    with st.sidebar:
+        st.title("🌿 NourishNest")
+        st.caption("A little more order. A healthier home.")
+        st.radio("Workspace", PAGES, key="page")
+        st.divider()
+    st.title(st.session_state["page"])
+    try:
+        with create_api_client() as api:
+            with st.sidebar:
+                with st.spinner("Checking API…"):
+                    health = api.health()
+                st.success("API connected")
+                st.caption(f"API version {health.version}")
+            with st.spinner("Loading households…"):
+                households = sorted(api.households(), key=lambda h: (h.name.casefold(), str(h.id)))
+            selected = sync_household_selection(st.session_state, households)
+            labels = {str(h.id): h.name for h in households}
+            with st.sidebar:
+                if households:
+                    st.selectbox(
+                        "Household", list(labels), format_func=labels.get, key="household_id"
+                    )
+                    selected = st.session_state["household_id"]
+                    st.button(
+                        "New household",
+                        on_click=navigate,
+                        args=(st.session_state, "Household", "New household"),
+                    )
+                else:
+                    st.info("No households yet")
+            if "success_message" in st.session_state:
+                st.success(st.session_state.pop("success_message"))
+            if selected is None:
+                st.subheader("Welcome home")
+                st.write(
+                    "Create your first household to bring meals, pantry stock, and grocery planning together."
+                )
+                create_household_form(api)
+            else:
+                selected_page(api, next(h for h in households if str(h.id) == selected))
+    except APIError as error:
+        st.sidebar.error("API connection needs attention")
+        show_error(error)
+        st.info(
+            "Start FastAPI and refresh. Check APP_API_BASE_URL and the two-terminal instructions in README if port 8000 is unavailable."
+        )
+        st.button("Retry connection")

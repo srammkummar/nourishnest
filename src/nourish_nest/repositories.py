@@ -32,6 +32,9 @@ class HouseholdRepository:
     def get(self, household_id: uuid.UUID) -> Household | None:
         return self.session.get(Household, household_id)
 
+    def list(self) -> list[Household]:
+        return list(self.session.scalars(select(Household).order_by(Household.name, Household.id)))
+
 
 class MemberRepository:
     def __init__(self, session: Session):

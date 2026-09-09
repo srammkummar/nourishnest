@@ -61,6 +61,16 @@ def create_household(client: TestClient, name: str = "Home") -> dict:
     return response.json()
 
 
+def test_household_collection(client: TestClient):
+    assert client.get("/v1/households").json() == []
+    second = create_household(client, "Zulu")
+    first = create_household(client, "Alpha")
+    response = client.get("/v1/households", headers={"x-request-id": "household-list"})
+    assert response.status_code == 200
+    assert [h["id"] for h in response.json()] == [first["id"], second["id"]]
+    assert response.headers["x-request-id"] == "household-list"
+
+
 def test_household_and_member_lifecycle_cascades_dependents(client: TestClient):
     household = create_household(client)
     household_id = household["id"]

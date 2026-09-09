@@ -4,7 +4,9 @@ NourishNest is a production-oriented household management platform. The first wo
 
 ## Current capabilities
 
-- Streamlit interface for a household member profile
+- Streamlit household dashboard, household selection/creation, and navigation shell
+- HTTP-only typed API client with timeouts, safe GET retries, and request-ID errors
+- Nutrition, recipe, pantry, and grocery workflow placeholders for Phase 6B
 - FastAPI health and nutrition-calculation endpoints
 - Deterministic Mifflin–St Jeor calorie calculation
 - Goal-aware calorie adjustment with conservative safety bounds
@@ -22,23 +24,68 @@ LLMs will interpret requests, coordinate agents, retrieve context, and draft pla
 
 ## Quick start
 
-Run from the project directory (`household-ai` in this checkout) with uv installed:
+With uv installed, run these commands in two Windows PowerShell terminals.
+Terminal 1 (FastAPI; keep it running):
 
-```bash
+```powershell
+Set-Location 'C:\Users\sramm\OneDrive\Documents\Mastering-Agentic-AI\UV-Project\nourishnest'
 uv sync --extra dev
-uv run uvicorn nourish_nest.api:app --reload
+uv run alembic upgrade head
+uv run python -m uvicorn nourish_nest.api:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-In a second terminal, from the same directory:
+Terminal 2 (Streamlit; keep it running):
 
-```bash
-uv run streamlit run streamlit_app.py
+```powershell
+Set-Location 'C:\Users\sramm\OneDrive\Documents\Mastering-Agentic-AI\UV-Project\nourishnest'
+$env:APP_API_BASE_URL = 'http://127.0.0.1:8000'
+uv run python -m streamlit run streamlit_app.py --server.address 127.0.0.1 --server.port 8501
 ```
 
 API documentation is available at `http://localhost:8000/docs`.
 The Streamlit interface is available at `http://localhost:8501`.
 The distribution is `nourish-nest`; Python imports use `nourish_nest`.
 See [architecture decisions](docs/ARCHITECTURE.md) for implementation and roadmap details.
+
+`APP_API_BASE_URL` defaults to `http://127.0.0.1:8000`. Set it in the Streamlit
+terminal or in `.env`; environment variables take precedence. Restart Streamlit
+after changing configuration. Docker Compose uses `http://api:8000` internally.
+The existing `uv run streamlit run streamlit_app.py` entrypoint remains supported.
+The commands above use Python modules to avoid stale Windows console launchers
+(for example, `uv trampoline failed to canonicalize script path`).
+
+If port 8000 is unavailable, check the API terminal for startup errors and run:
+
+```powershell
+Test-NetConnection 127.0.0.1 -Port 8000
+Invoke-RestMethod http://127.0.0.1:8000/health
+Get-NetTCPConnection -LocalPort 8000 -State Listen
+```
+
+If another application owns the port, use `--port 8001` in terminal 1 and
+`$env:APP_API_BASE_URL = 'http://127.0.0.1:8001'` in terminal 2 before restarting
+Streamlit. Do not stop unrelated processes. The health badge checks API reachability;
+a dashboard error may still indicate missing migrations or unavailable storage.
+Errors include a request ID for matching API logs. Household creation is never
+automatically retried; after a timeout, refresh and check the selector before
+submitting again.
+
+### Phase 6A UI scope
+
+The dashboard shows member and readable recipe counts, active pantry lots,
+expiring lots (the API's configured expiration window), foods below saved stock
+thresholds, and grocery lists whose status is `active`. Refresh retrieves current
+values. Empty households have a friendly starting state. Quick actions navigate
+to explanatory Phase 6B placeholders; full management and nutrition forms will
+arrive in that phase. The selected household persists within the Streamlit session.
+
+The selector uses the new `GET /v1/households` collection route. This application
+currently assumes a trusted deployment: household selection is not authentication
+or authorization. Do not expose it publicly without an access-control layer.
+Counts come from separate requests and are not a single database snapshot.
+Existing pantry summary/expiration GET routes can mark expired lots; the UI client
+does not retry those calls. Other safe GETs retry once on transport failures or
+502/503/504 responses; POSTs are sent once. No migrations change in Phase 6A.
 
 ## Tests
 

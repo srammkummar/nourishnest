@@ -4,14 +4,34 @@ NourishNest is packaged as `nourish-nest`, with Python modules under
 `src/nourish_nest`. FastAPI starts with `uv run uvicorn nourish_nest.api:app --reload`;
 the UI starts with `uv run streamlit run streamlit_app.py`.
 
-The current Streamlit UI calls `nourish_nest.nutrition` directly. FastAPI exposes
-the same deterministic service independently. The system shape below describes
+The Streamlit UI communicates exclusively with FastAPI through `api_client.py`.
+Its wire DTOs are independent of server schemas, ORM models, repositories, and
+services. The system shape below describes
 the target architecture, including orchestration and integrations still to be built.
 
 The [original architecture diagram](architecture.png), titled "AI Household Manager",
 is retained as the pre-rename roadmap; it does not represent completed integrations.
 
 ## Product boundary
+
+Phase 6A adds a native Streamlit navigation shell, session household selection,
+household creation, and six dashboard metrics. `GET /v1/households` supplies the
+selector using the existing repository/service pattern. Other pages explain the
+Phase 6B workflows. The former direct nutrition form is replaced by this boundary.
+
+The injectable httpx client centralizes validation, sanitized transport errors,
+structured API error envelopes/request IDs, 2-second connection and 8-second read
+timeouts, and one retry for safe GET requests. Mutations are never retried.
+Legacy pantry summary/expiring GETs update expiration state and are explicitly
+excluded from retries. Dashboard counts are separate point-in-time reads, not an
+atomic snapshot; collection APIs currently have no pagination. No UI database
+access or migration is introduced. Native labeled widgets and a high-contrast
+green theme avoid unsafe HTML. Configuration reads only the API URL; the UI does
+not import server settings or display raw transport errors/secrets.
+
+Household discovery lists all households in the current trusted deployment.
+Authentication and user-based household authorization remain future work and are
+required before public deployment.
 
 The system manages household planning: nutrition targets, meal plans, grocery lists, pantry inventory, budgets, and chores. It may prepare carts and calendar events but cannot execute either without explicit confirmation.
 

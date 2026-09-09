@@ -13,4 +13,4 @@ services:
       - "8501:8501"
     environment:
       APP_ENV: development
-
+      APP_API_BASE_URL: http://api:8000

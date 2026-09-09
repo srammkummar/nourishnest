@@ -292,6 +292,11 @@ def create_household(data: HouseholdCreate, db: Session = DB_DEPENDENCY) -> Hous
     return HouseholdService(db).create_household(data)
 
 
+@app.get("/v1/households", response_model=list[HouseholdResponse])
+def list_households(db: Session = DB_DEPENDENCY) -> list[HouseholdResponse]:
+    return HouseholdService(db).list_households()
+
+
 @app.get("/v1/households/{household_id}", response_model=HouseholdResponse)
 def get_household(household_id: uuid.UUID, db: Session = DB_DEPENDENCY) -> HouseholdResponse:
     return HouseholdService(db).get_household(household_id)
