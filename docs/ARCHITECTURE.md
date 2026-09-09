@@ -150,6 +150,37 @@ access; individual foreign keys do not enforce these cross-record relationships.
 Hash computation and idempotent replay behavior are not implemented. SQLite retains
 its NUMERIC storage limitations; PostgreSQL remains the exact-decimal target.
 
+## Atomic grocery generation (Phase 5E2)
+
+`POST /v1/households/{household_id}/grocery-lists/{list_id}/generations` accepts
+Phase 5C recipe selections, required `expected_list_version`, and a trimmed nonblank
+`idempotency_key` of at most 200 characters. Only draft/active lists can be generated.
+The service calls Phase 5D directly and saves only positive shortages. Source rows
+preserve every contributing recipe's full requirement before pantry subtraction;
+their sum can therefore exceed the generated item's shortage quantity.
+
+One transaction covers the version-qualified list update, run, items, and sources.
+PostgreSQL also locks the list row; pantry rows are never locked, changed, or reserved.
+The database key constraint and list version update protect concurrent attempts;
+failed uniqueness/version writes roll back before resolving a committed winner.
+Manual items remain untouched. Even complete pantry coverage creates a run and
+increments the list version. A list supports one successful generation; replacement
+and regeneration are deferred.
+
+The SHA-256 request hash canonicalizes recipe order and Decimal servings and includes
+`expected_list_version`. Exact replay is checked before current status/version rules;
+a changed request under the same key conflicts. Replay returns the run's currently
+persisted items/lineage and the current list version without recalculating or writing.
+Revision 0006 has no warning snapshot storage: first responses include inherited
+warnings with `warnings_available=true`; replay returns `warnings=[]` and
+`warnings_available=false`. `calculation_as_of` is retained in the run's creation time.
+This is not immutable response history: subsequent item edits/deletes affect replay.
+
+Quantities requiring more than six decimal places or exceeding `NUMERIC(18,6)` are
+rejected with `invalid_request`, without rounding or partial writes. Inventory remains
+a point-in-time estimate. The one-generation rule is enforced by this transactional
+service; arbitrary direct SQL can bypass it. No schema changes were added.
+
 ## Next vertical slice
 
 1. **Database Phase 1 complete:** household/member persistence with Alembic migrations,

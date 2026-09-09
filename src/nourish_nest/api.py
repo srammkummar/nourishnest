@@ -21,6 +21,14 @@ from nourish_nest.food_schemas import (
     RecipeUpdate,
 )
 from nourish_nest.food_services import UnsupportedConversionError
+from nourish_nest.grocery_generation_schemas import (
+    GroceryGenerationRequest,
+    GroceryGenerationResponse,
+)
+from nourish_nest.grocery_generation_services import (
+    GroceryGenerationError,
+    GroceryGenerationService,
+)
 from nourish_nest.grocery_requirement_schemas import (
     GroceryRequirementsRequest,
     GroceryRequirementsResponse,
@@ -200,6 +208,11 @@ async def stale_grocery(request: Request, exc: StaleGroceryVersionError) -> JSON
     return _provider_error(exc.code, str(exc), request, 409)
 
 
+@app.exception_handler(GroceryGenerationError)
+async def grocery_generation_error(request: Request, exc: GroceryGenerationError) -> JSONResponse:
+    return _provider_error(exc.code, str(exc), request, 422 if exc.code == "invalid_request" else 409)
+
+
 @app.exception_handler(SQLAlchemyError)
 async def database_failure(request: Request, exc: SQLAlchemyError) -> JSONResponse:
     body = ErrorBody(
@@ -226,6 +239,17 @@ def preview_grocery_shortage(
     household_id: uuid.UUID, data: GroceryRequirementsRequest, db: Session = DB_DEPENDENCY
 ):
     return GroceryShortageService(db).preview(household_id, data)
+
+
+@app.post(
+    "/v1/households/{household_id}/grocery-lists/{list_id}/generations",
+    response_model=GroceryGenerationResponse,
+)
+def generate_grocery_list(
+    household_id: uuid.UUID, list_id: uuid.UUID, data: GroceryGenerationRequest,
+    db: Session = DB_DEPENDENCY,
+):
+    return GroceryGenerationService(db).generate(household_id, list_id, data)
 
 
 @app.get("/health")
