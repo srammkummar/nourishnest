@@ -202,6 +202,7 @@ class APIClient:
         adapter: TypeAdapter[T],
         *,
         body: dict | None = None,
+        headers: dict[str, str] | None = None,
         expected_status: int = 200,
         retry_safe: bool = True,
     ) -> T:
@@ -213,7 +214,7 @@ class APIClient:
                     method,
                     f"{self.base_url}{path}",
                     json=body,
-                    headers={"x-request-id": request_id},
+                    headers={**(headers or {}), "x-request-id": request_id},
                     timeout=self.timeout,
                 )
             except httpx.TimeoutException:
@@ -375,29 +376,30 @@ class APIClient:
             "GET", f"/v1/households/{household_id}/recipes/{recipe_id}", TypeAdapter(RecipeRecord)
         )
 
-    def create_recipe(self, household_id: uuid.UUID, recipe: RecipeInput) -> RecipeRecord:
+    def create_recipe(self, household_id: uuid.UUID, recipe: RecipeInput, idempotency_key: str) -> RecipeRecord:
         return self._request(
             "POST",
             f"/v1/households/{household_id}/recipes",
             TypeAdapter(RecipeRecord),
             body=recipe.model_dump(mode="json"),
             expected_status=201,
+            headers={"Idempotency-Key": idempotency_key},
         )
 
     def update_recipe(
-        self, household_id: uuid.UUID, recipe_id: uuid.UUID, recipe: RecipeInput
+        self, household_id: uuid.UUID, recipe_id: uuid.UUID, recipe: RecipeInput, expected_version: int
     ) -> RecipeRecord:
         return self._request(
             "PUT",
             f"/v1/households/{household_id}/recipes/{recipe_id}",
             TypeAdapter(RecipeRecord),
-            body=recipe.model_dump(mode="json"),
+            body={**recipe.model_dump(mode="json"), "expected_version": expected_version},
         )
 
-    def delete_recipe(self, household_id: uuid.UUID, recipe_id: uuid.UUID) -> None:
+    def delete_recipe(self, household_id: uuid.UUID, recipe_id: uuid.UUID, expected_version: int) -> None:
         self._request(
             "DELETE",
-            f"/v1/households/{household_id}/recipes/{recipe_id}",
+            f"/v1/households/{household_id}/recipes/{recipe_id}?expected_version={expected_version}",
             TypeAdapter(type(None)),
             expected_status=204,
         )

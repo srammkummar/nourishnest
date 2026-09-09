@@ -160,16 +160,50 @@ All food search uses `GET /v1/foods/search?q=...`; recipe CRUD uses
 `GET /v1/households/{household_id}/recipes/{recipe_id}/nutrition`. No backend
 calculations, migrations, or external imports are added.
 
-Backend limitations: recipe updates replace all ingredients/instructions and have
-no optimistic version field or idempotency key. Mutations are never automatically
-retried; after an ambiguous timeout, refresh and check for the saved recipe before
-submitting again. Concurrent edits can overwrite one another. Recipe lists are not
+Recipe updates replace all ingredients/instructions and require their loaded
+version. Creation uses a durable idempotency key; mutations are never automatically
+retried. After an ambiguous creation timeout, retry with unchanged fields and the
+same draft. Recipe lists are not
 paginated, so name/cuisine filters operate locally on the retrieved collection.
 Nutrition can be incomplete or unavailable for missing food data or unsupported
 conversions; the UI displays API warnings and does not infer density. Recipes
 referenced by grocery lineage may reject deletion. Existing unusual ingredient
 units remain visible during editing; new ingredients use supported unit choices.
 Foods must already exist in the catalog; USDA search/import remains outside this UI.
+
+### Recipe mutation integrity
+
+Run `uv run alembic upgrade head` before starting the updated API. Migration
+`20260909_0009` adds `Recipe.version` (existing rows start at 1) and normalized
+`recipe_creation_records`. Migrations 0001–0008 are unchanged.
+
+- Recipe responses include `version`. `PUT /v1/households/{household_id}/recipes/{recipe_id}`
+  requires `expected_version` in the complete recipe body. `DELETE` on that URL
+  requires `?expected_version=N`. Stale writes return HTTP 409 `stale_recipe_version`.
+- `POST /v1/households/{household_id}/recipes` requires a nonblank `Idempotency-Key`
+  header of at most 128 characters. The unique household/key record stores a
+  SHA-256 canonical request hash, resulting recipe ID, and creation timestamp.
+  Validated defaults, Decimal values, object keys, and ingredient/instruction ordering
+  are canonicalized. Identical replay returns the existing recipe (HTTP 201);
+  changed payloads return HTTP 409 `idempotency_conflict`.
+- Creation of the recipe, ingredients, instructions, and key record commits in one
+  transaction. A database uniqueness conflict rolls back the losing transaction
+  before resolving the winning request. Updates and deletes also roll back on failure.
+- Streamlit retains its creation key through reruns, navigation, and manual retries.
+  Success clears the draft; **Cancel editing** explicitly discards it and its key.
+  For a stale update, cancel and refresh before editing again. Grocery-lineage
+  deletion restrictions return `recipe_in_use` with the existing message/request-ID
+  envelope. System recipes remain read-only.
+
+These are intentional API contract changes: older clients must send creation keys
+and mutation versions. Replay returns the recipe's current representation, including
+later edits, rather than a saved response snapshot. Key records live until household
+deletion; deleting a recipe nulls their recipe reference and subsequent replay returns
+`idempotency_result_deleted`, preventing accidental recreation. Browser-session loss
+loses the UI's draft/key; refresh and check existing recipes before creating again.
+Downgrading 0009 removes creation-key history and recipe versions; re-upgrading resets
+versions to 1. Reload clients after a downgrade. PostgreSQL DDL is tested offline;
+concurrent integration tests run against SQLite, not a live PostgreSQL server.
 
 ## Tests
 

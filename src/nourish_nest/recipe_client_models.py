@@ -57,6 +57,7 @@ class RecipeIngredient(IngredientInput):
 
 
 class RecipeRecord(RecipeInput):
+    version: int = Field(ge=1)
     id: UUID
     household_id: UUID | None
     ingredients: list[RecipeIngredient]

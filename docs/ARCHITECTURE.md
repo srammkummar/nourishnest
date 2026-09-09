@@ -21,10 +21,16 @@ household-specific recipe selections, cached API responses, and drafts with stab
 row IDs. Display order becomes ingredient order and unique sequential instruction
 numbers at submission. Decimal values are entered and serialized as strings. Save
 responses update only recipe state, clear drafts before rerun, and invalidate nutrition.
-System recipe edit/delete controls are absent. Existing recipe endpoints provide
-neither optimistic concurrency nor idempotency; no such guarantee is invented in the
-client. Ambiguous failures retain the draft and instruct users to verify the saved
-catalog before resubmitting. No new database migration or backend operation is added.
+System recipe edit/delete controls are absent. Migration `20260909_0009` adds recipe
+optimistic versions and normalized household creation-key records. Updates (including
+child-only changes) and deletes require the loaded version. The database uniqueness
+constraint on household/key arbitrates concurrent creation; recipe children and the
+key record commit together. Canonical request hashes distinguish replay from conflict.
+The UI retains its creation key during manual retries and submits the loaded version
+for mutations. Success or explicit draft cancellation clears that state. Key records
+cascade with households and retain a null recipe reference after recipe deletion, so
+an old key cannot silently recreate a deleted recipe. Grocery-lineage deletion errors
+retain their structured code and request ID. No grocery/pantry behavior is changed.
 
 Phase 6A adds a native Streamlit navigation shell, session household selection,
 household creation, and six dashboard metrics. `GET /v1/households` supplies the

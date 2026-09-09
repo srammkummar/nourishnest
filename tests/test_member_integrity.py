@@ -131,7 +131,7 @@ def test_member_migration_preserves_existing_rows(tmp_path, monkeypatch):
             home_id, member_id, MemberUpdate(**FIELDS, expected_version=1)
         )
         assert session.scalar(select(HouseholdMember.version)) == 2
-    command.downgrade(config, "-1")
+    command.downgrade(config, "20260909_0007")
     assert "version" not in {c["name"] for c in inspect(engine).get_columns("household_members")}
     command.upgrade(config, "head")
     with Session(engine) as session:

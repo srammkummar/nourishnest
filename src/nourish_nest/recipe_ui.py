@@ -31,6 +31,8 @@ def new_draft(recipe: RecipeRecord | None = None) -> dict:
     )
     return {
         "token": uuid4().hex,
+        "idempotency_key": uuid4().hex if recipe is None else None,
+        "expected_version": recipe.version if recipe else None,
         "recipe_id": recipe.id if recipe else None,
         "values": values,
         "foods": [],
@@ -250,9 +252,9 @@ def editor(api: APIClient, household: Household, workspace: dict, show_error: Ca
             payload = build_payload(draft)
             with st.spinner("Saving recipe…"):
                 saved = (
-                    api.update_recipe(household.id, draft["recipe_id"], payload)
+                    api.update_recipe(household.id, draft["recipe_id"], payload, draft["expected_version"])
                     if draft["recipe_id"]
-                    else api.create_recipe(household.id, payload)
+                    else api.create_recipe(household.id, payload, draft["idempotency_key"])
                 )
             finish_save(workspace, saved)
             st.rerun()
@@ -262,7 +264,7 @@ def editor(api: APIClient, household: Household, workspace: dict, show_error: Ca
         except APIError as error:
             show_error(error)
             st.info(
-                "The save was not automatically retried. After a timeout, cancel and refresh recipes to check whether it succeeded before submitting again."
+                "The save was not automatically retried. Retry creation with unchanged fields to reuse its creation key. Cancel editing explicitly discards the draft and its key. For a stale update, cancel and refresh before editing again."
             )
 
 
@@ -328,7 +330,7 @@ def details(
         )
         if st.button("Delete recipe", disabled=not confirmed) and confirmed:
             try:
-                api.delete_recipe(household.id, recipe.id)
+                api.delete_recipe(household.id, recipe.id, recipe.version)
                 workspace["recipes"] = [r for r in workspace["recipes"] if r.id != recipe.id]
                 workspace["selected"] = None
                 workspace["detail"] = workspace["nutrition"] = None

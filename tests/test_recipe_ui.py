@@ -49,7 +49,7 @@ def record(payload=None, *, recipe_id=RECIPE_ID, household_id=HOME.id):
     values["ingredients"] = [
         {**i, "food": FOOD.model_dump(mode="json")} for i in values["ingredients"]
     ]
-    return RecipeRecord(**values, id=recipe_id, household_id=household_id)
+    return RecipeRecord(**values, id=recipe_id, household_id=household_id, version=1)
 
 
 OWN = record()
@@ -96,8 +96,8 @@ def api(monkeypatch):
         active_grocery_lists=0,
     )
     mock.search_foods.return_value = [FOOD]
-    mock.create_recipe.side_effect = lambda home, payload: record(payload, recipe_id=UUID(int=5))
-    mock.update_recipe.side_effect = lambda home, rid, payload: record(payload, recipe_id=rid)
+    mock.create_recipe.side_effect = lambda home, payload, key: record(payload, recipe_id=UUID(int=5))
+    mock.update_recipe.side_effect = lambda home, rid, payload, version: record(payload, recipe_id=rid)
     monkeypatch.setattr("nourish_nest.streamlit_ui.create_api_client", lambda: mock)
     return mock
 
@@ -197,11 +197,12 @@ def test_edit_and_delete(api):
     assert not ui.exception
     assert api.update_recipe.call_args.args[:2] == (HOME.id, OWN.id)
     assert api.update_recipe.call_args.args[2].name == "Updated bowl"
+    assert api.update_recipe.call_args.args[3] == OWN.version
     assert button(ui, "Delete recipe").disabled
     ui.checkbox[0].check().run()
     button(ui, "Delete recipe").click().run()
     assert not ui.exception
-    api.delete_recipe.assert_called_once_with(HOME.id, OWN.id)
+    api.delete_recipe.assert_called_once_with(HOME.id, OWN.id, OWN.version)
     assert any("Deleted Updated bowl" in s.value for s in ui.success)
 
 
@@ -315,10 +316,13 @@ def test_http_recipe_contracts():
         assert api.search_foods("rice & beans") == [FOOD]
         assert api.recipes(HOME.id) == [OWN]
         assert api.get_recipe(HOME.id, OWN.id) == OWN
-        api.create_recipe(HOME.id, RecipeInput(**PAYLOAD))
-        api.update_recipe(HOME.id, OWN.id, RecipeInput(**PAYLOAD))
+        api.create_recipe(HOME.id, RecipeInput(**PAYLOAD), "stable-key")
+        api.update_recipe(HOME.id, OWN.id, RecipeInput(**PAYLOAD), OWN.version)
         assert api.recipe_nutrition(HOME.id, OWN.id) == NUTRITION
-        api.delete_recipe(HOME.id, OWN.id)
+        api.delete_recipe(HOME.id, OWN.id, OWN.version)
+    assert calls[3].headers["Idempotency-Key"] == "stable-key"
+    assert json.loads(calls[4].content)["expected_version"] == OWN.version
+    assert calls[-1].url.params["expected_version"] == str(OWN.version)
     base = f"/v1/households/{HOME.id}/recipes"
     assert [(r.method, r.url.path) for r in calls] == [
         ("GET", "/v1/foods/search"),
@@ -329,3 +333,44 @@ def test_http_recipe_contracts():
         ("GET", f"{base}/{OWN.id}/nutrition"),
         ("DELETE", f"{base}/{OWN.id}"),
     ]
+
+
+def test_creation_retry_retains_key_and_explicit_reset_changes_it(api):
+    ui = app()
+    button(ui, "Create recipe").click().run()
+    token, key = draft(ui)["token"], draft(ui)["idempotency_key"]
+    ui.text_input(key=f"{token}_name").input("Retry bowl").run()
+    button(ui, "Search foods").click().run()
+    button(ui, "Add ingredient").click().run()
+    api.create_recipe.side_effect = APIResponseError("api_timeout", "Timed out", "retry-trace")
+    button(ui, "Save recipe").click().run()
+    assert draft(ui)["idempotency_key"] == key
+    assert any(t.value == "Request ID: retry-trace" for t in ui.text)
+    ui.radio(key="page").set_value("Dashboard").run()
+    button(ui, "Browse recipes").click().run()
+    assert draft(ui)["idempotency_key"] == key
+    button(ui, "Save recipe").click().run()
+    assert [call.args[2] for call in api.create_recipe.call_args_list] == [key, key]
+    api.create_recipe.side_effect = lambda home, payload, key: record(payload, recipe_id=UUID(int=5))
+    button(ui, "Save recipe").click().run()
+    assert draft(ui) is None
+    button(ui, "Create recipe").click().run()
+    new_key = draft(ui)["idempotency_key"]
+    assert new_key != key
+    button(ui, "Cancel editing").click().run()
+    button(ui, "Create recipe").click().run()
+    assert draft(ui)["idempotency_key"] != new_key
+    assert not ui.exception
+
+
+def test_lineage_error_is_visible_without_losing_recipe(api):
+    ui = app()
+    api.delete_recipe.side_effect = APIResponseError(
+        "recipe_in_use", "Recipe is referenced by grocery source history and cannot be deleted.", "lineage-trace"
+    )
+    ui.checkbox[0].check().run()
+    button(ui, "Delete recipe").click().run()
+    assert not ui.exception
+    assert any("grocery source history" in e.value for e in ui.error)
+    assert any(t.value == "Request ID: lineage-trace" for t in ui.text)
+    assert ui.session_state[f"recipes_{HOME.id}"]["detail"].id == OWN.id

@@ -13,6 +13,7 @@ from nourish_nest.models import (
     Household,
     HouseholdMember,
     Recipe,
+    RecipeCreationRecord,
     RecipeIngredient,
     RecipeInstruction,
 )
@@ -162,12 +163,18 @@ class RecipeRepository:
         return recipe
 
     def update(self, recipe: Recipe, data: RecipeFields) -> Recipe:
-        for key, value in data.model_dump(exclude={"ingredients", "instructions"}).items():
+        for key, value in data.model_dump(exclude={"ingredients", "instructions", "expected_version"}).items():
             setattr(recipe, key, value)
         recipe.ingredients = [RecipeIngredient(**item.model_dump()) for item in data.ingredients]
         recipe.instructions = [RecipeInstruction(**item.model_dump()) for item in data.instructions]
         self.session.flush()
         return recipe
+
+    def creation_record(self, household_id: uuid.UUID, key: str) -> RecipeCreationRecord | None:
+        return self.session.scalar(select(RecipeCreationRecord).where(
+            RecipeCreationRecord.household_id == household_id,
+            RecipeCreationRecord.idempotency_key == key,
+        ))
 
     def _options(self, statement):
         return statement.options(

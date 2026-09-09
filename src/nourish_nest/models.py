@@ -469,6 +469,9 @@ class FoodDietaryTagRecord(Base):
 class Recipe(Base):
     __tablename__ = "recipes"
 
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    __mapper_args__: ClassVar[dict[str, object]] = {"version_id_col": version}
+
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     household_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("households.id", ondelete="CASCADE"), nullable=True, index=True
@@ -491,6 +494,25 @@ class Recipe(Base):
     instructions: Mapped[list["RecipeInstruction"]] = relationship(
         back_populates="recipe", cascade="all, delete-orphan", passive_deletes=True, order_by="RecipeInstruction.step_number"
     )
+
+
+class RecipeCreationRecord(Base):
+    __tablename__ = "recipe_creation_records"
+    __table_args__ = (
+        UniqueConstraint("household_id", "idempotency_key", name="uq_recipe_creation_household_key"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    household_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("households.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    idempotency_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    # Keep a tombstone after deletion; an old key must never create another recipe.
+    recipe_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("recipes.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
 
 class RecipeIngredient(Base):

@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Query, Request, Response, status
+from fastapi import Depends, FastAPI, Header, Query, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
@@ -96,11 +96,19 @@ from nourish_nest.services import (
     ForbiddenError,
     HouseholdService,
     NotFoundError,
+    RecipeMutationError,
     RecipeService,
     StaleMemberVersionError,
 )
 
 app = FastAPI(title="NourishNest API", version=__version__)
+
+
+@app.exception_handler(RecipeMutationError)
+async def recipe_mutation_error(request: Request, exc: RecipeMutationError):
+    return _provider_error(exc.code, str(exc), request, 422 if exc.code == "invalid_request" else 409)
+
+
 DB_DEPENDENCY = Depends(get_db)
 PROVIDER_DEPENDENCY = Depends(get_food_data_provider)
 
@@ -392,9 +400,11 @@ def delete_food(food_id: uuid.UUID, db: Session = DB_DEPENDENCY) -> Response:
     status_code=status.HTTP_201_CREATED,
 )
 def create_recipe(
-    household_id: uuid.UUID, data: RecipeCreate, db: Session = DB_DEPENDENCY
+    household_id: uuid.UUID, data: RecipeCreate,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=128, pattern=r"\S")],
+    db: Session = DB_DEPENDENCY,
 ) -> RecipeResponse:
-    return RecipeService(db).create(household_id, data)
+    return RecipeService(db).create(household_id, data, idempotency_key)
 
 
 @app.get("/v1/households/{household_id}/recipes", response_model=list[RecipeResponse])
@@ -424,9 +434,10 @@ def update_recipe(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 def delete_recipe(
-    household_id: uuid.UUID, recipe_id: uuid.UUID, db: Session = DB_DEPENDENCY
+    household_id: uuid.UUID, recipe_id: uuid.UUID,
+    expected_version: Annotated[int, Query(ge=1)], db: Session = DB_DEPENDENCY,
 ) -> Response:
-    RecipeService(db).delete(household_id, recipe_id)
+    RecipeService(db).delete(household_id, recipe_id, expected_version)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

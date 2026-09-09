@@ -1,6 +1,6 @@
 from decimal import Decimal
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -114,7 +114,7 @@ def test_recipe_crud_isolation_and_cascade(phase2_client):
     first = create_household(client)
     second = create_household(client)
     response = client.post(
-        f"/v1/households/{first}/recipes", json=recipe_payload([food["id"]])
+        f"/v1/households/{first}/recipes", headers={"Idempotency-Key": str(uuid4())}, json=recipe_payload([food["id"]])
     )
     assert response.status_code == 201, response.text
     recipe_id = response.json()["id"]
@@ -125,7 +125,7 @@ def test_recipe_crud_isolation_and_cascade(phase2_client):
         assert session.scalar(
             select(RecipeIngredient.recipe_id).where(RecipeIngredient.recipe_id == UUID(recipe_id))
         )
-    assert client.delete(f"/v1/households/{first}/recipes/{recipe_id}").status_code == 204
+    assert client.delete(f"/v1/households/{first}/recipes/{recipe_id}?expected_version=1").status_code == 204
     with session_factory() as session:
         assert session.scalar(
             select(RecipeIngredient.recipe_id).where(RecipeIngredient.recipe_id == UUID(recipe_id))
@@ -150,7 +150,7 @@ def test_recipe_nutrition_scales_and_propagates_metadata(phase2_client):
     )
     household = create_household(client)
     recipe = client.post(
-        f"/v1/households/{household}/recipes",
+        f"/v1/households/{household}/recipes", headers={"Idempotency-Key": str(uuid4())},
         json=recipe_payload([rice["id"], chicken["id"]], servings=2),
     )
     assert recipe.status_code == 201, recipe.text
@@ -171,7 +171,7 @@ def test_conversion_support_and_structured_unsupported_error(phase2_client):
     food = create_food(client, "Liquid test", serving_unit="ml", serving_quantity=100)
     household = create_household(client)
     recipe = client.post(
-        f"/v1/households/{household}/recipes",
+        f"/v1/households/{household}/recipes", headers={"Idempotency-Key": str(uuid4())},
         json=recipe_payload([food["id"]], units=["pinch"]),
     )
     assert recipe.status_code == 201
@@ -187,7 +187,7 @@ def test_unknown_density_warns_and_incomplete_food_warns(phase2_client):
     food = create_food(client, "Unknown density", serving_unit="g")
     household = create_household(client)
     recipe = client.post(
-        f"/v1/households/{household}/recipes",
+        f"/v1/households/{household}/recipes", headers={"Idempotency-Key": str(uuid4())},
         json=recipe_payload([food["id"]], units=["cup"]),
     )
     response = client.get(
@@ -205,7 +205,7 @@ def test_unknown_density_warns_and_incomplete_food_warns(phase2_client):
         fat_g=None,
     )
     recipe = client.post(
-        f"/v1/households/{household}/recipes", json=recipe_payload([incomplete["id"]])
+        f"/v1/households/{household}/recipes", headers={"Idempotency-Key": str(uuid4())}, json=recipe_payload([incomplete["id"]])
     )
     response = client.get(
         f"/v1/households/{household}/recipes/{recipe.json()['id']}/nutrition"
@@ -228,7 +228,7 @@ def test_system_recipe_is_readable_but_not_editable(phase2_client):
     assert client.get(f"/v1/households/{household}/recipes/{system_id}").status_code == 200
     response = client.put(
         f"/v1/households/{household}/recipes/{system_id}",
-        json=recipe_payload([food["id"]]),
+        json={**recipe_payload([food["id"]]), "expected_version": 1},
     )
     assert response.status_code == 403
     assert response.json()["code"] == "forbidden"

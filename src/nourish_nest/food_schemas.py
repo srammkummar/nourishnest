@@ -137,11 +137,13 @@ class RecipeCreate(RecipeFields):
 
 
 class RecipeUpdate(RecipeFields):
-    pass
+    expected_version: int = Field(ge=1)
 
 
 class RecipeResponse(RecipeFields):
     model_config = ConfigDict(from_attributes=True)
+
+    version: int
 
     id: uuid.UUID
     household_id: uuid.UUID | None
