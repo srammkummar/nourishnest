@@ -98,7 +98,7 @@ Deletion requires a member-specific confirmation checkbox. Successful changes
 update the member cards without loading unrelated dashboard data.
 
 On **Nutrition**, select a saved member and choose **Calculate nutrition**. The UI
-calls `POST /v1/members/{member_id}/nutrition/calculate` and displays BMR, estimated
+calls `POST /v1/households/{household_id}/members/{member_id}/nutrition/calculate` and displays BMR, estimated
 TDEE, calorie and macro targets, the returned calculation version, and API warnings.
 Calculations are not persisted and results disappear on navigation or another
 rerun, avoiding display of an estimate for a different member. All calculations
@@ -109,10 +109,34 @@ calculator rejects minors. Calculator sex options are female/male. Height must
 exceed 100 cm and weight must exceed 30 kg. Loss/gain needs a positive weekly
 change; maintenance saves zero. Nutrition profile numbers follow the existing
 floating-point API contract. Member updates replace the complete profile and
-preference/allergy collections; no optimistic version field exists. Member-ID
-routes are not household-scoped or authenticated; the UI selects IDs exclusively
-from the selected household's collection, but this is not server authorization.
-Recipes, Pantry, and Grocery Lists remain placeholders. No migrations change.
+preference/allergy collections. Recipes, Pantry, and Grocery Lists remain placeholders.
+
+### Phase 6B1.1: member API integrity
+
+Apply migration `20260909_0008` with `uv run alembic upgrade head` before starting
+the updated API. Existing members receive integer `version = 1`. Migrations
+0001–0007 are unchanged. Restart FastAPI and Streamlit together after upgrading.
+
+All individual member operations now use `/v1/households/{household_id}/members/{member_id}`:
+
+- `GET`: read a member, including `version`.
+- `PUT`: replace the complete profile with required `expected_version` in the JSON body.
+- `DELETE`: require `?expected_version=N`; success remains HTTP 204.
+- `POST .../nutrition/calculate`: calculate from the owned member without persisting results.
+
+Cross-household access returns the existing structured `not_found` response.
+Stale writes return HTTP 409 with `stale_member_version` and the request ID.
+Successful updates increment the version, including preference/allergy-only edits.
+The edit form retains its loaded version; use **Refresh members** after a conflict
+to load current data before resubmitting. Deletion confirmation resets on a new version.
+
+This is an intentional pre-release compatibility break: all `/v1/members/{member_id}`
+routes, including nutrition, are removed. Collection create/list routes and standalone
+`POST /v1/nutrition/calculate` remain compatible. Clients must migrate to scoped paths
+and supply versions for mutations. Household ownership checks do not replace user
+authentication, which remains future work. Nutrition remains adult-only (18+), although
+saved profiles permit ages 13–100. Downgrading 0008 removes version history; re-upgrading
+resets versions to 1, so reload all clients after a downgrade/re-upgrade.
 
 ## Tests
 

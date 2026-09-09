@@ -336,6 +336,9 @@ class Household(Base):
 class HouseholdMember(Base):
     __tablename__ = "household_members"
 
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    __mapper_args__: ClassVar[dict[str, object]] = {"version_id_col": version}
+
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     household_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("households.id", ondelete="CASCADE"), nullable=False, index=True

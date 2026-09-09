@@ -306,7 +306,8 @@ def test_migration_purchase_roundtrip_and_postgresql(tmp_path, monkeypatch):
     with Session(db) as session:
         result = GroceryPurchaseService(session).purchase(*ids, GroceryPurchaseRequest(**payload()))
         assert result.purchased_total == Decimal("0.25")
-    command.downgrade(config, "-1")
+    # Test removal of purchase migration 0007 even when later revisions exist.
+    command.downgrade(config, "20260908_0006")
     assert "grocery_purchase_events" not in inspect(db).get_table_names()
     with Session(db) as session:
         assert session.get(GroceryListItem, ids[2]).purchased_quantity == Decimal("0.25")

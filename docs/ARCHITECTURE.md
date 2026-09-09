@@ -27,9 +27,20 @@ checkbox and accepts the existing 204 response. Mutation responses update member
 cards locally without querying unrelated dashboard endpoints. Member choices are
 rebuilt from the current household's collection on rerun, with household-specific
 widget keys. Nutrition POST results are transient and display only for the current
-selection. API errors retain the shared request-ID presentation. Existing member
-routes have neither authentication nor optimistic versioning; the UI does not
-add those guarantees. No routes or migrations are changed in Phase 6B1.
+selection. API errors retain the shared request-ID presentation.
+
+Phase 6B1.1 removes unscoped individual-member routes and requires household/member
+IDs throughout the HTTP client, API, service, and repository lookup. Collection
+routes and standalone nutrition remain unchanged. Migration `20260909_0008` adds
+the non-null integer `HouseholdMember.version` (default 1) and SQLAlchemy's
+`version_id_col` supplies UPDATE/DELETE predicates. Updates require `expected_version`
+in the body; deletes require it in the query. The parent version explicitly advances
+for every profile replacement, including dependent-collection-only edits. Explicit
+version mismatches and ORM `StaleDataError` map to HTTP 409 `stale_member_version`;
+failures roll back parent and child changes together. Cross-household lookups return
+the existing structured 404. The UI retains edit snapshots until refresh or success,
+and binds deletion confirmation to the current version. Authentication remains future
+work. The adult-only nutrition restriction and deterministic calculator are unchanged.
 
 The injectable httpx client centralizes validation, sanitized transport errors,
 structured API error envelopes/request IDs, 2-second connection and 8-second read

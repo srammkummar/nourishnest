@@ -113,6 +113,7 @@ class MemberInput(BaseModel):
 class Member(MemberInput):
     id: uuid.UUID
     household_id: uuid.UUID
+    version: int = Field(ge=1)
 
 
 class NutritionMacros(BaseModel):
@@ -314,22 +315,40 @@ class APIClient:
             expected_status=201,
         )
 
-    def update_member(self, member_id: uuid.UUID, member: MemberInput) -> Member:
+    def get_member(self, household_id: uuid.UUID, member_id: uuid.UUID) -> Member:
+        return self._request(
+            "GET", f"/v1/households/{household_id}/members/{member_id}", TypeAdapter(Member)
+        )
+
+    def update_member(
+        self,
+        household_id: uuid.UUID,
+        member_id: uuid.UUID,
+        member: MemberInput,
+        expected_version: int,
+    ) -> Member:
         return self._request(
             "PUT",
-            f"/v1/members/{member_id}",
+            f"/v1/households/{household_id}/members/{member_id}",
             TypeAdapter(Member),
-            body=member.model_dump(mode="json"),
+            body={**member.model_dump(mode="json"), "expected_version": expected_version},
         )
 
-    def delete_member(self, member_id: uuid.UUID) -> None:
+    def delete_member(
+        self, household_id: uuid.UUID, member_id: uuid.UUID, expected_version: int
+    ) -> None:
         self._request(
-            "DELETE", f"/v1/members/{member_id}", TypeAdapter(type(None)), expected_status=204
+            "DELETE",
+            f"/v1/households/{household_id}/members/{member_id}?expected_version={expected_version}",
+            TypeAdapter(type(None)),
+            expected_status=204,
         )
 
-    def member_nutrition(self, member_id: uuid.UUID) -> MemberNutrition:
+    def member_nutrition(self, household_id: uuid.UUID, member_id: uuid.UUID) -> MemberNutrition:
         return self._request(
-            "POST", f"/v1/members/{member_id}/nutrition/calculate", TypeAdapter(MemberNutrition)
+            "POST",
+            f"/v1/households/{household_id}/members/{member_id}/nutrition/calculate",
+            TypeAdapter(MemberNutrition),
         )
 
 

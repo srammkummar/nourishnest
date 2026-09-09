@@ -1,3 +1,4 @@
+import json
 from copy import deepcopy
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -34,7 +35,7 @@ PROFILE = {
     "dietary_preferences": [{"preference_type": "custom", "value": "Low sodium"}],
     "allergies": [{"allergen": "Peanuts", "severity": "severe", "notes": "Carry medication"}],
 }
-PERSON = Member(id=UUID(int=3), household_id=HOME.id, **PROFILE)
+PERSON = Member(id=UUID(int=3), household_id=HOME.id, version=1, **PROFILE)
 PLAN = MemberNutrition(
     bmr_calories=1400,
     maintenance_calories=2100,
@@ -62,10 +63,15 @@ def api(monkeypatch):
     )
     mock.member_nutrition.return_value = PLAN
     mock.create_member.side_effect = lambda household_id, payload: Member(
-        id=UUID(int=4), household_id=household_id, **payload.model_dump()
+        id=UUID(int=4), household_id=household_id, version=1, **payload.model_dump()
     )
-    mock.update_member.side_effect = lambda member_id, payload: Member(
-        id=member_id, household_id=HOME.id, **payload.model_dump()
+    mock.update_member.side_effect = lambda household_id, member_id, payload, expected_version: (
+        Member(
+            id=member_id,
+            household_id=household_id,
+            version=expected_version + 1,
+            **payload.model_dump(),
+        )
     )
     monkeypatch.setattr("nourish_nest.streamlit_ui.create_api_client", lambda: mock)
     return mock
@@ -118,15 +124,43 @@ def test_create_member(api):
 def test_edit_preserves_preferences_and_allergies(api):
     ui = app()
     ui.radio(key=f"member_action_{HOME.id}").set_value("Edit member").run()
-    ui.text_input(key=f"edit_{PERSON.id}_name").input("Alex updated")
+    ui.text_input(key=f"edit_{PERSON.id}_v1_name").input("Alex updated")
     button(ui, "Save member").click().run()
     assert not ui.exception
-    member_id, payload = api.update_member.call_args.args
+    household_id, member_id, payload, version = api.update_member.call_args.args
+    assert household_id == HOME.id and version == 1
     assert member_id == PERSON.id
     assert payload.name == "Alex updated"
     assert payload.dietary_preferences == PERSON.dietary_preferences
     assert payload.allergies == PERSON.allergies
     assert any(h.value == "Alex updated" for h in ui.subheader)
+
+
+def test_edit_preserves_loaded_version_until_explicit_refresh(api):
+    ui = app()
+    ui.radio(key=f"member_action_{HOME.id}").set_value("Edit member").run()
+    api.members.return_value = [PERSON.model_copy(update={"version": 2, "name": "Remote edit"})]
+    api.update_member.side_effect = APIResponseError(
+        "stale_member_version", "Refresh member", "stale-ui", 409
+    )
+    ui.text_input(key=f"edit_{PERSON.id}_v1_name").input("My edit")
+    button(ui, "Save member").click().run()
+    assert not ui.exception
+    assert api.update_member.call_args.args[3] == 1
+    assert any("stale-ui" in t.value for t in ui.text)
+    button(ui, "Refresh members").click().run()
+    assert ui.text_input(key=f"edit_{PERSON.id}_v2_name").value == "Remote edit"
+
+
+def test_delete_confirmation_invalidated_by_new_version(api):
+    ui = app()
+    ui.radio(key=f"member_action_{HOME.id}").set_value("Delete member").run()
+    ui.checkbox[0].check().run()
+    api.members.return_value = [PERSON.model_copy(update={"version": 2})]
+    button(ui, "Delete member").click().run()
+    assert not ui.exception
+    api.delete_member.assert_not_called()
+    assert button(ui, "Delete member").disabled
 
 
 def test_create_with_preference_and_allergy_rows(api):
@@ -154,14 +188,14 @@ def test_edit_can_remove_preference_and_allergy_rows(api):
     ui = app()
     ui.radio(key=f"member_action_{HOME.id}").set_value("Edit member").run()
     for suffix in ("preferences", "allergies"):
-        ui.session_state[f"edit_{PERSON.id}_{suffix}"] = {
+        ui.session_state[f"edit_{PERSON.id}_v1_{suffix}"] = {
             "edited_rows": {},
             "added_rows": [],
             "deleted_rows": [0],
         }
     button(ui, "Save member").click().run()
     assert not ui.exception
-    payload = api.update_member.call_args.args[1]
+    payload = api.update_member.call_args.args[2]
     assert payload.dietary_preferences == []
     assert payload.allergies == []
 
@@ -174,7 +208,7 @@ def test_delete_requires_confirmation(api):
     ui.checkbox[0].check().run()
     button(ui, "Delete member").click().run()
     assert not ui.exception
-    api.delete_member.assert_called_once_with(PERSON.id)
+    api.delete_member.assert_called_once_with(HOME.id, PERSON.id, PERSON.version)
     assert any("Deleted Alex" in s.value for s in ui.success)
     assert not any(h.value == "Alex" for h in ui.subheader)
 
@@ -223,7 +257,7 @@ def test_nutrition_display(api):
     assert any("mifflin-st-jeor-v1" in c.value for c in ui.caption)
     assert any("not medical advice" in c.value for c in ui.caption)
     assert ui.warning[0].value == "Example API warning"
-    api.member_nutrition.assert_called_once_with(PERSON.id)
+    api.member_nutrition.assert_called_once_with(HOME.id, PERSON.id)
     api.update_member.assert_not_called()
 
 
@@ -282,7 +316,7 @@ def test_http_member_contracts():
             return httpx.Response(204)
         if request.url.path.endswith("/nutrition/calculate"):
             return httpx.Response(200, json=PLAN.model_dump(mode="json"))
-        if request.method == "GET":
+        if request.method == "GET" and request.url.path.endswith("/members"):
             return httpx.Response(200, json=[PERSON.model_dump(mode="json")])
         return httpx.Response(
             201 if request.method == "POST" else 200, json=PERSON.model_dump(mode="json")
@@ -292,16 +326,20 @@ def test_http_member_contracts():
         api = APIClient(client=transport)
         assert api.members(HOME.id)[0] == PERSON
         api.create_member(HOME.id, MemberInput(**PROFILE))
-        api.update_member(PERSON.id, MemberInput(**PROFILE))
-        assert api.delete_member(PERSON.id) is None
-        assert api.member_nutrition(PERSON.id) == PLAN
+        assert api.get_member(HOME.id, PERSON.id) == PERSON
+        api.update_member(HOME.id, PERSON.id, MemberInput(**PROFILE), 1)
+        assert api.delete_member(HOME.id, PERSON.id, 1) is None
+        assert api.member_nutrition(HOME.id, PERSON.id) == PLAN
     assert [(r.method, r.url.path) for r in calls] == [
         ("GET", f"/v1/households/{HOME.id}/members"),
         ("POST", f"/v1/households/{HOME.id}/members"),
-        ("PUT", f"/v1/members/{PERSON.id}"),
-        ("DELETE", f"/v1/members/{PERSON.id}"),
-        ("POST", f"/v1/members/{PERSON.id}/nutrition/calculate"),
+        ("GET", f"/v1/households/{HOME.id}/members/{PERSON.id}"),
+        ("PUT", f"/v1/households/{HOME.id}/members/{PERSON.id}"),
+        ("DELETE", f"/v1/households/{HOME.id}/members/{PERSON.id}"),
+        ("POST", f"/v1/households/{HOME.id}/members/{PERSON.id}/nutrition/calculate"),
     ]
+    assert json.loads(calls[3].content)["expected_version"] == 1
+    assert calls[4].url.params["expected_version"] == "1"
 
 
 @pytest.mark.parametrize("operation", ["update_member", "delete_member", "member_nutrition"])
@@ -319,6 +357,14 @@ def test_member_mutations_never_retry(operation):
         api = APIClient(client=transport)
         with pytest.raises(APIResponseError):
             getattr(api, operation)(
-                PERSON.id, *([MemberInput(**PROFILE)] if operation == "update_member" else [])
+                HOME.id,
+                PERSON.id,
+                *(
+                    [MemberInput(**PROFILE), 1]
+                    if operation == "update_member"
+                    else [1]
+                    if operation == "delete_member"
+                    else []
+                ),
             )
     assert len(calls) == 1

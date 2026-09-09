@@ -1,6 +1,7 @@
 import uuid
 
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import StaleDataError
 
 from nourish_nest.domain import NutritionProfile
 from nourish_nest.food_schemas import FoodFields, RecipeFields
@@ -14,7 +15,7 @@ from nourish_nest.repositories import (
     MemberRepository,
     RecipeRepository,
 )
-from nourish_nest.schemas import HouseholdCreate, MemberFields
+from nourish_nest.schemas import HouseholdCreate, MemberFields, MemberUpdate
 
 
 class NotFoundError(LookupError):
@@ -26,6 +27,10 @@ class ForbiddenError(PermissionError):
 
 
 class ConflictError(RuntimeError):
+    pass
+
+
+class StaleMemberVersionError(ConflictError):
     pass
 
 
@@ -66,26 +71,47 @@ class HouseholdService:
         self.get_household(household_id)
         return self.members.list_for_household(household_id)
 
-    def get_member(self, member_id: uuid.UUID) -> HouseholdMember:
-        member = self.members.get(member_id)
+    def get_member(self, household_id: uuid.UUID, member_id: uuid.UUID) -> HouseholdMember:
+        self.get_household(household_id)
+        member = self.members.get(household_id, member_id)
         if member is None:
             raise NotFoundError("Member not found")
         return member
 
-    def update_member(self, member_id: uuid.UUID, data: MemberFields) -> HouseholdMember:
-        member = self.get_member(member_id)
-        updated = self.members.update(member, data)
-        self.session.commit()
-        self.session.refresh(updated)
-        return updated
+    def update_member(self, household_id: uuid.UUID, member_id: uuid.UUID, data: MemberUpdate) -> HouseholdMember:
+        try:
+            member = self.get_member(household_id, member_id)
+            if member.version != data.expected_version:
+                raise StaleMemberVersionError("Member changed. Refresh before trying again.")
+            # Force a parent UPDATE even when only preferences/allergies changed.
+            member.version += 1
+            updated = self.members.update(member, data)
+            self.session.commit()
+            self.session.refresh(updated)
+            return updated
+        except StaleDataError as exc:
+            self.session.rollback()
+            raise StaleMemberVersionError("Member changed. Refresh before trying again.") from exc
+        except Exception:
+            self.session.rollback()
+            raise
 
-    def delete_member(self, member_id: uuid.UUID) -> None:
-        member = self.get_member(member_id)
-        self.session.delete(member)
-        self.session.commit()
+    def delete_member(self, household_id: uuid.UUID, member_id: uuid.UUID, expected_version: int) -> None:
+        try:
+            member = self.get_member(household_id, member_id)
+            if member.version != expected_version:
+                raise StaleMemberVersionError("Member changed. Refresh before trying again.")
+            self.session.delete(member)
+            self.session.commit()
+        except StaleDataError as exc:
+            self.session.rollback()
+            raise StaleMemberVersionError("Member changed. Refresh before trying again.") from exc
+        except Exception:
+            self.session.rollback()
+            raise
 
-    def calculate_member_nutrition(self, member_id: uuid.UUID):
-        member = self.get_member(member_id)
+    def calculate_member_nutrition(self, household_id: uuid.UUID, member_id: uuid.UUID):
+        member = self.get_member(household_id, member_id)
         profile = NutritionProfile(
             age=member.age,
             sex=member.sex,

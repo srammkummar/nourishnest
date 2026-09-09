@@ -82,7 +82,7 @@ def test_household_and_member_lifecycle_cascades_dependents(client: TestClient):
     assert client.get(f"/v1/households/{household_id}").status_code == 200
     assert len(client.get(f"/v1/households/{household_id}/members").json()) == 1
     assert client.delete(f"/v1/households/{household_id}").status_code == 204
-    assert client.get(f"/v1/members/{member_id}").status_code == 404
+    assert client.get(f"/v1/households/{household_id}/members/{member_id}").status_code == 404
 
 
 def test_relationship_isolation_and_member_update(client: TestClient):
@@ -98,7 +98,8 @@ def test_relationship_isolation_and_member_update(client: TestClient):
     updated = member_payload("Updated member")
     updated["goal"] = "maintain"
     updated["weekly_goal_kg"] = 0.5
-    response = client.put(f"/v1/members/{member_id}", json=updated)
+    updated["expected_version"] = member_response.json()["version"]
+    response = client.put(f"/v1/households/{first['id']}/members/{member_id}", json=updated)
     assert response.status_code == 200
     assert response.json()["name"] == "Updated member"
     assert response.json()["weekly_goal_kg"] == 0
@@ -111,7 +112,9 @@ def test_saved_member_preferences_allergies_and_nutrition(client: TestClient):
     assert member["dietary_preferences"][0]["preference_type"] == "vegetarian"
     assert member["allergies"][0]["severity"] == "severe"
 
-    nutrition = client.post(f"/v1/members/{member['id']}/nutrition/calculate")
+    nutrition = client.post(
+        f"/v1/households/{household['id']}/members/{member['id']}/nutrition/calculate"
+    )
     assert nutrition.status_code == 200
     assert nutrition.json()["target_calories"] == 1857
 
@@ -136,3 +139,64 @@ def test_missing_and_invalid_records_keep_error_contract(client: TestClient):
 
 def test_database_tests_use_temporary_database(client: TestClient):
     assert Path(get_settings().database_url.removeprefix("sqlite:///")) != Path("test.db")
+
+
+def test_member_scope_versions_and_removed_routes(client: TestClient):
+    home = create_household(client)
+    other = create_household(client, "Other")
+    member = client.post(f"/v1/households/{home['id']}/members", json=member_payload()).json()
+    assert member["version"] == 1
+    path = f"/v1/households/{home['id']}/members/{member['id']}"
+    wrong = f"/v1/households/{other['id']}/members/{member['id']}"
+    headers = {"x-request-id": "member-integrity"}
+    for response in (
+        client.get(wrong, headers=headers),
+        client.put(wrong, json={**member_payload(), "expected_version": 1}, headers=headers),
+        client.delete(wrong, params={"expected_version": 1}, headers=headers),
+        client.post(wrong + "/nutrition/calculate", headers=headers),
+    ):
+        assert response.status_code == 404
+        assert response.json() == {
+            "code": "not_found",
+            "message": "Member not found",
+            "request_id": "member-integrity",
+        }
+    assert client.get(path).json()["version"] == 1
+    assert client.put(path, json=member_payload()).status_code == 422
+    assert client.delete(path).status_code == 422
+    # A collection-only edit must still advance the parent's version.
+    payload = {**member_payload(), "allergies": [], "expected_version": 1}
+    changed = client.put(path, json=payload)
+    assert changed.status_code == 200 and changed.json()["version"] == 2
+    assert changed.json()["allergies"] == []
+    for response in (
+        client.put(path, json=payload, headers=headers),
+        client.delete(path, params={"expected_version": 1}, headers=headers),
+    ):
+        assert response.status_code == 409
+        assert response.json()["code"] == "stale_member_version"
+        assert (
+            response.json()["request_id"] == response.headers["x-request-id"] == "member-integrity"
+        )
+    assert client.get(path).json()["version"] == 2
+    assert client.delete(path, params={"expected_version": 2}).status_code == 204
+    assert client.get(path).status_code == 404
+    for method, suffix in (
+        ("get", ""),
+        ("put", ""),
+        ("delete", ""),
+        ("post", "/nutrition/calculate"),
+    ):
+        assert getattr(client, method)(f"/v1/members/{member['id']}{suffix}").status_code == 404
+
+
+def test_saved_member_nutrition_still_rejects_minors(client: TestClient):
+    home = create_household(client)
+    member = client.post(
+        f"/v1/households/{home['id']}/members", json={**member_payload(), "age": 17}
+    ).json()
+    response = client.post(
+        f"/v1/households/{home['id']}/members/{member['id']}/nutrition/calculate"
+    )
+    assert response.status_code == 422
+    assert response.json()["request_id"]

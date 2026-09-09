@@ -40,14 +40,14 @@ class MemberRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def get(self, member_id: uuid.UUID) -> HouseholdMember | None:
+    def get(self, household_id: uuid.UUID, member_id: uuid.UUID) -> HouseholdMember | None:
         statement = (
             select(HouseholdMember)
             .options(
                 selectinload(HouseholdMember.dietary_preferences),
                 selectinload(HouseholdMember.allergies),
             )
-            .where(HouseholdMember.id == member_id)
+            .where(HouseholdMember.id == member_id, HouseholdMember.household_id == household_id)
         )
         return self.session.scalars(statement).one_or_none()
 
@@ -75,7 +75,7 @@ class MemberRepository:
         return member
 
     def update(self, member: HouseholdMember, data: MemberFields) -> HouseholdMember:
-        values = data.model_dump(exclude={"dietary_preferences", "allergies"})
+        values = data.model_dump(exclude={"dietary_preferences", "allergies", "expected_version"})
         for key, value in values.items():
             setattr(member, key, value)
         member.dietary_preferences = [

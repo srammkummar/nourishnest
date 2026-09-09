@@ -97,6 +97,7 @@ from nourish_nest.services import (
     HouseholdService,
     NotFoundError,
     RecipeService,
+    StaleMemberVersionError,
 )
 
 app = FastAPI(title="NourishNest API", version=__version__)
@@ -216,6 +217,11 @@ async def stale_grocery(request: Request, exc: StaleGroceryVersionError) -> JSON
     return _provider_error(exc.code, str(exc), request, 409)
 
 
+@app.exception_handler(StaleMemberVersionError)
+async def stale_member(request: Request, exc: StaleMemberVersionError) -> JSONResponse:
+    return _provider_error("stale_member_version", str(exc), request, 409)
+
+
 @app.exception_handler(GroceryGenerationError)
 async def grocery_generation_error(request: Request, exc: GroceryGenerationError) -> JSONResponse:
     return _provider_error(exc.code, str(exc), request, 422 if exc.code == "invalid_request" else 409)
@@ -324,27 +330,27 @@ def list_members(household_id: uuid.UUID, db: Session = DB_DEPENDENCY) -> list[M
     return HouseholdService(db).list_members(household_id)
 
 
-@app.get("/v1/members/{member_id}", response_model=MemberResponse)
-def get_member(member_id: uuid.UUID, db: Session = DB_DEPENDENCY) -> MemberResponse:
-    return HouseholdService(db).get_member(member_id)
+@app.get("/v1/households/{household_id}/members/{member_id}", response_model=MemberResponse)
+def get_member(household_id: uuid.UUID, member_id: uuid.UUID, db: Session = DB_DEPENDENCY) -> MemberResponse:
+    return HouseholdService(db).get_member(household_id, member_id)
 
 
-@app.put("/v1/members/{member_id}", response_model=MemberResponse)
+@app.put("/v1/households/{household_id}/members/{member_id}", response_model=MemberResponse)
 def update_member(
-    member_id: uuid.UUID, data: MemberUpdate, db: Session = DB_DEPENDENCY
+    household_id: uuid.UUID, member_id: uuid.UUID, data: MemberUpdate, db: Session = DB_DEPENDENCY
 ) -> MemberResponse:
-    return HouseholdService(db).update_member(member_id, data)
+    return HouseholdService(db).update_member(household_id, member_id, data)
 
 
-@app.delete("/v1/members/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_member(member_id: uuid.UUID, db: Session = DB_DEPENDENCY) -> Response:
-    HouseholdService(db).delete_member(member_id)
+@app.delete("/v1/households/{household_id}/members/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_member(household_id: uuid.UUID, member_id: uuid.UUID, expected_version: Annotated[int, Query(ge=1)], db: Session = DB_DEPENDENCY) -> Response:
+    HouseholdService(db).delete_member(household_id, member_id, expected_version)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.post("/v1/members/{member_id}/nutrition/calculate", response_model=NutritionPlan)
-def calculate_saved_member(member_id: uuid.UUID, db: Session = DB_DEPENDENCY) -> NutritionPlan:
-    return HouseholdService(db).calculate_member_nutrition(member_id)
+@app.post("/v1/households/{household_id}/members/{member_id}/nutrition/calculate", response_model=NutritionPlan)
+def calculate_saved_member(household_id: uuid.UUID, member_id: uuid.UUID, db: Session = DB_DEPENDENCY) -> NutritionPlan:
+    return HouseholdService(db).calculate_member_nutrition(household_id, member_id)
 
 
 @app.post("/v1/foods", response_model=FoodResponse, status_code=status.HTTP_201_CREATED)

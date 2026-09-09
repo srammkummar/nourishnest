@@ -73,11 +73,13 @@ class MemberCreate(MemberFields):
 
 
 class MemberUpdate(MemberFields):
-    pass
+    expected_version: int = Field(ge=1)
 
 
 class MemberResponse(MemberFields):
     model_config = ConfigDict(from_attributes=True)
+
+    version: int
 
     id: uuid.UUID
     household_id: uuid.UUID

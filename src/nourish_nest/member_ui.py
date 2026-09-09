@@ -176,7 +176,9 @@ def render_members(
         show_error(error)
         st.button("Refresh members")
         return
-    st.button("Refresh members")
+    if st.button("Refresh members"):
+        for member in members:
+            st.session_state.pop(f"member_snapshot_{member.id}", None)
     mode = st.radio(
         "Member action",
         ["Add member", "Edit member", "Delete member"],
@@ -194,16 +196,18 @@ def render_members(
     if mode == "Add member":
         payload = member_form(f"add_{household.id}")
     elif mode == "Edit member" and selected:
-        payload = member_form(f"edit_{selected.id}", selected)
+        selected = st.session_state.setdefault(f"member_snapshot_{selected.id}", selected)
+        payload = member_form(f"edit_{selected.id}_v{selected.version}", selected)
     try:
         if payload:
             with st.spinner("Saving member…"):
                 saved = (
-                    api.update_member(selected.id, payload)
+                    api.update_member(household.id, selected.id, payload, selected.version)
                     if selected
                     else api.create_member(household.id, payload)
                 )
             members = [m for m in members if m.id != saved.id] + [saved]
+            st.session_state[f"member_snapshot_{saved.id}"] = saved
             st.success(f"Saved {saved.name}.")
         if mode == "Delete member" and selected:
             st.warning(
@@ -211,11 +215,11 @@ def render_members(
             )
             confirmed = st.checkbox(
                 f"I confirm deletion of {selected.name}",
-                key=f"confirm_delete_{household.id}_{selected.id}",
+                key=f"confirm_delete_{household.id}_{selected.id}_v{selected.version}",
             )
             if st.button("Delete member", disabled=not confirmed, type="primary") and confirmed:
                 with st.spinner("Deleting member…"):
-                    api.delete_member(selected.id)
+                    api.delete_member(household.id, selected.id, selected.version)
                 members = [m for m in members if m.id != selected.id]
                 st.success(f"Deleted {selected.name}.")
     except APIError as error:
@@ -272,7 +276,7 @@ def render_nutrition(
         if not st.button("Calculate nutrition", type="primary"):
             return
         with st.spinner("Calculating nutrition through the API…"):
-            plan = api.member_nutrition(selected.id)
+            plan = api.member_nutrition(household.id, selected.id)
         st.subheader(f"Nutrition estimate for {selected.name}")
         cards = [
             ("BMR", f"{plan.bmr_calories:,} kcal/day", "Estimated energy your body uses at rest."),
