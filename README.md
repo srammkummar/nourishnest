@@ -6,7 +6,8 @@ NourishNest is a production-oriented household management platform. The first wo
 
 - Streamlit household dashboard, household selection/creation, and navigation shell
 - HTTP-only typed API client with timeouts, safe GET retries, and request-ID errors
-- Nutrition, recipe, pantry, and grocery workflow placeholders for Phase 6B
+- Saved household member management and API-based nutrition estimates
+- Recipe, pantry, and grocery workflow placeholders for later Phase 6B work
 - FastAPI health and nutrition-calculation endpoints
 - Deterministic Mifflin–St Jeor calorie calculation
 - Goal-aware calorie adjustment with conservative safety bounds
@@ -75,9 +76,9 @@ submitting again.
 The dashboard shows member and readable recipe counts, active pantry lots,
 expiring lots (the API's configured expiration window), foods below saved stock
 thresholds, and grocery lists whose status is `active`. Refresh retrieves current
-values. Empty households have a friendly starting state. Quick actions navigate
-to explanatory Phase 6B placeholders; full management and nutrition forms will
-arrive in that phase. The selected household persists within the Streamlit session.
+values. Empty households have a friendly starting state. Quick actions open member
+management and nutrition; pantry and grocery actions remain explanatory placeholders.
+The selected household persists within the Streamlit session.
 
 The selector uses the new `GET /v1/households` collection route. This application
 currently assumes a trusted deployment: household selection is not authentication
@@ -86,6 +87,32 @@ Counts come from separate requests and are not a single database snapshot.
 Existing pantry summary/expiration GET routes can mark expired lots; the UI client
 does not retry those calls. Other safe GETs retry once on transport failures or
 502/503/504 responses; POSTs are sent once. No migrations change in Phase 6A.
+
+### Phase 6B1: members and nutrition
+
+On **Household**, use the sidebar to select a household or create another one.
+The page displays its name and ID, saved member cards, and Add/Edit/Delete actions.
+Forms include the existing profile fields with units, editable preference rows,
+and allergy rows with severity and notes. Select a row in either table to remove it.
+Deletion requires a member-specific confirmation checkbox. Successful changes
+update the member cards without loading unrelated dashboard data.
+
+On **Nutrition**, select a saved member and choose **Calculate nutrition**. The UI
+calls `POST /v1/members/{member_id}/nutrition/calculate` and displays BMR, estimated
+TDEE, calorie and macro targets, the returned calculation version, and API warnings.
+Calculations are not persisted and results disappear on navigation or another
+rerun, avoiding display of an estimate for a different member. All calculations
+remain in FastAPI. Results are estimates, not medical advice.
+
+Contract limits: member profiles accept ages 13–100, but the current nutrition
+calculator rejects minors. Calculator sex options are female/male. Height must
+exceed 100 cm and weight must exceed 30 kg. Loss/gain needs a positive weekly
+change; maintenance saves zero. Nutrition profile numbers follow the existing
+floating-point API contract. Member updates replace the complete profile and
+preference/allergy collections; no optimistic version field exists. Member-ID
+routes are not household-scoped or authenticated; the UI selects IDs exclusively
+from the selected household's collection, but this is not server authorization.
+Recipes, Pantry, and Grocery Lists remain placeholders. No migrations change.
 
 ## Tests
 

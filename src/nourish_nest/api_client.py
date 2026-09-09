@@ -6,7 +6,7 @@ from collections.abc import Callable
 from typing import Literal, TypeVar
 
 import httpx
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 T = TypeVar("T")
@@ -64,6 +64,70 @@ class Household(BaseModel):
 
 class Record(BaseModel):
     id: uuid.UUID
+
+
+class Preference(BaseModel):
+    preference_type: Literal[
+        "vegetarian", "vegan", "pescatarian", "halal", "no-beef", "no-pork", "custom"
+    ]
+    value: str = Field(min_length=1, max_length=200)
+
+
+class Allergy(BaseModel):
+    allergen: str = Field(min_length=1, max_length=200)
+    severity: Literal["mild", "moderate", "severe"]
+    notes: str | None = Field(default=None, max_length=2000)
+
+
+class MemberInput(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    age: int = Field(ge=13, le=100)
+    sex: Literal["female", "male"]
+    height_cm: float = Field(gt=100, le=250, allow_inf_nan=False)
+    weight_kg: float = Field(gt=30, le=350, allow_inf_nan=False)
+    activity_level: Literal["sedentary", "light", "moderate", "very_active"]
+    goal: Literal["lose", "maintain", "gain"]
+    weekly_goal_kg: float = Field(default=0.25, ge=0, le=1, allow_inf_nan=False)
+    meals_per_day: int = Field(default=3, ge=2, le=6)
+    dietary_preferences: list[Preference] = Field(default_factory=list)
+    allergies: list[Allergy] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_profile(self):
+        self.name = self.name.strip()
+        if not self.name:
+            raise ValueError("Enter a member name.")
+        if self.goal == "maintain":
+            self.weekly_goal_kg = 0
+        elif self.weekly_goal_kg == 0:
+            raise ValueError("Weekly change must be greater than zero for loss or gain.")
+        for preference in self.dietary_preferences:
+            if not preference.value.strip():
+                raise ValueError("Dietary preference values cannot be blank.")
+        for allergy in self.allergies:
+            if not allergy.allergen.strip():
+                raise ValueError("Allergen names cannot be blank.")
+        return self
+
+
+class Member(MemberInput):
+    id: uuid.UUID
+    household_id: uuid.UUID
+
+
+class NutritionMacros(BaseModel):
+    protein_g: int
+    carbohydrate_g: int
+    fat_g: int
+
+
+class MemberNutrition(BaseModel):
+    bmr_calories: int
+    maintenance_calories: int
+    target_calories: int
+    macros: NutritionMacros
+    calculation_version: str | None = None
+    warnings: list[str] = Field(default_factory=list)
 
 
 class GroceryListRecord(Record):
@@ -184,7 +248,7 @@ class APIClient:
                     response.status_code,
                 )
             try:
-                return adapter.validate_python(response.json())
+                return adapter.validate_python(None if expected_status == 204 else response.json())
             except (ValueError, ValidationError):
                 raise APIProtocolError(
                     "invalid_response",
@@ -234,6 +298,38 @@ class APIClient:
             expiring_items=len(expiring),
             low_stock_items=len(pantry.low_stock_food_ids),
             active_grocery_lists=sum(row.status == "active" for row in lists),
+        )
+
+    def members(self, household_id: uuid.UUID) -> list[Member]:
+        return self._request(
+            "GET", f"/v1/households/{household_id}/members", TypeAdapter(list[Member])
+        )
+
+    def create_member(self, household_id: uuid.UUID, member: MemberInput) -> Member:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/members",
+            TypeAdapter(Member),
+            body=member.model_dump(mode="json"),
+            expected_status=201,
+        )
+
+    def update_member(self, member_id: uuid.UUID, member: MemberInput) -> Member:
+        return self._request(
+            "PUT",
+            f"/v1/members/{member_id}",
+            TypeAdapter(Member),
+            body=member.model_dump(mode="json"),
+        )
+
+    def delete_member(self, member_id: uuid.UUID) -> None:
+        self._request(
+            "DELETE", f"/v1/members/{member_id}", TypeAdapter(type(None)), expected_status=204
+        )
+
+    def member_nutrition(self, member_id: uuid.UUID) -> MemberNutrition:
+        return self._request(
+            "POST", f"/v1/members/{member_id}/nutrition/calculate", TypeAdapter(MemberNutrition)
         )
 
 

@@ -9,6 +9,7 @@ from nourish_nest.api_client import (
     Household,
     create_api_client,
 )
+from nourish_nest.member_ui import render_members, render_nutrition
 from nourish_nest.ui_state import (
     PAGES,
     navigate,
@@ -17,7 +18,6 @@ from nourish_nest.ui_state import (
 )
 
 PLACEHOLDERS = {
-    "Nutrition": "Calculate calorie and macro targets for household members and review their nutrition plans.",
     "Recipes": "Browse household and shared recipes, review ingredients, and scale servings.",
     "Pantry": "Manage inventory lots, storage locations, expiration dates, and stock levels.",
     "Grocery Lists": "Create grocery lists, calculate recipe shortages, and record purchases with optional pantry intake.",
@@ -72,7 +72,9 @@ def quick_actions() -> None:
             args=(st.session_state, page, label),
             use_container_width=True,
         )
-    st.caption("These management workflows are coming in Phase 6B.")
+    st.caption(
+        "Manage members and calculate nutrition now. Pantry and grocery workflows are coming next."
+    )
 
 
 def dashboard_cards(counts: DashboardCounts) -> None:
@@ -93,7 +95,7 @@ def dashboard_cards(counts: DashboardCounts) -> None:
                 st.caption(caption)
     if not any(counts.model_dump().values()):
         st.info(
-            "Your household is ready. There is no dashboard data yet. Member, recipe, pantry, and grocery workflows arrive in Phase 6B."
+            "Your household is ready. There is no dashboard data yet. Use Add member to get started."
         )
 
 
@@ -113,13 +115,16 @@ def selected_page(api: APIClient, household: Household) -> None:
     elif page == "Household":
         with st.container(border=True):
             st.subheader(household.name)
+            st.text(f"Household ID: {household.id}")
             st.write(f"Timezone: {household.timezone} · Currency: {household.currency}")
-        st.subheader("Household members")
-        st.info("Phase 6B will add member profiles, dietary preferences, and allergies here.")
+        st.caption("Change the selected household using the sidebar selector.")
         with st.expander(
             "Create another household", expanded=st.session_state.get("intent") == "New household"
         ):
             create_household_form(api)
+        render_members(api, household, show_error)
+    elif page == "Nutrition":
+        render_nutrition(api, household, show_error)
     else:
         with st.container(border=True):
             st.subheader(page)

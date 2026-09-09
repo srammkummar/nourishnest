@@ -261,12 +261,17 @@ def test_dashboard_failure_not_zero_and_pantries_not_retried(monkeypatch):
 
 
 def test_ui_import_boundary():
-    allowed = {"nourish_nest.api_client", "nourish_nest.ui_state", "nourish_nest.streamlit_ui"}
+    allowed = {
+        "nourish_nest.api_client",
+        "nourish_nest.ui_state",
+        "nourish_nest.streamlit_ui",
+        "nourish_nest.member_ui",
+    }
     for path in [
         ROOT / "streamlit_app.py",
         *(
             ROOT / "src" / "nourish_nest" / f"{name}.py"
-            for name in ("api_client", "ui_state", "streamlit_ui")
+            for name in ("api_client", "ui_state", "streamlit_ui", "member_ui")
         ),
     ]:
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):

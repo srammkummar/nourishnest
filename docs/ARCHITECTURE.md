@@ -17,7 +17,19 @@ is retained as the pre-rename roadmap; it does not represent completed integrati
 Phase 6A adds a native Streamlit navigation shell, session household selection,
 household creation, and six dashboard metrics. `GET /v1/households` supplies the
 selector using the existing repository/service pattern. Other pages explain the
-Phase 6B workflows. The former direct nutrition form is replaced by this boundary.
+remaining Phase 6B workflows. The former direct nutrition form is replaced by this boundary.
+
+Phase 6B1 implements Household member CRUD and saved-member nutrition in
+`member_ui.py`. Pure wire models validate member inputs before HTTP submission;
+the UI has no nutrition formulas or server imports. PUT sends the complete saved
+profile, including preferences and allergies. DELETE requires a confirmation
+checkbox and accepts the existing 204 response. Mutation responses update member
+cards locally without querying unrelated dashboard endpoints. Member choices are
+rebuilt from the current household's collection on rerun, with household-specific
+widget keys. Nutrition POST results are transient and display only for the current
+selection. API errors retain the shared request-ID presentation. Existing member
+routes have neither authentication nor optimistic versioning; the UI does not
+add those guarantees. No routes or migrations are changed in Phase 6B1.
 
 The injectable httpx client centralizes validation, sanitized transport errors,
 structured API error envelopes/request IDs, 2-second connection and 8-second read
