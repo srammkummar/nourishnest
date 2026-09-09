@@ -23,6 +23,35 @@ PLACEHOLDERS = {
     "Grocery Lists": "Create grocery lists, calculate recipe shortages, and record purchases with optional pantry intake.",
 }
 
+# Keep the scroll container and its contents within the sidebar's available width.
+# Scope these rules to the sidebar so dashboard and form layouts stay unchanged.
+SIDEBAR_STYLE = """
+<style>
+[data-testid="stSidebarContent"] {
+    box-sizing: border-box;
+    padding-inline: 0;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+}
+[data-testid="stSidebarHeader"],
+[data-testid="stSidebarUserContent"] {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    margin-inline: 0;
+    padding-inline: 1.25rem;
+}
+[data-testid="stSidebarUserContent"] p,
+[data-testid="stSidebarUserContent"] label {
+    overflow-wrap: anywhere;
+}
+[data-testid="stSidebarUserContent"] [data-testid="stSelectbox"] {
+    min-width: 0;
+    max-width: 100%;
+}
+</style>
+"""
+
 
 def show_error(error: APIError) -> None:
     st.error(error.message)
@@ -137,6 +166,7 @@ def selected_page(api: APIClient, household: Household) -> None:
 
 def main() -> None:
     st.set_page_config(page_title="NourishNest", page_icon="🌿", layout="wide")
+    st.html(SIDEBAR_STYLE)
     st.session_state.setdefault("page", "Dashboard")
     if "pending_page" in st.session_state:
         navigate(st.session_state, st.session_state.pop("pending_page"))
