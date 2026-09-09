@@ -10,6 +10,7 @@ from nourish_nest.api_client import (
     create_api_client,
 )
 from nourish_nest.member_ui import render_members, render_nutrition
+from nourish_nest.recipe_ui import render_recipes
 from nourish_nest.ui_state import (
     PAGES,
     navigate,
@@ -18,7 +19,6 @@ from nourish_nest.ui_state import (
 )
 
 PLACEHOLDERS = {
-    "Recipes": "Browse household and shared recipes, review ingredients, and scale servings.",
     "Pantry": "Manage inventory lots, storage locations, expiration dates, and stock levels.",
     "Grocery Lists": "Create grocery lists, calculate recipe shortages, and record purchases with optional pantry intake.",
 }
@@ -92,8 +92,9 @@ def quick_actions() -> None:
         ("Add pantry item", "Pantry"),
         ("Create grocery list", "Grocery Lists"),
         ("Calculate nutrition", "Nutrition"),
+        ("Browse recipes", "Recipes"),
     ]
-    for column, (label, page) in zip(st.columns(4), actions, strict=True):
+    for column, (label, page) in zip(st.columns(len(actions)), actions, strict=True):
         column.button(
             label,
             key=f"action_{page}",
@@ -154,6 +155,8 @@ def selected_page(api: APIClient, household: Household) -> None:
         render_members(api, household, show_error)
     elif page == "Nutrition":
         render_nutrition(api, household, show_error)
+    elif page == "Recipes":
+        render_recipes(api, household, show_error)
     else:
         with st.container(border=True):
             st.subheader(page)

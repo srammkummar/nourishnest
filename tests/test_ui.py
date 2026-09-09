@@ -266,12 +266,21 @@ def test_ui_import_boundary():
         "nourish_nest.ui_state",
         "nourish_nest.streamlit_ui",
         "nourish_nest.member_ui",
+        "nourish_nest.recipe_ui",
+        "nourish_nest.recipe_client_models",
     }
     for path in [
         ROOT / "streamlit_app.py",
         *(
             ROOT / "src" / "nourish_nest" / f"{name}.py"
-            for name in ("api_client", "ui_state", "streamlit_ui", "member_ui")
+            for name in (
+                "api_client",
+                "ui_state",
+                "streamlit_ui",
+                "member_ui",
+                "recipe_ui",
+                "recipe_client_models",
+            )
         ),
     ]:
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):

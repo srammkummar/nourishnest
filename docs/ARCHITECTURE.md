@@ -14,6 +14,18 @@ is retained as the pre-rename roadmap; it does not represent completed integrati
 
 ## Product boundary
 
+Phase 6B2 implements Recipes using `recipe_ui.py` and standalone typed wire contracts
+in `recipe_client_models.py`. All persisted data comes from `APIClient`; the UI
+contains no ORM/service imports or nutrition/conversion formulas. Session state holds
+household-specific recipe selections, cached API responses, and drafts with stable
+row IDs. Display order becomes ingredient order and unique sequential instruction
+numbers at submission. Decimal values are entered and serialized as strings. Save
+responses update only recipe state, clear drafts before rerun, and invalidate nutrition.
+System recipe edit/delete controls are absent. Existing recipe endpoints provide
+neither optimistic concurrency nor idempotency; no such guarantee is invented in the
+client. Ambiguous failures retain the draft and instruct users to verify the saved
+catalog before resubmitting. No new database migration or backend operation is added.
+
 Phase 6A adds a native Streamlit navigation shell, session household selection,
 household creation, and six dashboard metrics. `GET /v1/households` supplies the
 selector using the existing repository/service pattern. Other pages explain the

@@ -7,7 +7,8 @@ NourishNest is a production-oriented household management platform. The first wo
 - Streamlit household dashboard, household selection/creation, and navigation shell
 - HTTP-only typed API client with timeouts, safe GET retries, and request-ID errors
 - Saved household member management and API-based nutrition estimates
-- Recipe, pantry, and grocery workflow placeholders for later Phase 6B work
+- Recipe browsing, editing, and API-calculated nutrition
+- Pantry and grocery workflow placeholders for later Phase 6B work
 - FastAPI health and nutrition-calculation endpoints
 - Deterministic Mifflin–St Jeor calorie calculation
 - Goal-aware calorie adjustment with conservative safety bounds
@@ -109,7 +110,7 @@ calculator rejects minors. Calculator sex options are female/male. Height must
 exceed 100 cm and weight must exceed 30 kg. Loss/gain needs a positive weekly
 change; maintenance saves zero. Nutrition profile numbers follow the existing
 floating-point API contract. Member updates replace the complete profile and
-preference/allergy collections. Recipes, Pantry, and Grocery Lists remain placeholders.
+preference/allergy collections. Pantry and Grocery Lists remain placeholders.
 
 ### Phase 6B1.1: member API integrity
 
@@ -137,6 +138,38 @@ and supply versions for mutations. Household ownership checks do not replace use
 authentication, which remains future work. Nutrition remains adult-only (18+), although
 saved profiles permit ages 13–100. Downgrading 0008 removes version history; re-upgrading
 resets versions to 1, so reload all clients after a downgrade/re-upgrade.
+
+### Phase 6B2: Recipes
+
+Open **Recipes** in the sidebar or **Browse recipes** on the dashboard. Search recipe
+names and filter by available cuisines. Household and shared system recipes are
+labeled separately; system recipes have no edit/delete controls. Details display
+ordered ingredients and instructions, metadata, and API-provided nutrition totals,
+per-serving values, allergens, dietary tags, warnings, and calculation version.
+
+Choose **Create recipe**, search the stored food catalog, select a food, and add
+ingredients. Enter positive quantities (up to three decimal places) and servings
+(up to two decimal places). Use Move up/Move down/Remove for ingredients and steps;
+instruction numbers are assigned in display order. **Save recipe** sends one request.
+Successful creation clears the draft; edits prepopulate the complete recipe. Delete
+requires a confirmation checkbox. Drafts and selections are household-specific within
+the Streamlit session. **Refresh recipes** reloads the recipe data and nutrition.
+
+All food search uses `GET /v1/foods/search?q=...`; recipe CRUD uses
+`/v1/households/{household_id}/recipes[/{recipe_id}]`, and nutrition uses
+`GET /v1/households/{household_id}/recipes/{recipe_id}/nutrition`. No backend
+calculations, migrations, or external imports are added.
+
+Backend limitations: recipe updates replace all ingredients/instructions and have
+no optimistic version field or idempotency key. Mutations are never automatically
+retried; after an ambiguous timeout, refresh and check for the saved recipe before
+submitting again. Concurrent edits can overwrite one another. Recipe lists are not
+paginated, so name/cuisine filters operate locally on the retrieved collection.
+Nutrition can be incomplete or unavailable for missing food data or unsupported
+conversions; the UI displays API warnings and does not infer density. Recipes
+referenced by grocery lineage may reject deletion. Existing unusual ingredient
+units remain visible during editing; new ingredients use supported unit choices.
+Foods must already exist in the catalog; USDA search/import remains outside this UI.
 
 ## Tests
 

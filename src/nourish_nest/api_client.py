@@ -9,6 +9,14 @@ import httpx
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from nourish_nest.recipe_client_models import (
+    RecipeInput,
+    RecipeNutrition,
+    RecipeRecord,
+    StoredFood,
+    StoredFoodSearch,
+)
+
 T = TypeVar("T")
 
 
@@ -349,6 +357,56 @@ class APIClient:
             "POST",
             f"/v1/households/{household_id}/members/{member_id}/nutrition/calculate",
             TypeAdapter(MemberNutrition),
+        )
+
+    def search_foods(self, query: str) -> list[StoredFood]:
+        query_string = str(httpx.QueryParams({"q": query}))
+        return self._request(
+            "GET", f"/v1/foods/search?{query_string}", TypeAdapter(StoredFoodSearch)
+        ).foods
+
+    def recipes(self, household_id: uuid.UUID) -> list[RecipeRecord]:
+        return self._request(
+            "GET", f"/v1/households/{household_id}/recipes", TypeAdapter(list[RecipeRecord])
+        )
+
+    def get_recipe(self, household_id: uuid.UUID, recipe_id: uuid.UUID) -> RecipeRecord:
+        return self._request(
+            "GET", f"/v1/households/{household_id}/recipes/{recipe_id}", TypeAdapter(RecipeRecord)
+        )
+
+    def create_recipe(self, household_id: uuid.UUID, recipe: RecipeInput) -> RecipeRecord:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/recipes",
+            TypeAdapter(RecipeRecord),
+            body=recipe.model_dump(mode="json"),
+            expected_status=201,
+        )
+
+    def update_recipe(
+        self, household_id: uuid.UUID, recipe_id: uuid.UUID, recipe: RecipeInput
+    ) -> RecipeRecord:
+        return self._request(
+            "PUT",
+            f"/v1/households/{household_id}/recipes/{recipe_id}",
+            TypeAdapter(RecipeRecord),
+            body=recipe.model_dump(mode="json"),
+        )
+
+    def delete_recipe(self, household_id: uuid.UUID, recipe_id: uuid.UUID) -> None:
+        self._request(
+            "DELETE",
+            f"/v1/households/{household_id}/recipes/{recipe_id}",
+            TypeAdapter(type(None)),
+            expected_status=204,
+        )
+
+    def recipe_nutrition(self, household_id: uuid.UUID, recipe_id: uuid.UUID) -> RecipeNutrition:
+        return self._request(
+            "GET",
+            f"/v1/households/{household_id}/recipes/{recipe_id}/nutrition",
+            TypeAdapter(RecipeNutrition),
         )
 
 
