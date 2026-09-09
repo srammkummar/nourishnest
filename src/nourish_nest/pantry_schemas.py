@@ -48,7 +48,7 @@ class PantryItemUpdate(PantryItemFields):
 class PantryItemResponse(PantryItemFields):
     model_config = ConfigDict(from_attributes=True)
 
-    quantity: Decimal = Field(ge=0, max_digits=14, decimal_places=3)
+    quantity: Decimal = Field(ge=0, max_digits=18, decimal_places=6)
     id: uuid.UUID
     household_id: uuid.UUID
     canonical_quantity: Decimal | None

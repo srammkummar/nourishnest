@@ -42,7 +42,7 @@ class GroceryListResponse(GroceryListCreate):
     version: int
 
 
-class GroceryItemCreate(BaseModel):
+class GroceryItemFields(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     food_id: uuid.UUID | None = None
@@ -55,6 +55,8 @@ class GroceryItemCreate(BaseModel):
     source_reference_id: uuid.UUID | None = None
     checked: bool = False
 
+
+class GroceryItemCreate(GroceryItemFields):
     @model_validator(mode="after")
     def valid_purchase(self) -> Self:
         if self.purchased_quantity > self.required_quantity:
@@ -68,7 +70,7 @@ class GroceryItemUpdate(GroceryItemCreate):
     expected_version: int = Field(ge=1, strict=True)
 
 
-class GroceryItemResponse(GroceryItemCreate):
+class GroceryItemResponse(GroceryItemFields):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID

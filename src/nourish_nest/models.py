@@ -184,7 +184,69 @@ class GroceryListItem(Base):
     recipe_sources: Mapped[list["GroceryItemRecipeSource"]] = relationship(
         back_populates="grocery_list_item", cascade="all, delete-orphan", passive_deletes=True
     )
+    purchases: Mapped[list["GroceryPurchaseEvent"]] = relationship(
+        back_populates="grocery_list_item", cascade="all, delete-orphan", passive_deletes=True
+    )
     __mapper_args__: ClassVar[dict[str, object]] = {"version_id_col": version}
+
+
+class GroceryPurchaseEvent(Base):
+    __tablename__ = "grocery_purchase_events"
+    __table_args__ = (
+        UniqueConstraint("household_id", "grocery_list_id", "grocery_list_item_id", "idempotency_key",
+                         name="uq_grocery_purchase_key"),
+        CheckConstraint("purchased_quantity > 0", name="ck_grocery_purchase_quantity"),
+        CheckConstraint("item_quantity > 0", name="ck_grocery_purchase_item_quantity"),
+        CheckConstraint("purchased_total >= item_quantity", name="ck_grocery_purchase_total"),
+        CheckConstraint("purchase_price >= 0", name="ck_grocery_purchase_price"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    household_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("households.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    grocery_list_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("grocery_lists.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    grocery_list_item_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("grocery_list_items.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    idempotency_key: Mapped[str] = mapped_column(String(200), nullable=False)
+    request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    purchased_quantity: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
+    purchased_unit: Mapped[str] = mapped_column(String(32), nullable=False)
+    item_quantity: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
+    item_unit: Mapped[str] = mapped_column(String(32), nullable=False)
+    purchased_total: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
+    checked: Mapped[bool] = mapped_column(Boolean(create_constraint=True, name="grocery_purchase_checked"), nullable=False)
+    item_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    grocery_list_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    grocery_list_status: Mapped[GroceryListStatus] = mapped_column(
+        Enum(GroceryListStatus, values_callable=lambda cls: [e.value for e in cls], native_enum=False,
+             create_constraint=True, name="grocery_purchase_list_status", length=16), nullable=False
+    )
+    add_to_pantry: Mapped[bool] = mapped_column(
+        Boolean(create_constraint=True, name="grocery_purchase_intake"), nullable=False
+    )
+    allow_overpurchase: Mapped[bool] = mapped_column(
+        Boolean(create_constraint=True, name="grocery_purchase_overpurchase"), nullable=False
+    )
+    pantry_location_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("pantry_locations.id", ondelete="SET NULL"), nullable=True
+    )
+    expiration_date: Mapped[date | None] = mapped_column(nullable=True)
+    purchase_price: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    pantry_item_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("pantry_items.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    pantry_transaction_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("pantry_transactions.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False, index=True)
+    grocery_list_item: Mapped[GroceryListItem] = relationship(back_populates="purchases")
+    pantry_item: Mapped["PantryItem | None"] = relationship()
+    pantry_transaction: Mapped["PantryTransaction | None"] = relationship()
 
 
 class GroceryGenerationRun(Base):

@@ -195,7 +195,7 @@ def test_migration_roundtrip_preserves_manual_items(tmp_path, monkeypatch):
     with Session(db) as session:
         item = session.get(GroceryListItem, UUID(item_id))
         assert item.generation_run_id is None and item.required_quantity == Decimal("1.234567")
-    command.downgrade(config, "-1")
+    command.downgrade(config, "20260908_0005")
     assert "grocery_generation_runs" not in inspect(db).get_table_names()
     assert "grocery_item_recipe_sources" not in inspect(db).get_table_names()
     assert "generation_run_id" not in {column["name"] for column in inspect(db).get_columns("grocery_list_items")}

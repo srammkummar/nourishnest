@@ -29,6 +29,14 @@ from nourish_nest.grocery_generation_services import (
     GroceryGenerationError,
     GroceryGenerationService,
 )
+from nourish_nest.grocery_purchase_schemas import (
+    GroceryPurchaseRequest,
+    GroceryPurchaseResponse,
+)
+from nourish_nest.grocery_purchase_services import (
+    GroceryPurchaseError,
+    GroceryPurchaseService,
+)
 from nourish_nest.grocery_requirement_schemas import (
     GroceryRequirementsRequest,
     GroceryRequirementsResponse,
@@ -213,6 +221,12 @@ async def grocery_generation_error(request: Request, exc: GroceryGenerationError
     return _provider_error(exc.code, str(exc), request, 422 if exc.code == "invalid_request" else 409)
 
 
+@app.exception_handler(GroceryPurchaseError)
+async def grocery_purchase_error(request: Request, exc: GroceryPurchaseError) -> JSONResponse:
+    status_code = 409 if exc.code in {"idempotency_conflict", "overpurchase_not_allowed"} else 422
+    return _provider_error(exc.code, str(exc), request, status_code)
+
+
 @app.exception_handler(SQLAlchemyError)
 async def database_failure(request: Request, exc: SQLAlchemyError) -> JSONResponse:
     body = ErrorBody(
@@ -250,6 +264,17 @@ def generate_grocery_list(
     db: Session = DB_DEPENDENCY,
 ):
     return GroceryGenerationService(db).generate(household_id, list_id, data)
+
+
+@app.post(
+    "/v1/households/{household_id}/grocery-lists/{list_id}/items/{item_id}/purchase",
+    response_model=GroceryPurchaseResponse,
+)
+def purchase_grocery_item(
+    household_id: uuid.UUID, list_id: uuid.UUID, item_id: uuid.UUID,
+    data: GroceryPurchaseRequest, db: Session = DB_DEPENDENCY,
+):
+    return GroceryPurchaseService(db).purchase(household_id, list_id, item_id, data)
 
 
 @app.get("/health")

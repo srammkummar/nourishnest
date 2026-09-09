@@ -181,6 +181,49 @@ rejected with `invalid_request`, without rounding or partial writes. Inventory r
 a point-in-time estimate. The one-generation rule is enforced by this transactional
 service; arbitrary direct SQL can bypass it. No schema changes were added.
 
+## Grocery purchase and pantry intake (Phase 5F)
+
+`POST /v1/households/{household_id}/grocery-lists/{list_id}/items/{item_id}/purchase`
+accepts a positive Decimal `purchased_quantity` increment, `purchased_unit`, required
+`expected_item_version`, nonblank `idempotency_key` (maximum 200 characters), and
+`add_to_pantry`. Intake requires an owned `pantry_location_id` and an item food
+reference. Optional fields are `expiration_date`, `purchase_price`, and
+`allow_overpurchase` (default false). Price is the total for this purchase event,
+recorded in the household's currency; it is not a per-unit price or a payment.
+
+Migration `20260909_0007` adds normalized `grocery_purchase_events`: existing pantry
+transactions cannot audit purchases without a pantry lot and do not store request
+hashes or prices. The unique household/list/item/idempotency-key constraint protects
+all purchases, including those without intake. Events store original and converted
+increments, resulting totals/checked status, item/list versions, price, currency,
+flags, dates, and optional stock/transaction links. The purchase service only inserts
+events. Household/list/item deletion cascades audit history under existing ownership
+conventions; deleting pantry records nulls links while preserving the purchase event.
+
+One transaction updates item/list versions and completion status, inserts the event,
+and optionally creates a new pantry lot plus an append-only `RESTOCK` transaction.
+Purchases of different items serialize through the list row (PostgreSQL lock and
+optimistic version predicate), with one retry for a competing parent update. All
+failures roll back together. No existing pantry lot is consumed, reserved, or merged.
+An expired intake date produces an expired lot. Completion is set only when all
+items are checked at purchase time; general CRUD can still edit list status/items.
+
+The request hash includes the expected item version and all request options,
+normalizing Decimal spelling and unit whitespace/case/known aliases. Replay is
+checked before version/intake validation and returns the saved audit result without
+creating stock, even after the original stock is deleted. A changed request conflicts.
+Database uniqueness and optimistic-write failures are resolved after rollback, not
+solely through a pre-query. Snapshot versions/totals returned on replay may precede
+the current item state. Optional deleted stock/location references return null.
+
+Unsupported units, cross-dimension conversion, and quantities that cannot fit
+`NUMERIC(18,6)` exactly are rejected. No density is inferred or rounding applied.
+Explicit overpurchase keeps the original required quantity and marks the item checked
+when the total meets or exceeds it. Response schemas support those overpurchased
+items and six-decimal pantry lots; the older CRUD write validations remain unchanged.
+Downgrading 0007 removes purchase audit/idempotency history but does not undo stock or
+grocery purchases. Refunds, reversals, and external shopping/payment flows are deferred.
+
 ## Next vertical slice
 
 1. **Database Phase 1 complete:** household/member persistence with Alembic migrations,
