@@ -133,6 +133,23 @@ storage guarantees, so SQLite remains a development target.
 Migration `20260908_0005` adds only these two tables. Grocery calculation, pantry
 subtraction, services, API/UI, agents, and RAG remain future work.
 
+## Grocery generation persistence (Phase 5E1)
+
+Migration `20260908_0006` adds generation runs with a unique household/list/idempotency
+key and recipe contribution snapshots using `NUMERIC(18, 6)`. Runs cascade with their
+household or list; sources cascade with their grocery item. Deleting a run nulls the
+optional item reference. Ingredient deletion nulls its optional source reference,
+preserving quantity snapshots when existing recipe updates replace ingredients.
+Recipe references use deferred `NO ACTION`: deletion is blocked at commit while
+sources remain, but the existing household cascade can remove both in one transaction.
+Database foreign-key actions do not increment item optimistic versions.
+
+This phase adds persistence only. Future generation services must validate that run,
+list, item, recipe, and ingredient references belong together and enforce recipe
+access; individual foreign keys do not enforce these cross-record relationships.
+Hash computation and idempotent replay behavior are not implemented. SQLite retains
+its NUMERIC storage limitations; PostgreSQL remains the exact-decimal target.
+
 ## Next vertical slice
 
 1. **Database Phase 1 complete:** household/member persistence with Alembic migrations,

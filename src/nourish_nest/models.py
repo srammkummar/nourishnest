@@ -129,6 +129,9 @@ class GroceryList(Base):
     items: Mapped[list["GroceryListItem"]] = relationship(
         back_populates="grocery_list", cascade="all, delete-orphan", passive_deletes=True
     )
+    generation_runs: Mapped[list["GroceryGenerationRun"]] = relationship(
+        back_populates="grocery_list", cascade="all, delete-orphan", passive_deletes=True
+    )
     __mapper_args__: ClassVar[dict[str, object]] = {"version_id_col": version}
 
 
@@ -161,6 +164,11 @@ class GroceryListItem(Base):
         nullable=False, default=GroceryItemSourceType.MANUAL, server_default="manual",
     )
     source_reference_id: Mapped[uuid.UUID | None] = mapped_column(Uuid(as_uuid=True), nullable=True)
+    generation_run_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("grocery_generation_runs.id", name="fk_grocery_item_generation_run", ondelete="SET NULL"),
+        nullable=True, index=True,
+    )
     checked: Mapped[bool] = mapped_column(
         Boolean(create_constraint=True, name="grocery_item_checked"),
         nullable=False, default=False, server_default=false(),
@@ -172,7 +180,66 @@ class GroceryListItem(Base):
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
     grocery_list: Mapped[GroceryList] = relationship(back_populates="items")
     food: Mapped["Food | None"] = relationship()
+    generation_run: Mapped["GroceryGenerationRun | None"] = relationship(back_populates="items")
+    recipe_sources: Mapped[list["GroceryItemRecipeSource"]] = relationship(
+        back_populates="grocery_list_item", cascade="all, delete-orphan", passive_deletes=True
+    )
     __mapper_args__: ClassVar[dict[str, object]] = {"version_id_col": version}
+
+
+class GroceryGenerationRun(Base):
+    __tablename__ = "grocery_generation_runs"
+    __table_args__ = (
+        UniqueConstraint("household_id", "grocery_list_id", "idempotency_key",
+                         name="uq_grocery_generation_run_key"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    household_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("households.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    grocery_list_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("grocery_lists.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    idempotency_key: Mapped[str] = mapped_column(String(200), nullable=False)
+    request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    calculation_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False, index=True
+    )
+    household: Mapped["Household"] = relationship()
+    grocery_list: Mapped[GroceryList] = relationship(back_populates="generation_runs")
+    items: Mapped[list[GroceryListItem]] = relationship(
+        back_populates="generation_run", passive_deletes="all"
+    )
+
+
+class GroceryItemRecipeSource(Base):
+    __tablename__ = "grocery_item_recipe_sources"
+    __table_args__ = (
+        CheckConstraint("required_quantity >= 0", name="ck_grocery_recipe_source_quantity"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    grocery_list_item_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("grocery_list_items.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    recipe_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("recipes.id", ondelete="NO ACTION", deferrable=True, initially="DEFERRED"),
+        nullable=False, index=True,
+    )
+    recipe_ingredient_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("recipe_ingredients.id", ondelete="SET NULL"),
+        nullable=True, index=True,
+    )
+    required_quantity: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
+    canonical_unit: Mapped[str] = mapped_column(String(16), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    grocery_list_item: Mapped[GroceryListItem] = relationship(back_populates="recipe_sources")
+    recipe: Mapped["Recipe"] = relationship()
+    recipe_ingredient: Mapped["RecipeIngredient | None"] = relationship()
 
 
 class Household(Base):

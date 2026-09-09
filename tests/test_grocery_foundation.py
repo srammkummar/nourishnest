@@ -187,13 +187,13 @@ def test_migration_roundtrip_and_metadata_match(tmp_path, monkeypatch):
         assert diffs == []
         indexes = inspect(connection).get_indexes("grocery_list_items")
         assert {tuple(index["column_names"]) for index in indexes} == {
-            ("grocery_list_id", "checked"), ("food_id",),
+            ("grocery_list_id", "checked"), ("food_id",), ("generation_run_id",),
         }
         assert {tuple(index["column_names"]) for index in
                 inspect(connection).get_indexes("grocery_lists")} == {
             ("household_id", "status"), ("status",),
         }
-    command.downgrade(config, "-1")
+    command.downgrade(config, "20260908_0004")
     assert "grocery_lists" not in inspect(db).get_table_names()
     assert "grocery_list_items" not in inspect(db).get_table_names()
     assert "pantry_items" in inspect(db).get_table_names()
