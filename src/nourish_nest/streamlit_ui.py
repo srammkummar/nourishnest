@@ -9,6 +9,7 @@ from nourish_nest.api_client import (
     Household,
     create_api_client,
 )
+from nourish_nest.grocery_ui import render_groceries
 from nourish_nest.member_ui import render_members, render_nutrition
 from nourish_nest.pantry_ui import render_pantry
 from nourish_nest.recipe_ui import render_recipes
@@ -18,10 +19,6 @@ from nourish_nest.ui_state import (
     remember_created_household,
     sync_household_selection,
 )
-
-PLACEHOLDERS = {
-    "Grocery Lists": "Create grocery lists, calculate recipe shortages, and record purchases with optional pantry intake.",
-}
 
 # Keep the scroll container and its contents within the sidebar's available width.
 # Scope these rules to the sidebar so dashboard and form layouts stay unchanged.
@@ -103,7 +100,7 @@ def quick_actions() -> None:
             use_container_width=True,
         )
     st.caption(
-        "Manage members, recipes, nutrition, and pantry inventory. Grocery list workflows are coming next."
+        "Manage members, recipes, nutrition, pantry inventory, and grocery lists."
     )
 
 
@@ -126,6 +123,9 @@ def dashboard_cards(counts: DashboardCounts) -> None:
                 if label in ("Expiring items", "Low-stock items"):
                     st.button(f"View {label.lower()}", on_click=navigate,
                               args=(st.session_state, "Pantry", label), use_container_width=True)
+                elif label == "Active grocery lists":
+                    st.button("View active grocery lists", on_click=navigate,
+                              args=(st.session_state, "Grocery Lists", label), use_container_width=True)
     if not any(counts.model_dump().values()):
         st.info(
             "Your household is ready. There is no dashboard data yet. Use Add member to get started."
@@ -162,14 +162,8 @@ def selected_page(api: APIClient, household: Household) -> None:
         render_recipes(api, household, show_error)
     elif page == "Pantry":
         render_pantry(api, household, show_error)
-    else:
-        with st.container(border=True):
-            st.subheader(page)
-            st.write(PLACEHOLDERS[page])
-            st.info("Coming in Phase 6B. This page is a preview of the planned workflow.")
-        if st.session_state.get("intent"):
-            st.caption(f"Selected action: {st.session_state['intent']}")
-        st.button("Back to dashboard", on_click=navigate, args=(st.session_state, "Dashboard"))
+    elif page == "Grocery Lists":
+        render_groceries(api, household, show_error)
 
 
 def main() -> None:

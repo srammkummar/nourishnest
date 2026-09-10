@@ -14,6 +14,16 @@ is retained as the pre-rename roadmap; it does not represent completed integrati
 
 ## Product boundary
 
+Phase 6B4 implements `grocery_ui.py` with standalone `grocery_client_models.py`
+wire types. The shared API client handles CRUD, previews, generation, and purchase.
+Per-household state retains selections and per-list pending generation/purchase
+payloads. Widget state is separate from recipe selections so Streamlit cleanup
+cannot discard desired servings on navigation. Submitted mutations retain versions
+and idempotency keys unchanged through retries; successful purchase invalidation is
+separate from subsequent summary reads. Grocery calculations and intake transactions
+remain entirely in the existing backend. Session receipts expose source lineage and
+warning availability without inventing history endpoints or regeneration behavior.
+
 Phase 6B3 adds `pantry_ui.py` and standalone `pantry_client_models.py` contracts.
 Household-specific session state holds API snapshots, food labels, and pending
 inventory actions. Each submitted action retains its typed payload, loaded version

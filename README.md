@@ -248,6 +248,58 @@ Existing backend limits are intentionally preserved:
 Use the two-terminal launch commands above. No migrations or backend rules changed;
 the database remains at `20260909_0009`.
 
+### Phase 6B4: Grocery Lists
+
+Grocery Lists now supports list creation, status filtering, versioned name/status
+updates and confirmed deletion; exact-Decimal manual items with optional catalog
+food links; recipe requirement and pantry shortage previews; pantry-aware generation;
+and partial/complete purchase increments with optional pantry intake. Purchases support
+explicit overpurchase, expiration, and an optional total price in household currency.
+The dashboard opens list creation or the active-list filter. List/item status and
+purchased-item progress come from API records; the UI performs no stock/unit calculations.
+
+All requests use the typed HTTP client. Existing endpoints used:
+
+- `/v1/households/{household_id}/grocery-lists`: GET/POST.
+- The same path plus `/{list_id}`: GET/PUT/DELETE; updates send `expected_version`
+  in JSON and deletes send it as a query parameter.
+- `/{list_id}/items`: GET/POST; `/{list_id}/items/{item_id}`: GET/PUT/DELETE,
+  with the same version conventions.
+- `POST /v1/households/{household_id}/grocery-requirements/preview` and
+  `/shortage-preview` use recipe IDs and desired servings. Results show canonical
+  requirements, recipe contributions, pantry-lot contributions, and structured warnings.
+- `POST .../grocery-lists/{list_id}/generations` sends `expected_list_version` and
+  an idempotency key. `POST .../{list_id}/items/{item_id}/purchase` sends
+  `expected_item_version`, an idempotency key, and the purchase/intake options.
+- Existing recipe collection, food search/get, pantry-location, pantry-summary,
+  and dashboard data endpoints supply selections and refreshes.
+
+Recipe selections/servings and selected lists survive navigation within a Streamlit
+session. Once submitted, generation and purchase requests retain their entire payload
+and key through retries, refreshes, and household navigation. Only success or explicit
+reset clears the pending request. No mutation is automatically retried. A successful
+purchase invalidates the Pantry snapshot and refreshes grocery versions, pantry
+summary, and dashboard counts; a subsequent read failure does not resubmit the purchase.
+
+Backend limitations remain visible:
+
+- One successful generation per list; only draft/active lists are eligible. No
+  regeneration/replacement is implemented. Fully covered recipes can produce an empty run.
+- Shortages are point-in-time estimates, not reservations. Generation recalculates
+  them. Lineage quantities describe the full recipe contribution before pantry subtraction.
+- Generation replay does not recover original warnings (`warnings_available=false`).
+  Receipts/lineage are retained in this UI session; no generation/purchase history-read
+  endpoints exist. Losing the browser session loses its pending keys and displayed receipts.
+- List/manual-item creation has no idempotency contract: check refreshed data after
+  ambiguous failures. CRUD does not infer completion; the UI displays API status.
+- Manual items without a food reference cannot enter pantry. Purchase intake needs
+  an existing owned location. CRUD preserves purchase totals/checked state and still
+  enforces its required-versus-purchased invariant; purchased-item units are read-only
+  in the edit form. Use Purchase for converted increments.
+
+Launch with the existing two-terminal commands above. No migrations or backend
+business rules changed; Alembic remains at `20260909_0009`.
+
 ## Tests
 
 ```bash

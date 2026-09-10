@@ -9,6 +9,7 @@ import httpx
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+import nourish_nest.grocery_client_models as grocery
 from nourish_nest.pantry_client_models import (
     AdjustmentInput,
     ConsumeInput,
@@ -381,6 +382,148 @@ class APIClient:
     def recipes(self, household_id: uuid.UUID) -> list[RecipeRecord]:
         return self._request(
             "GET", f"/v1/households/{household_id}/recipes", TypeAdapter(list[RecipeRecord])
+        )
+
+    def grocery_lists(self, household_id: uuid.UUID) -> list[grocery.GroceryList]:
+        return self._request(
+            "GET",
+            f"/v1/households/{household_id}/grocery-lists",
+            TypeAdapter(list[grocery.GroceryList]),
+        )
+
+    def grocery_list(self, household_id: uuid.UUID, list_id: uuid.UUID) -> grocery.GroceryList:
+        return self._request(
+            "GET",
+            f"/v1/households/{household_id}/grocery-lists/{list_id}",
+            TypeAdapter(grocery.GroceryList),
+        )
+
+    def create_grocery_list(
+        self, household_id: uuid.UUID, data: grocery.ListInput
+    ) -> grocery.GroceryList:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/grocery-lists",
+            TypeAdapter(grocery.GroceryList),
+            body=data.model_dump(mode="json"),
+            expected_status=201,
+        )
+
+    def update_grocery_list(
+        self, household_id: uuid.UUID, list_id: uuid.UUID, data: grocery.ListUpdate
+    ) -> grocery.GroceryList:
+        return self._request(
+            "PUT",
+            f"/v1/households/{household_id}/grocery-lists/{list_id}",
+            TypeAdapter(grocery.GroceryList),
+            body=data.model_dump(mode="json"),
+        )
+
+    def delete_grocery_list(
+        self, household_id: uuid.UUID, list_id: uuid.UUID, expected_version: int
+    ) -> None:
+        self._request(
+            "DELETE",
+            f"/v1/households/{household_id}/grocery-lists/{list_id}?expected_version={expected_version}",
+            TypeAdapter(type(None)),
+            expected_status=204,
+        )
+
+    def grocery_items(
+        self, household_id: uuid.UUID, list_id: uuid.UUID
+    ) -> list[grocery.GroceryItem]:
+        return self._request(
+            "GET",
+            f"/v1/households/{household_id}/grocery-lists/{list_id}/items",
+            TypeAdapter(list[grocery.GroceryItem]),
+        )
+
+    def grocery_item(
+        self, household_id: uuid.UUID, list_id: uuid.UUID, item_id: uuid.UUID
+    ) -> grocery.GroceryItem:
+        return self._request(
+            "GET",
+            f"/v1/households/{household_id}/grocery-lists/{list_id}/items/{item_id}",
+            TypeAdapter(grocery.GroceryItem),
+        )
+
+    def create_grocery_item(
+        self, household_id: uuid.UUID, list_id: uuid.UUID, data: grocery.ItemInput
+    ) -> grocery.GroceryItem:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/grocery-lists/{list_id}/items",
+            TypeAdapter(grocery.GroceryItem),
+            body=data.model_dump(mode="json"),
+            expected_status=201,
+        )
+
+    def update_grocery_item(
+        self,
+        household_id: uuid.UUID,
+        list_id: uuid.UUID,
+        item_id: uuid.UUID,
+        data: grocery.ItemUpdate,
+    ) -> grocery.GroceryItem:
+        return self._request(
+            "PUT",
+            f"/v1/households/{household_id}/grocery-lists/{list_id}/items/{item_id}",
+            TypeAdapter(grocery.GroceryItem),
+            body=data.model_dump(mode="json"),
+        )
+
+    def delete_grocery_item(
+        self, household_id: uuid.UUID, list_id: uuid.UUID, item_id: uuid.UUID, expected_version: int
+    ) -> None:
+        self._request(
+            "DELETE",
+            f"/v1/households/{household_id}/grocery-lists/{list_id}/items/{item_id}?expected_version={expected_version}",
+            TypeAdapter(type(None)),
+            expected_status=204,
+        )
+
+    def grocery_requirements(
+        self, household_id: uuid.UUID, data: grocery.RequirementsInput
+    ) -> grocery.RequirementsResult:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/grocery-requirements/preview",
+            TypeAdapter(grocery.RequirementsResult),
+            body=data.model_dump(mode="json"),
+        )
+
+    def grocery_shortages(
+        self, household_id: uuid.UUID, data: grocery.RequirementsInput
+    ) -> grocery.ShortageResult:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/grocery-requirements/shortage-preview",
+            TypeAdapter(grocery.ShortageResult),
+            body=data.model_dump(mode="json"),
+        )
+
+    def generate_grocery_list(
+        self, household_id: uuid.UUID, list_id: uuid.UUID, data: grocery.GenerationInput
+    ) -> grocery.GenerationResult:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/grocery-lists/{list_id}/generations",
+            TypeAdapter(grocery.GenerationResult),
+            body=data.model_dump(mode="json"),
+        )
+
+    def purchase_grocery_item(
+        self,
+        household_id: uuid.UUID,
+        list_id: uuid.UUID,
+        item_id: uuid.UUID,
+        data: grocery.PurchaseInput,
+    ) -> grocery.PurchaseResult:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/grocery-lists/{list_id}/items/{item_id}/purchase",
+            TypeAdapter(grocery.PurchaseResult),
+            body=data.model_dump(mode="json"),
         )
 
     def stored_food(self, food_id: uuid.UUID) -> StoredFood:

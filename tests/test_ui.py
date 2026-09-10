@@ -196,7 +196,7 @@ def test_ui_empty_create_household_and_dashboard(monkeypatch):
     assert sum(r.method == "POST" for r in server.calls) == 1
 
 
-def test_ui_populated_selection_and_placeholder(monkeypatch):
+def test_ui_populated_selection_and_grocery_navigation(monkeypatch):
     second = {**HOME, "id": str(UUID(int=2)), "name": "Second"}
     server = Server([HOME, second], populated=True)
     ui = app(monkeypatch, server)
@@ -210,7 +210,7 @@ def test_ui_populated_selection_and_placeholder(monkeypatch):
     ui.button(key="action_Grocery Lists").click().run()
     assert not ui.exception
     assert ui.session_state["page"] == "Grocery Lists"
-    assert any("Phase 6B" in x.value for x in ui.info)
+    assert ui.session_state["intent"] == ""
 
 
 def test_ui_api_failure_and_request_id(monkeypatch):
@@ -270,6 +270,8 @@ def test_ui_import_boundary():
         "nourish_nest.recipe_client_models",
         "nourish_nest.pantry_ui",
         "nourish_nest.pantry_client_models",
+        "nourish_nest.grocery_ui",
+        "nourish_nest.grocery_client_models",
     }
     for path in [
         ROOT / "streamlit_app.py",
@@ -284,6 +286,8 @@ def test_ui_import_boundary():
                 "recipe_client_models",
                 "pantry_ui",
                 "pantry_client_models",
+                "grocery_ui",
+                "grocery_client_models",
             )
         ),
     ]:
