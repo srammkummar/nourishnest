@@ -22,6 +22,7 @@ from nourish_nest.pantry_client_models import (
     StockRuleInput,
     TransferInput,
 )
+from nourish_nest.planning_contracts import RecommendationRequest, RecommendationResponse
 from nourish_nest.recipe_client_models import (
     RecipeInput,
     RecipeNutrition,
@@ -701,6 +702,12 @@ class APIClient:
             "GET",
             f"/v1/households/{household_id}/recipes/{recipe_id}/nutrition",
             TypeAdapter(RecipeNutrition),
+        )
+
+    def recipe_recommendations(self, household_id: uuid.UUID, data: RecommendationRequest) -> RecommendationResponse:
+        return self._request(
+            "POST", f"/v1/households/{household_id}/recipe-recommendations",
+            TypeAdapter(RecommendationResponse), body=data.model_dump(mode="json"),
         )
 
 

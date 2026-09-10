@@ -428,3 +428,60 @@ list selection to purchases. Unit choices include their full names.
 The existing theme is retained, with narrow-screen spacing and wrapping metric values. Large
 inventory tables can still scroll horizontally; drafts and retry keys remain session-local.
 Pantry history and one-generation-per-list limitations are unchanged.
+
+### Phase 7: deterministic Smart Planning MVP
+
+Open **Meal Planner**, choose a member or the whole household, and select **Find recipes**.
+Filter by cuisine (case-insensitive exact match), cooking time, and acceptable missing foods.
+Cards explain pantry coverage, missing quantities, food expiring soon, nutrition per serving,
+and stored allergen/dietary warnings. Add a recipe to Monday–Sunday breakfast, lunch, dinner,
+or an optional snack; adjust portions in the day sections. There is one recipe per meal slot;
+replacement requires confirmation. Plans are separated by household and selected member.
+
+**The weekly plan is session-local and disappears when the Streamlit session ends.** It is an
+undated weekly plan, not a saved calendar. Nutrition totals multiply server-provided per-serving
+values by planned servings; no new nutrition formula runs in Streamlit. For member comparisons,
+enter only portions that member will eat. Unplanned meals are not a complete diet. Adult targets
+are never requested for members under 18. Nutrition values and recipe choices are snapshots;
+recheck recommendations and food labels when recipes, profiles, or pantry stock change.
+
+`POST /v1/households/{household_id}/recipe-recommendations` accepts:
+
+```json
+{"member_id": null, "maximum_missing_ingredients": 3,
+ "maximum_cooking_minutes": null, "cuisine": null, "limit": 10}
+```
+
+Response: household/member IDs, ordered `recommendations`, warnings, `calculation_as_of`, and
+`calculation_version: "recipe-recommendations-v1"`. Each recommendation includes its recipe
+ID/name, saved serving yield, preparation/cooking time, cuisine, quantity requirements and
+missing amounts, expiring-food quantities, per-serving nutrition, classification, score components,
+and explanation. Missing counts use distinct foods, including foods with unresolved conversions.
+Request limits: missing foods 0–100, optional cooking minutes 1–1440, results 1–50.
+
+For each aggregated food/canonical-unit requirement, let **c = min(available / required, 1)**
+and **e = min(usable expiring-soon stock / required, 1)**. Coverage is `100 × mean(c)`;
+the score is **80 × mean(c) + 20 × mean(e)**. This measures partial quantity coverage, not
+binary ingredient presence. Grams, millilitres, and counts are never summed together. Unsupported
+food/unit groups contribute zero to both means and remain visible as unresolved shopping needs.
+Expiring soon uses the existing configured window and UTC expiration rules. Sort by score descending,
+coverage descending, then case-folded recipe name and recipe UUID. Ready means all requirements
+are covered; otherwise 1–2 missing foods yields “Missing 1–2 ingredients,” and more yields
+“Needs shopping.” Each recipe is assessed independently at its saved serving yield, without
+reserving shared pantry stock across recommendations.
+
+Member allergen checks run before conversions: case-insensitive, whitespace-normalized `contains`
+matches are hard exclusions, including ingredients with unsupported units. `may_contain` is shown
+as a warning. Allergen synonyms are not inferred; missing food metadata is not a safety guarantee.
+Structured dietary preferences require their explicit matching tag on every ingredient; untagged
+recipes are excluded for those preferences. Custom preferences are reported as unverified.
+Household planning has no personal allergy filters. No adult-target calculation is part of ranking.
+
+**Prepare grocery needs** consolidates repeated recipes and calls the existing requirement and
+shortage previews. Save through the existing generation endpoint into a draft/active list; the
+original request and idempotency key are retained on retry. One generation per list remains the
+backend rule. Planning and recommendations never consume, mutate, lock, or reserve pantry stock.
+Only explicitly saving grocery needs writes a grocery generation. The catalog is evaluated in
+memory using existing services; this MVP does not add pagination, persistence, authentication,
+LLM scoring, or external integrations. Missing nutrition may be incomplete or unavailable and is
+shown with warnings. Results are estimates, not medical advice.

@@ -3,7 +3,7 @@ from typing import Any
 
 from nourish_nest.api_client import Household
 
-PAGES = ("Dashboard", "Household", "Nutrition", "Recipes", "Pantry", "Grocery Lists")
+PAGES = ("Dashboard", "Household", "Nutrition", "Recipes", "Pantry", "Grocery Lists", "Meal Planner")
 
 
 def sync_household_selection(

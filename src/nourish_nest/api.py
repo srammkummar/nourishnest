@@ -72,6 +72,8 @@ from nourish_nest.pantry_services import (
     PantryError,
     PantryService,
 )
+from nourish_nest.planning_contracts import RecommendationRequest, RecommendationResponse
+from nourish_nest.planning_services import RecommendationService
 from nourish_nest.providers import (
     ExternalFoodNotFoundError,
     FoodDataProvider,
@@ -299,6 +301,13 @@ def health() -> dict[str, str]:
 @app.post("/v1/nutrition/calculate", response_model=NutritionPlan)
 def nutrition_calculate(profile: NutritionProfile) -> NutritionPlan:
     return calculate_nutrition_plan(profile)
+
+
+@app.post("/v1/households/{household_id}/recipe-recommendations", response_model=RecommendationResponse)
+def recipe_recommendations(
+    household_id: uuid.UUID, data: RecommendationRequest, db: Session = DB_DEPENDENCY
+) -> RecommendationResponse:
+    return RecommendationService(db).recommend(household_id, data)
 
 
 @app.post("/v1/households", response_model=HouseholdResponse, status_code=status.HTTP_201_CREATED)

@@ -12,6 +12,7 @@ from nourish_nest.api_client import (
 from nourish_nest.grocery_ui import render_groceries
 from nourish_nest.member_ui import render_members, render_nutrition
 from nourish_nest.pantry_ui import render_pantry
+from nourish_nest.planning_ui import render_planner
 from nourish_nest.recipe_ui import render_recipes
 from nourish_nest.ui_labels import friendly_message, technical_details
 from nourish_nest.ui_labels import labels as human_labels
@@ -181,6 +182,8 @@ def selected_page(api: APIClient, household: Household) -> None:
         render_pantry(api, household, show_error)
     elif page == "Grocery Lists":
         render_groceries(api, household, show_error)
+    elif page == "Meal Planner":
+        render_planner(api, household, show_error)
 
 
 def main() -> None:
