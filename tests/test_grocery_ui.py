@@ -225,7 +225,7 @@ def test_list_crud_and_versions(api):
 def test_manual_item_crud_and_decimal(api):
     ui = app()
     section(ui, "Manual items")
-    text(ui, "Display name", "Manual soap")
+    text(ui, "Item name", "Manual soap")
     text(ui, "Required quantity", "0.000001")
     button(ui, "Add item").click().run()
     data = api.create_grocery_item.call_args.args[-1]
@@ -246,7 +246,7 @@ def test_stored_food_manual_item(api):
     section(ui, "Manual items")
     ui.checkbox[0].check().run()
     button(ui, "Search foods").click().run()
-    text(ui, "Display name", "Rice")
+    text(ui, "Item name", "Rice")
     button(ui, "Add item").click().run()
     assert api.create_grocery_item.call_args.args[-1].food_id == FOOD.id
 
@@ -286,7 +286,7 @@ def test_generation_retains_identical_request_and_errors(api, code):
     original = record(ui)["generation"]
     assert original.expected_list_version == 2
     assert any(t.value == "Request ID: generation-trace" for t in ui.text)
-    assert any(c.value == f"Error code: {code}" for c in ui.caption)
+    assert any(c.value == f"Error code: {code}" for c in ui.text)
     api.grocery_list.return_value = LIST.model_copy(update={"version": 7})
     button(ui, "Refresh groceries").click().run()
     text(ui, f"Desired servings: {OWN.name}", "9")
@@ -316,7 +316,7 @@ def test_purchase_intake_retained_key_and_refresh(api):
     section(ui, "Purchase")
     button(ui, "Start purchase").click().run()
     next(c for c in ui.checkbox if c.label == "Add purchase to pantry").check().run()
-    text(ui, "Purchased quantity increment", "0.125001")
+    text(ui, "Amount bought this time", "0.125001")
     text(ui, "Total purchase price (optional)", "1.25")
     next(c for c in ui.checkbox if c.label == "Explicitly allow overpurchase").check()
     button(ui, "Record purchase").click().run()
@@ -397,7 +397,9 @@ def test_rendering_and_validation():
 
 
 def test_purchase_refresh_failure_does_not_repeat_purchase(api):
-    api.pantry_overview.side_effect = APIResponseError("api_timeout", "Refresh failed", "refresh-trace")
+    api.pantry_overview.side_effect = APIResponseError(
+        "api_timeout", "Refresh failed", "refresh-trace"
+    )
     ui = app()
     section(ui, "Purchase")
     button(ui, "Start purchase").click().run()
@@ -426,7 +428,10 @@ def test_recipe_selection_and_pending_generation_survive_households(api):
     ui.selectbox(key="household_id").select(str(HOME.id)).run()
     assert record(ui)["generation"] == original
     assert set(ui.multiselect[0].value) == {OWN.id, SYSTEM.id}
-    assert next(i.value for i in ui.text_input if i.label == f"Desired servings: {OWN.name}") == "5.125001"
+    assert (
+        next(i.value for i in ui.text_input if i.label == f"Desired servings: {OWN.name}")
+        == "5.125001"
+    )
 
 
 def test_http_grocery_contracts():
@@ -510,3 +515,21 @@ def test_http_grocery_contracts():
     assert json.loads(calls[8].content)["expected_version"] == 3
     assert json.loads(calls[-1].content) == purchase.model_dump(mode="json")
     assert json.loads(calls[-2].content) == gen.model_dump(mode="json")
+
+
+def test_human_grocery_labels_and_guidance(api):
+    ui = app()
+    selector = next(box for box in ui.selectbox if box.label == "Grocery list")
+    assert all(str(LIST.id) not in option for option in selector.options)
+    assert LIST.name in selector.options[0]
+    guide = next(e for e in ui.expander if e.label == "Shopping guide")
+    assert "Create/select list" in guide.markdown[0].value
+    assert "Record purchases" in guide.markdown[0].value
+    assert "Item ID" not in ui.dataframe[0].value.columns
+    assert "Version" not in ui.dataframe[0].value.columns
+    assert any(
+        str(LIST.id) in t.value
+        for e in ui.expander
+        if e.label == "Technical details"
+        for t in e.text
+    )

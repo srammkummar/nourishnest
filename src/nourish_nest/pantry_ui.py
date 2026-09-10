@@ -16,6 +16,14 @@ from nourish_nest.pantry_client_models import (
     StockRuleInput,
     TransferInput,
 )
+from nourish_nest.ui_labels import (
+    food_labels,
+    humanize,
+    labels,
+    technical_details,
+    unit_label,
+    validation_errors,
+)
 
 UNITS = ("g", "kg", "oz", "lb", "ml", "l", "cup", "tbsp", "tsp", "item")
 SECTIONS = ("Inventory", "Add item", "Locations", "Actions", "Low-stock rules", "History")
@@ -79,13 +87,13 @@ def filtered_lots(snapshot: dict, foods: dict, query: str, location, view: str) 
 
 
 def inventory_rows(lots: list[PantryLot], snapshot: dict, foods: dict) -> list[dict]:
-    locations = {r.id: r.name for r in snapshot["locations"]}
+    locations = labels(snapshot["locations"], context=lambda r: humanize(r.location_type))
     expiring = {i.id for i in snapshot["expiring"]}
     expired = {i.id for i in snapshot["expired"]}
     return [
         {
             "Food": foods[i.food_id].name,
-            "Location": locations.get(i.location_id, str(i.location_id)),
+            "Location": locations.get(i.location_id, "Unknown location"),
             "Status": f"{'🔴' if i.id in expired else '🟠' if i.id in expiring else '•'} {i.status.title()}",
             "Expiration alert": "Expired"
             if i.id in expired
@@ -96,8 +104,6 @@ def inventory_rows(lots: list[PantryLot], snapshot: dict, foods: dict) -> list[d
             "Unit": i.unit,
             "Expiration": str(i.expiration_date or "Not set"),
             "Purchased": str(i.purchase_date or "Not set"),
-            "Version": i.version,
-            "Lot ID": str(i.id),
         }
         for i in lots
     ]
@@ -119,14 +125,14 @@ def choose_food(api: APIClient, workspace: dict, prefix: str):
     return st.selectbox(
         "Food",
         [f.id for f in results],
-        format_func=lambda value: f"{workspace['foods'][value].name} · {str(value)[:8]}",
+        format_func=food_labels(results).get,
         key=f"{prefix}_food",
     )
 
 
 def inventory(snapshot: dict, workspace: dict, prefix: str) -> None:
     query = st.text_input("Filter by food name", key=f"{prefix}_query")
-    locations = {r.id: r.name for r in snapshot["locations"]}
+    locations = labels(snapshot["locations"], context=lambda r: humanize(r.location_type))
     location = st.selectbox(
         "Location filter",
         [None, *locations],
@@ -140,7 +146,26 @@ def inventory(snapshot: dict, workspace: dict, prefix: str) -> None:
         workspace["foods"],
     )
     if rows:
-        st.dataframe(rows, hide_index=True, use_container_width=True)
+        st.dataframe(
+            rows,
+            column_order=[
+                "Food",
+                "Quantity",
+                "Unit",
+                "Location",
+                "Status",
+                "Expiration alert",
+                "Expiration",
+                "Purchased",
+            ],
+            hide_index=True,
+            use_container_width=True,
+        )
+        technical_details(
+            inventory_records="\n".join(
+                f"{item.id}: version {item.version}" for item in snapshot["items"]
+            )
+        )
         st.caption(
             "Expiration alerts and low-stock membership come from the API. Refresh for current stock."
         )
@@ -152,7 +177,7 @@ def locations_page(api: APIClient, home, snapshot: dict, workspace: dict, prefix
     locations = snapshot["locations"]
     if locations:
         st.dataframe(
-            [{"Name": r.name, "Type": r.location_type, "ID": str(r.id)} for r in locations],
+            [{"Name": r.name, "Type": humanize(r.location_type)} for r in locations],
             hide_index=True,
         )
     else:
@@ -160,30 +185,33 @@ def locations_page(api: APIClient, home, snapshot: dict, workspace: dict, prefix
     with st.form(f"{prefix}_create"):
         name = st.text_input("Location name", max_chars=100)
         kind = st.selectbox(
-            "Storage type", ["pantry", "refrigerator", "freezer", "cabinet", "custom"]
+            "Storage type",
+            ["pantry", "refrigerator", "freezer", "cabinet", "custom"],
+            format_func=humanize,
         )
         submitted = st.form_submit_button("Create location")
     if submitted:
         api.create_pantry_location(home, LocationInput(name=name.strip(), location_type=kind))
-        finish(workspace, "Storage location created.")
+        finish(workspace, f"Created {name.strip()}.")
         st.rerun()
     if locations:
-        selected = st.selectbox(
-            "Location to delete",
-            [r.id for r in locations],
-            format_func=lambda value: next(r.name for r in locations if r.id == value),
-            key=f"{prefix}_delete",
-        )
-        confirm = st.checkbox(
-            "Confirm deletion of this empty location", key=f"{prefix}_{selected}_confirm"
-        )
-        if st.button("Delete location", disabled=not confirm):
-            api.delete_pantry_location(home, selected)
-            finish(workspace, "Storage location deleted.")
-            st.rerun()
-        st.caption(
-            "Only empty locations can be deleted. The API checks whether lots still reference the location."
-        )
+        with st.expander("Delete an empty location"):
+            selected = st.selectbox(
+                "Location to delete",
+                [r.id for r in locations],
+                format_func=labels(locations, context=lambda r: humanize(r.location_type)).get,
+                key=f"{prefix}_delete",
+            )
+            confirm = st.checkbox(
+                "Confirm deletion of this empty location", key=f"{prefix}_{selected}_confirm"
+            )
+            if st.button("Delete location", disabled=not confirm):
+                api.delete_pantry_location(home, selected)
+                finish(workspace, "Storage location deleted.")
+                st.rerun()
+            st.caption(
+                "Only empty locations can be deleted. The API checks whether lots still reference the location."
+            )
 
 
 def add_item(api: APIClient, home, snapshot: dict, workspace: dict, prefix: str):
@@ -193,18 +221,18 @@ def add_item(api: APIClient, home, snapshot: dict, workspace: dict, prefix: str)
     food = choose_food(api, workspace, prefix)
     if food is None:
         return
-    locations = {r.id: r.name for r in snapshot["locations"]}
+    locations = labels(snapshot["locations"], context=lambda r: humanize(r.location_type))
     with st.form(f"{prefix}_add"):
         location = st.selectbox("Store in", list(locations), format_func=locations.get)
         quantity = st.text_input(
             "Quantity", "1", help="Positive decimal, up to three decimal places."
         )
-        unit = st.selectbox("Unit", UNITS)
+        unit = st.selectbox("Unit", UNITS, format_func=unit_label)
         expiration = st.date_input("Expiration date (optional)", value=None)
         purchase = st.date_input("Purchase date (optional)", value=None)
         submitted = st.form_submit_button("Add pantry item")
     st.caption(
-        "Adding a lot has no API idempotency key. After a timeout, refresh inventory and check for the lot before submitting again."
+        "If saving times out, refresh inventory and check whether this food was added before trying again."
     )
     if submitted:
         data = PantryItemInput(
@@ -216,7 +244,7 @@ def add_item(api: APIClient, home, snapshot: dict, workspace: dict, prefix: str)
             purchase_date=purchase,
         )
         api.create_pantry_item(home, data)
-        finish(workspace, "Pantry item added.")
+        finish(workspace, f"Added {workspace['foods'][food].name} to {locations[location]}.")
         st.rerun()
 
 
@@ -245,7 +273,10 @@ def execute_action(api: APIClient, home, workspace: dict) -> None:
     except APIError as error:
         action["error"] = error
         raise
-    finish(workspace, f"{operation} completed. Inventory refreshed.")
+    finish(
+        workspace,
+        f"Updated {workspace['foods'][action['item'].food_id].name}. Inventory refreshed.",
+    )
     st.rerun()
 
 
@@ -258,18 +289,23 @@ def actions(
             st.info("Add inventory before starting an action.")
             return
         selected = st.selectbox(
-            "Lot",
+            "Food package",
             [r.id for r in snapshot["items"]],
-            format_func=lambda value: next(
-                f"{workspace['foods'][r.food_id].name} · {r.quantity} {r.unit} · {r.status} · {str(r.id)[:8]}"
-                for r in snapshot["items"]
-                if r.id == value
-            ),
+            format_func=labels(
+                snapshot["items"],
+                name=lambda r: workspace["foods"][r.food_id].name,
+                context=lambda r: (
+                    f"{next((loc.name for loc in snapshot['locations'] if loc.id == r.location_id), 'Unknown location')} · {r.quantity} {r.unit} · {humanize(r.status)} · Best before {r.expiration_date or 'not set'}"
+                ),
+            ).get,
             key=f"{prefix}_lot",
         )
         operation = st.selectbox(
             "Action",
             ["Increase quantity", "Consume (FEFO)", "Transfer whole lot", "Discard"],
+            format_func=lambda value: (
+                "Use food (earliest expiry first)" if value == "Consume (FEFO)" else value
+            ),
             key=f"{prefix}_operation",
         )
         if st.button("Start action"):
@@ -279,15 +315,15 @@ def actions(
             st.rerun()
         return
     item, operation = action["item"], action["operation"]
-    st.subheader(operation)
+    st.subheader("Use food" if operation == "Consume (FEFO)" else operation)
     st.write(f"{workspace['foods'][item.food_id].name} · {item.quantity} {item.unit}")
-    st.caption(f"Lot: {item.id} · Expected version: {item.version}")
+    technical_details(pantry_lot_ID=item.id, version=item.version)
     if st.button("Reset action with current stock"):
         workspace.update(action=None, snapshot=None)
         st.rerun()
     if action["payload"] is not None:
         st.info(
-            "The submitted action is retained unchanged, with the same key. Retry it, or check refreshed inventory before explicitly resetting."
+            "Your submitted change is saved for a safe retry. Check refreshed inventory before resetting it to start a different change."
         )
         if action["error"]:
             show_error(action["error"])
@@ -296,7 +332,7 @@ def actions(
         return
     if operation == "Consume (FEFO)":
         st.info(
-            "The API chooses this food's lots across all locations using earliest expiration first. It accepts no client version; it does not target only the selected lot."
+            "Food is used from the earliest-expiring stock first, across all your locations. The chosen package identifies the food, not the only package that will be used."
         )
     elif operation == "Transfer whole lot":
         st.info(
@@ -318,7 +354,7 @@ def actions(
                 "Quantity to discard" if operation == "Discard" else "Quantity change", "1"
             )
             options = list(dict.fromkeys([item.unit, *UNITS]))
-            unit = st.selectbox("Action unit", options)
+            unit = st.selectbox("Action unit", options, format_func=unit_label)
             reason = st.text_input("Reason (optional)", max_chars=300)
             target = None
         confirm = st.checkbox("Confirm discard of this lot") if operation == "Discard" else True
@@ -385,14 +421,14 @@ def stock_rules(api: APIClient, home, snapshot: dict, workspace: dict, prefix: s
             "Low-stock threshold", str(rule.threshold_quantity) if rule else "1"
         )
         threshold_units = list(dict.fromkeys([rule.threshold_unit, *UNITS])) if rule else UNITS
-        threshold_unit = st.selectbox("Threshold unit", threshold_units)
+        threshold_unit = st.selectbox("Threshold unit", threshold_units, format_func=unit_label)
         reorder = st.text_input(
             "Preferred reorder quantity", str(rule.preferred_reorder_quantity) if rule else "1"
         )
         reorder_units = (
             list(dict.fromkeys([rule.preferred_reorder_unit, *UNITS])) if rule else UNITS
         )
-        reorder_unit = st.selectbox("Reorder unit", reorder_units)
+        reorder_unit = st.selectbox("Reorder unit", reorder_units, format_func=unit_label)
         submitted = st.form_submit_button("Save stock rule")
     if submitted:
         api.save_pantry_stock_rule(
@@ -405,11 +441,12 @@ def stock_rules(api: APIClient, home, snapshot: dict, workspace: dict, prefix: s
                 preferred_reorder_unit=reorder_unit,
             ),
         )
-        finish(workspace, "Low-stock rule saved.")
+        finish(workspace, f"Saved restock reminder for {foods[food].name}.")
         st.rerun()
 
 
 def render_pantry(api: APIClient, household: Household, show_error: Callable) -> None:
+    st.write("See what you have, where it is stored, and what needs using or replacing.")
     workspace = st.session_state.setdefault(f"pantry_{household.id}", new_workspace())
     prefix = f"pantry_{household.id}"
     intent = st.session_state.get("intent")
@@ -446,6 +483,16 @@ def render_pantry(api: APIClient, household: Household, show_error: Callable) ->
         ):
             column.metric(label, value)
         section = st.radio("Pantry section", SECTIONS, horizontal=True, key=f"{prefix}_section")
+        st.caption(
+            {
+                "Inventory": "Filter your food by location or freshness, then use Actions to change stock.",
+                "Add item": "Choose a food and storage location, then enter its amount; dates are optional.",
+                "Locations": "Create named storage spaces such as Kitchen cupboard or Garage freezer.",
+                "Actions": "Choose the food and action, review the amount, then confirm your change.",
+                "Low-stock rules": "Choose a food and the amount below which you want a reminder to restock.",
+                "History": "Review past stock changes when history becomes available.",
+            }[section]
+        )
         form_prefix = f"{prefix}_{workspace['epoch']}_{section}"
         if section == "Inventory":
             inventory(snapshot, workspace, f"{prefix}_inventory")
@@ -465,8 +512,7 @@ def render_pantry(api: APIClient, household: Household, show_error: Callable) ->
                 "Transaction type, quantity, unit, timestamp, and item/location references will appear here when a read endpoint is available. This page does not infer history from current stock."
             )
     except ValidationError as error:
-        for issue in error.errors():
-            st.error(f"{' / '.join(map(str, issue['loc']))}: {issue['msg']}")
+        validation_errors(error)
     except APIError as error:
         show_error(error)
         if error.code == "stale_inventory_version":

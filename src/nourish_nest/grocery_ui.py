@@ -9,6 +9,13 @@ from pydantic import ValidationError
 import nourish_nest.grocery_client_models as wire
 from nourish_nest.api_client import APIClient, APIError, Household
 from nourish_nest.pantry_ui import UNITS, choose_food
+from nourish_nest.ui_labels import (
+    humanize,
+    labels,
+    technical_details,
+    unit_label,
+    validation_errors,
+)
 
 STATUSES = ("draft", "active", "completed", "archived")
 SECTIONS = ("Lists", "Manual items", "Recipe planning", "Purchase")
@@ -61,9 +68,7 @@ def item_rows(items):
             if i.purchased_quantity
             else "○ Needed",
             "Category": i.category or "",
-            "Source": i.source_type,
-            "Version": i.version,
-            "Item ID": str(i.id),
+            "Source": humanize(i.source_type),
         }
         for i in items
     ]
@@ -93,20 +98,34 @@ def requirement_rows(result):
 
 def render_warnings(warnings):
     for warning in warnings:
-        st.warning(f"{warning.code}: {warning.message}")
-        st.caption(
-            f"Food {warning.food_id}"
-            + (f" · Recipe {warning.recipe_id}" if warning.recipe_id else "")
-            + (f" · Pantry lot {warning.pantry_item_id}" if warning.pantry_item_id else "")
+        st.warning(warning.message)
+        technical_details(
+            code=warning.code,
+            food_ID=warning.food_id,
+            recipe_ID=warning.recipe_id,
+            pantry_lot_ID=warning.pantry_item_id,
         )
 
 
 def render_preview(result):
     st.subheader("Preview result")
     st.caption(f"Calculation: {result.calculation_version}")
+    source_names = {
+        source.recipe_id: source.recipe_name
+        for requirement in result.requirements
+        for source in requirement.sources
+    }
     st.caption(
         "Selection used: "
-        + "; ".join(f"{s.recipe_id}: {s.desired_servings} servings" for s in result.recipes)
+        + "; ".join(
+            f"{source_names.get(selection.recipe_id, 'Selected recipe')}: {selection.desired_servings} servings"
+            for selection in result.recipes
+        )
+    )
+    technical_details(
+        recipe_selections="; ".join(
+            f"{selection.recipe_id}: {selection.desired_servings}" for selection in result.recipes
+        )
     )
     if isinstance(result, wire.ShortageResult):
         st.info(
@@ -122,8 +141,6 @@ def render_preview(result):
                 [
                     {
                         "Recipe": s.recipe_name,
-                        "Recipe ID": str(s.recipe_id),
-                        "Ingredient": str(s.ingredient_id),
                         "Scaled original quantity": f"{s.scaled_quantity} {s.original_unit}",
                         "Contribution": f"{s.required_quantity} {requirement.canonical_unit}",
                     }
@@ -135,7 +152,7 @@ def render_preview(result):
                 st.dataframe(
                     [
                         {
-                            "Pantry lot": str(p.pantry_item_id),
+                            "Food": requirement.food_name,
                             "Original": f"{p.quantity} {p.original_unit}",
                             "Available contribution": f"{p.available_quantity} {requirement.canonical_unit}",
                             "Expiration": str(p.expiration_date or "Not set"),
@@ -154,10 +171,10 @@ def list_management(api, home, workspace, record, prefix):
     ):
         with st.form(f"{prefix}_create"):
             name = st.text_input("New list name", max_chars=200)
-            status = st.selectbox("New list status", STATUSES)
-            submitted = st.form_submit_button("Create list")
+            status = st.selectbox("New list status", STATUSES, format_func=humanize)
+            submitted = st.form_submit_button("Create list", type="primary")
         st.caption(
-            "Creation has no idempotency key. After a timeout, refresh lists before submitting again."
+            "If saving times out, refresh your lists and check whether the new list exists before trying again."
         )
         if submitted:
             saved = api.create_grocery_list(home, wire.ListInput(name=name, status=status))
@@ -170,38 +187,50 @@ def list_management(api, home, workspace, record, prefix):
     listing = record["detail"]
     with st.form(f"{prefix}_{listing.id}_{listing.version}_edit"):
         name = st.text_input("List name", listing.name, max_chars=200)
-        status = st.selectbox("List status", STATUSES, index=STATUSES.index(listing.status))
-        st.caption(f"Expected version: {listing.version}")
-        submitted = st.form_submit_button("Save list")
+        status = st.selectbox(
+            "List status", STATUSES, format_func=humanize, index=STATUSES.index(listing.status)
+        )
+        technical_details(version=listing.version)
+        submitted = st.form_submit_button("Save list", type="primary")
     if submitted:
         api.update_grocery_list(
             home,
             listing.id,
             wire.ListUpdate(name=name, status=status, expected_version=listing.version),
         )
-        finish(workspace, record, "List updated.")
+        finish(workspace, record, f"Updated {name}.")
         st.rerun()
-    confirmed = st.checkbox(
-        "Confirm deletion of this list and all its items",
-        key=f"{prefix}_{listing.id}_{listing.version}_delete",
-    )
-    if st.button("Delete list", disabled=not confirmed):
-        api.delete_grocery_list(home, listing.id, listing.version)
-        workspace["records"].pop(str(listing.id), None)
-        finish(workspace, None, "Grocery list deleted.")
-        st.rerun()
+    with st.expander("Delete this grocery list"):
+        confirmed = st.checkbox(
+            "Confirm deletion of this list and all its items",
+            key=f"{prefix}_{listing.id}_{listing.version}_delete",
+        )
+        if st.button("Delete list", disabled=not confirmed):
+            api.delete_grocery_list(home, listing.id, listing.version)
+            workspace["records"].pop(str(listing.id), None)
+            finish(workspace, None, f"Deleted {listing.name}.")
+            st.rerun()
 
 
 def manual_items(api, home, workspace, record, prefix):
     listing = record["detail"]
     manual = [i for i in record["items"] if i.source_type == "manual"]
+    st.caption(
+        "Enter the item name and amount needed. Linking a food and adding a category are optional."
+    )
     selection = st.selectbox(
         "Manual item",
         [None, *[i.id for i in manual]],
         format_func=lambda value: (
             "Add a new item"
             if value is None
-            else next(f"{i.display_name} · {str(i.id)[:8]}" for i in manual if i.id == value)
+            else labels(
+                manual,
+                name=lambda i: i.display_name,
+                context=lambda i: (
+                    f"{i.required_quantity} {i.required_unit} · {i.category or 'Uncategorised'}"
+                ),
+            )[value]
         ),
         key=f"{prefix}_manual",
     )
@@ -218,16 +247,21 @@ def manual_items(api, home, workspace, record, prefix):
             workspace["foods"][food.id] = food
         food_id = choose_food(api, workspace, token)
     with st.form(f"{token}_edit"):
-        name = st.text_input("Display name", item.display_name if item else "", max_chars=200)
+        name = st.text_input("Item name", item.display_name if item else "", max_chars=200)
         quantity = st.text_input("Required quantity", str(item.required_quantity) if item else "1")
         units = list(dict.fromkeys([item.required_unit, *UNITS])) if item else UNITS
-        unit = st.selectbox("Required unit", units, disabled=bool(item and item.purchased_quantity))
+        unit = st.selectbox(
+            "Required unit",
+            units,
+            format_func=unit_label,
+            disabled=bool(item and item.purchased_quantity),
+        )
         category = st.text_input(
             "Category (optional)", (item.category or "") if item else "", max_chars=100
         )
         if item:
             st.caption(
-                f"Purchased: {item.purchased_quantity} {item.required_unit} · Expected version: {item.version}. Purchase totals are maintained through Purchase."
+                f"Purchased: {item.purchased_quantity} {item.required_unit}. Record additional purchases in Purchase."
             )
         submitted = st.form_submit_button("Save item" if item else "Add item")
     if submitted:
@@ -253,16 +287,17 @@ def manual_items(api, home, workspace, record, prefix):
             )
         else:
             api.create_grocery_item(home, listing.id, wire.ItemInput(**values))
-        finish(workspace, record, "Manual item saved.")
+        finish(workspace, record, f"Saved {name}.")
         st.rerun()
     if item:
-        confirm = st.checkbox("Confirm deletion of this item", key=f"{token}_confirm")
-        if st.button("Delete item", disabled=not confirm):
-            api.delete_grocery_item(home, listing.id, item.id, item.version)
-            finish(workspace, record, "Manual item deleted.")
-            st.rerun()
+        with st.expander("Delete this item"):
+            confirm = st.checkbox("Confirm deletion of this item", key=f"{token}_confirm")
+            if st.button("Delete item", disabled=not confirm):
+                api.delete_grocery_item(home, listing.id, item.id, item.version)
+                finish(workspace, record, f"Deleted {item.display_name}.")
+                st.rerun()
     st.caption(
-        "New-item creation has no idempotency key; refresh after an ambiguous timeout. Generated items retain their recipe source and are shown in the inventory above."
+        "If adding an item times out, refresh and check the list before trying again. Items from recipes keep their original recipe details."
     )
 
 
@@ -279,19 +314,31 @@ def submit_generation(api, home, workspace, record):
     st.rerun()
 
 
-def generation_result(result):
+def generation_result(result, recipes=()):
     st.subheader("Saved generation")
-    st.caption(
-        f"Run {result.generation_run_id} · List version {result.grocery_list_version} · {result.calculation_version} · {result.calculation_as_of.isoformat()}"
+    st.caption(f"Saved at {result.calculation_as_of.isoformat()}")
+    technical_details(
+        generation_run_ID=result.generation_run_id,
+        version=result.grocery_list_version,
+        calculation=result.calculation_version,
     )
     if result.created_items:
         st.dataframe(item_rows(result.created_items), hide_index=True)
+        technical_details(
+            recipe_lineage="\n".join(
+                f"{item.id}: recipe {source.recipe_id}, ingredient {source.recipe_ingredient_id}"
+                for item in result.created_items
+                for source in item.recipe_sources
+            )
+        )
         st.dataframe(
             [
                 {
                     "Item": item.display_name,
-                    "Recipe ID": str(source.recipe_id),
-                    "Ingredient ID": str(source.recipe_ingredient_id or "Removed ingredient"),
+                    "Recipe": next(
+                        (r.name for r in recipes if r.id == source.recipe_id),
+                        "Saved recipe contribution",
+                    ),
                     "Recipe requirement before pantry subtraction": f"{source.required_quantity} {source.canonical_unit}",
                 }
                 for item in result.created_items
@@ -316,15 +363,20 @@ def recipe_planning(api, home, workspace, record, prefix):
         st.info("No readable recipes yet. Create a household recipe first.")
         return
     if f"{prefix}_recipes" not in st.session_state:
-        st.session_state[f"{prefix}_recipes"] = [r for r in workspace.get("selected_recipes", []) if r in recipes]
+        st.session_state[f"{prefix}_recipes"] = [
+            r for r in workspace.get("selected_recipes", []) if r in recipes
+        ]
     else:
-        st.session_state[f"{prefix}_recipes"] = [r for r in st.session_state[f"{prefix}_recipes"] if r in recipes]
+        st.session_state[f"{prefix}_recipes"] = [
+            r for r in st.session_state[f"{prefix}_recipes"] if r in recipes
+        ]
     selected = st.multiselect(
         "Recipes",
         list(recipes),
-        format_func=lambda value: (
-            f"{recipes[value].name} · {'System recipe' if recipes[value].household_id is None else 'Household recipe'} · {str(value)[:8]}"
-        ),
+        format_func=labels(
+            recipes.values(),
+            context=lambda r: "System recipe" if r.household_id is None else "Household recipe",
+        ).get,
         key=f"{prefix}_recipes",
     )
     workspace["selected_recipes"] = selected
@@ -355,13 +407,13 @@ def recipe_planning(api, home, workspace, record, prefix):
         st.info("Select or create a grocery list to save a generation.")
         return
     listing = record["detail"]
-    st.subheader("Save pantry-aware generation")
+    st.subheader("Save shopping needs")
     st.caption(
-        f"Target: {listing.name} · Expected version: {listing.version}. Only one successful recipe generation is supported per list. Existing manual items remain."
+        f"Target: {listing.name}. Only one successful recipe generation is supported per list. Existing manual items remain."
     )
     if record["generation"] is not None:
         st.info(
-            "A generation request is pending. Retrying sends its original selections, version, and key unchanged."
+            "Your recipe choices are saved for retry. Retry the original request, or reset it to start again after checking the list."
         )
         if st.button("Retry generation"):
             submit_generation(api, home, workspace, record)
@@ -381,7 +433,7 @@ def recipe_planning(api, home, workspace, record, prefix):
         if listing.status not in ("draft", "active"):
             st.info("Generation requires a draft or active list.")
     if record["generation_result"]:
-        generation_result(record["generation_result"])
+        generation_result(record["generation_result"], workspace["recipes"])
 
 
 def submit_purchase(api, home, workspace, record):
@@ -410,13 +462,13 @@ def purchase(api, home, workspace, record, prefix):
         st.success(
             f"Recorded purchase: {receipt.purchased_quantity} {receipt.purchased_unit}. Purchased total: {receipt.purchased_total} {receipt.item_unit}."
         )
-        st.caption(
-            f"Event {receipt.purchase_event_id} · Item version {receipt.item_version} · List status {receipt.grocery_list_status}"
+        st.caption(f"List status: {humanize(receipt.grocery_list_status)}")
+        technical_details(
+            purchase_event_ID=receipt.purchase_event_id,
+            version=receipt.item_version,
+            pantry_lot_ID=receipt.pantry_item_id,
+            transaction_ID=receipt.pantry_transaction_id,
         )
-        if receipt.pantry_item_id:
-            st.caption(
-                f"Pantry lot {receipt.pantry_item_id} · Transaction {receipt.pantry_transaction_id}"
-            )
         if receipt.purchase_price is not None:
             st.write(f"Total price: {receipt.purchase_price} {receipt.currency}")
     pending = record["purchase"]
@@ -428,9 +480,13 @@ def purchase(api, home, workspace, record, prefix):
         selected = st.selectbox(
             "Item to purchase",
             list(items),
-            format_func=lambda value: (
-                f"{items[value].display_name} · {items[value].purchased_quantity}/{items[value].required_quantity} {items[value].required_unit}"
-            ),
+            format_func=labels(
+                items.values(),
+                name=lambda i: i.display_name,
+                context=lambda i: (
+                    f"{i.purchased_quantity}/{i.required_quantity} {i.required_unit} · {i.category or humanize(i.source_type)}"
+                ),
+            ).get,
             key=f"{prefix}_item",
         )
         if st.button("Start purchase"):
@@ -439,16 +495,14 @@ def purchase(api, home, workspace, record, prefix):
         return
     item = pending["item"]
     st.subheader(f"Purchase: {item.display_name}")
-    st.caption(
-        f"Expected item version: {item.version}. Enter the increment purchased, not a new cumulative total."
-    )
+    st.caption("Enter the amount you bought this time, not the total of all previous purchases.")
     if st.button("Reset purchase request"):
         record["purchase"] = None
         record.update(detail=None, items=None)
         st.rerun()
     if pending["payload"] is not None:
         st.info(
-            "Retry uses the original purchase amount, pantry options, version, and key unchanged. Check inventory before explicitly resetting an uncertain purchase."
+            "Retry sends the same purchase and pantry choices without adding stock twice. Check inventory before resetting to a different purchase."
         )
         if st.button("Retry purchase"):
             submit_purchase(api, home, workspace, record)
@@ -461,10 +515,22 @@ def purchase(api, home, workspace, record, prefix):
         st.caption(
             "This item has no stored-food link. It can be purchased but cannot be added to pantry."
         )
-    locations = {r.id: r.name for r in api.pantry_locations(home)} if intake else {}
+    locations = (
+        labels(api.pantry_locations(home), context=lambda r: humanize(r.location_type))
+        if intake
+        else {}
+    )
     with st.form(f"{token}_form"):
-        amount = st.text_input("Purchased quantity increment", "1")
-        unit = st.selectbox("Purchased unit", list(dict.fromkeys([item.required_unit, *UNITS])))
+        amount = st.text_input(
+            "Amount bought this time",
+            "1",
+            help="Enter a positive amount. For example, 0.5 kg means half a kilogram.",
+        )
+        unit = st.selectbox(
+            "Purchased unit",
+            list(dict.fromkeys([item.required_unit, *UNITS])),
+            format_func=unit_label,
+        )
         overpurchase = st.checkbox("Explicitly allow overpurchase")
         location = (
             st.selectbox("Pantry location", list(locations), format_func=locations.get)
@@ -476,7 +542,7 @@ def purchase(api, home, workspace, record, prefix):
             "Total purchase price (optional)",
             help="Total price for this increment, in household currency.",
         )
-        submitted = st.form_submit_button("Record purchase")
+        submitted = st.form_submit_button("Record purchase", type="primary")
     if submitted:
         pending["payload"] = wire.PurchaseInput(
             purchased_quantity=amount,
@@ -493,6 +559,11 @@ def purchase(api, home, workspace, record, prefix):
 
 
 def render_groceries(api: APIClient, household: Household, show_error: Callable):
+    st.write("Plan your shopping, check what is already at home, and record purchases as you go.")
+    with st.expander("Shopping guide", expanded=True):
+        st.markdown(
+            "1. **Create/select list** in Lists.\n2. **Select recipes** in Recipe planning.\n3. **Preview needs** to see ingredients.\n4. **Check pantry shortages** to see what to buy.\n5. **Generate list** to save those shortages.\n6. **Record purchases** in Purchase, optionally adding food to your pantry."
+        )
     home = household.id
     prefix = f"groceries_{home}"
     workspace = st.session_state.setdefault(prefix, new_workspace())
@@ -525,7 +596,9 @@ def render_groceries(api: APIClient, household: Household, show_error: Callable)
         if "pending_selection" in workspace:
             st.session_state[f"{prefix}_selected"] = workspace.pop("pending_selection")
             st.session_state[f"{prefix}_filter"] = "All"
-        status = st.selectbox("Filter list status", ["All", *STATUSES], key=f"{prefix}_filter")
+        status = st.selectbox(
+            "Filter list status", ["All", *STATUSES], format_func=humanize, key=f"{prefix}_filter"
+        )
         workspace["filter"] = status
         available = {
             str(r.id): r for r in workspace["lists"] if status == "All" or r.status == status
@@ -533,9 +606,18 @@ def render_groceries(api: APIClient, household: Household, show_error: Callable)
         record = None
         if available:
             if st.session_state.get(f"{prefix}_selected") not in available:
-                st.session_state[f"{prefix}_selected"] = workspace.get("selected") if workspace.get("selected") in available else next(iter(available))
+                st.session_state[f"{prefix}_selected"] = (
+                    workspace.get("selected")
+                    if workspace.get("selected") in available
+                    else next(iter(available))
+                )
             # Use actual display strings as options so browser labels change with records.
-            picker_options = {f"{row.name} · {row.status} · {key}": key for key, row in available.items()}
+            picker_options = {
+                label: str(key)
+                for key, label in labels(
+                    available.values(), context=lambda r: humanize(r.status)
+                ).items()
+            }
             selected_option = st.selectbox(
                 "Grocery list",
                 list(picker_options),
@@ -553,7 +635,7 @@ def render_groceries(api: APIClient, household: Household, show_error: Callable)
                 record["items"] = api.grocery_items(home, available[selected].id)
             listing, items = record["detail"], record["items"]
             st.subheader(f"{listing.name} · {listing.status.title()}")
-            st.caption(f"List ID: {listing.id} · Version {listing.version}")
+            technical_details(list_ID=listing.id, version=listing.version)
             checked, total = sum(i.checked for i in items), len(items)
             st.progress(
                 checked * 100 // total if total else 0, text=f"Purchased items: {checked} / {total}"
@@ -578,8 +660,7 @@ def render_groceries(api: APIClient, household: Household, show_error: Callable)
         else:
             purchase(api, home, workspace, record, form_prefix)
     except ValidationError as error:
-        for issue in error.errors():
-            st.error(f"{' / '.join(map(str, issue['loc']))}: {issue['msg']}")
+        validation_errors(error)
     except APIError as error:
         show_error(error)
         if error.code == "stale_grocery_version":

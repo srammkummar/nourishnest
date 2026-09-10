@@ -8,6 +8,15 @@ from pydantic import ValidationError
 
 from nourish_nest.api_client import APIClient, APIError, Household
 from nourish_nest.recipe_client_models import RecipeInput, RecipeNutrition, RecipeRecord, StoredFood
+from nourish_nest.ui_labels import (
+    food_labels,
+    humanize,
+    unit_label,
+    validation_errors,
+)
+from nourish_nest.ui_labels import (
+    labels as human_labels,
+)
 
 # Input choices mirror the API's supported units; conversion remains server-side.
 UNITS = ("g", "kg", "oz", "lb", "ml", "l", "cup", "tbsp", "tsp", "item")
@@ -144,6 +153,9 @@ def row_controls(rows: list[dict], index: int, key: str) -> None:
 def editor(api: APIClient, household: Household, workspace: dict, show_error: Callable) -> None:
     draft = workspace["draft"]
     token, values = draft["token"], draft["values"]
+    st.caption(
+        "Name, servings, and at least one ingredient are required. Add ingredients in cooking order; you can move or remove rows before saving."
+    )
     st.subheader("Edit household recipe" if draft["recipe_id"] else "Create household recipe")
     if st.button("Cancel editing"):
         workspace["draft"] = None
@@ -152,11 +164,14 @@ def editor(api: APIClient, household: Household, workspace: dict, show_error: Ca
         "Recipe name", values["name"], max_chars=200, key=f"{token}_name"
     )
     values["description"] = st.text_area(
-        "Description", values.get("description") or "", max_chars=4000, key=f"{token}_description"
+        "Description (optional)",
+        values.get("description") or "",
+        max_chars=4000,
+        key=f"{token}_description",
     )
     a, b = st.columns(2)
     values["cuisine"] = a.text_input(
-        "Cuisine", values.get("cuisine") or "", max_chars=100, key=f"{token}_cuisine"
+        "Cuisine (optional)", values.get("cuisine") or "", max_chars=100, key=f"{token}_cuisine"
     )
     values["servings"] = b.text_input(
         "Servings",
@@ -199,12 +214,7 @@ def editor(api: APIClient, household: Household, workspace: dict, show_error: Ca
         except APIError as error:
             show_error(error)
     if draft["foods"]:
-        labels = {
-            str(food.id): f"{food.name}"
-            + (f" — {food.brand}" if food.brand else "")
-            + f" · {food.id}"
-            for food in draft["foods"]
-        }
+        labels = {str(key): value for key, value in food_labels(draft["foods"]).items()}
         food_id = st.selectbox(
             "Stored food", list(labels), format_func=labels.get, key=f"{token}_food"
         )
@@ -228,10 +238,14 @@ def editor(api: APIClient, household: Household, workspace: dict, show_error: Ca
                 units.append(row["unit"])
                 st.caption("Existing unit preserved; nutrition may report conversion warnings.")
             row["unit"] = b.selectbox(
-                "Unit", units, index=units.index(row["unit"]), key=f"{key}_unit"
+                "Unit",
+                units,
+                format_func=unit_label,
+                index=units.index(row["unit"]),
+                key=f"{key}_unit",
             )
             row["preparation_note"] = st.text_input(
-                "Preparation note",
+                "Preparation note (optional)",
                 row.get("preparation_note") or "",
                 max_chars=300,
                 key=f"{key}_note",
@@ -252,20 +266,28 @@ def editor(api: APIClient, household: Household, workspace: dict, show_error: Ca
             payload = build_payload(draft)
             with st.spinner("Saving recipe…"):
                 saved = (
-                    api.update_recipe(household.id, draft["recipe_id"], payload, draft["expected_version"])
+                    api.update_recipe(
+                        household.id, draft["recipe_id"], payload, draft["expected_version"]
+                    )
                     if draft["recipe_id"]
                     else api.create_recipe(household.id, payload, draft["idempotency_key"])
                 )
             finish_save(workspace, saved)
             st.rerun()
         except ValidationError as error:
-            for issue in error.errors():
-                st.error(f"{' / '.join(map(str, issue['loc'])) or 'Recipe'}: {issue['msg']}")
+            validation_errors(error)
         except APIError as error:
             show_error(error)
             st.info(
                 "The save was not automatically retried. Retry creation with unchanged fields to reuse its creation key. Cancel editing explicitly discards the draft and its key. For a stale update, cancel and refresh before editing again."
             )
+            if error.code == "stale_recipe_version":
+                st.caption(
+                    "Refresh recipe discards these unsaved edits and loads the latest saved recipe."
+                )
+                if st.button("Refresh recipe"):
+                    workspace.update(draft=None, recipes=None, detail=None, nutrition=None)
+                    st.rerun()
 
 
 def details(
@@ -283,7 +305,7 @@ def details(
         f"Cuisine: {recipe.cuisine or 'Not specified'} · Preparation: {recipe.preparation_minutes} min · Cooking: {recipe.cooking_minutes} min · Servings: {recipe.servings}"
     )
     if recipe.source:
-        st.caption(f"Source: {recipe.source}")
+        st.caption(f"Source: {humanize(recipe.source)}")
     st.subheader("Ingredients")
     for row in sorted(recipe.ingredients, key=lambda r: r.display_order):
         st.write(
@@ -304,9 +326,15 @@ def details(
         st.dataframe(nutrition_rows(result), hide_index=True, use_container_width=True)
         st.write(
             "Allergens: "
-            + (", ".join(result.aggregated_allergens) or "None reported by stored food data")
+            + (
+                ", ".join(humanize(value) for value in result.aggregated_allergens)
+                or "None reported by stored food data"
+            )
         )
-        st.write("Dietary tags: " + (", ".join(result.dietary_tags) or "None reported"))
+        st.write(
+            "Dietary tags: "
+            + (", ".join(humanize(value) for value in result.dietary_tags) or "None reported")
+        )
         for warning in result.warnings:
             st.warning(warning)
         st.caption(f"Calculation version: {result.calculation_version}")
@@ -341,6 +369,9 @@ def details(
 
 
 def render_recipes(api: APIClient, household: Household, show_error: Callable) -> None:
+    st.write(
+        "Choose a recipe to see ingredients and nutrition, or create your own household recipe."
+    )
     workspace = st.session_state.setdefault(
         f"recipes_{household.id}",
         {
@@ -400,10 +431,11 @@ def render_recipes(api: APIClient, household: Household, show_error: Callable) -
             )
             return
         labels = {
-            str(
-                r.id
-            ): f"{r.name} · {'System recipe' if r.household_id is None else 'Household recipe'} · {str(r.id)[:8]}"
-            for r in recipes
+            str(key): value
+            for key, value in human_labels(
+                recipes,
+                context=lambda r: "System recipe" if r.household_id is None else "Household recipe",
+            ).items()
         }
         selected = workspace["selected"] if workspace["selected"] in labels else next(iter(labels))
         widget_key = f"selected_recipe_{household.id}"

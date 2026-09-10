@@ -8,7 +8,7 @@ NourishNest is a production-oriented household management platform. The first wo
 - HTTP-only typed API client with timeouts, safe GET retries, and request-ID errors
 - Saved household member management and API-based nutrition estimates
 - Recipe browsing, editing, and API-calculated nutrition
-- Pantry and grocery workflow placeholders for later Phase 6B work
+- Pantry inventory, shopping previews, grocery generation, and purchase workflows
 - FastAPI health and nutrition-calculation endpoints
 - Deterministic Mifflin–St Jeor calorie calculation
 - Goal-aware calorie adjustment with conservative safety bounds
@@ -413,3 +413,18 @@ docker compose up --build
 ## Important boundary
 
 Version 0.1 supports adults only and is intended for planning and education, not diagnosis or treatment. Pregnancy, eating-disorder risk, medical conditions, and therapeutic diets require qualified professional guidance.
+
+
+### Phase 6C: household-friendly presentation
+
+Selectors use names and friendly context while keeping IDs in HTTP payloads and session state.
+Identical names with identical context use numbered options; UUIDs, versions, and request IDs
+are available in collapsed **Technical details** sections. Errors keep your entered values.
+New member age, height, and weight start blank; enter actual measurements. Member cards offer
+Edit and Delete actions, and destructive actions have confirmation sections. Nutrition remains
+adult-only and is calculated by the API. The grocery Shopping guide explains the six steps from
+list selection to purchases. Unit choices include their full names.
+
+The existing theme is retained, with narrow-screen spacing and wrapping metric values. Large
+inventory tables can still scroll horizontally; drafts and retry keys remain session-local.
+Pantry history and one-generation-per-list limitations are unchanged.

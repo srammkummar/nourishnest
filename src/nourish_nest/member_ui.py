@@ -7,10 +7,13 @@ import streamlit as st
 from pydantic import ValidationError
 
 from nourish_nest.api_client import APIClient, APIError, Household, Member, MemberInput
+from nourish_nest.ui_labels import humanize, reset_fields
+from nourish_nest.ui_labels import labels as human_labels
 
 SEX = ["female", "male"]
 ACTIVITY = ["sedentary", "light", "moderate", "very_active"]
 GOALS = ["lose", "maintain", "gain"]
+GOAL_LABELS = {"lose": "Lose weight", "maintain": "Maintain weight", "gain": "Gain weight"}
 PREFERENCES = ["vegetarian", "vegan", "pescatarian", "halal", "no-beef", "no-pork", "custom"]
 
 
@@ -20,10 +23,10 @@ def member_form(key: str, member: Member | None = None) -> MemberInput | None:
         if member
         else {
             "name": "",
-            "age": 35,
+            "age": None,
             "sex": "female",
-            "height_cm": 170.0,
-            "weight_kg": 70.0,
+            "height_cm": None,
+            "weight_kg": None,
             "activity_level": "moderate",
             "goal": "maintain",
             "weekly_goal_kg": 0.0,
@@ -32,7 +35,12 @@ def member_form(key: str, member: Member | None = None) -> MemberInput | None:
             "allergies": [],
         }
     )
+    st.caption(
+        "Enter this person’s actual measurements. All profile fields are required; preferences, allergies, and notes are optional. Nutrition estimates are available for adults only."
+    )
+    st.button("Reset profile fields", key=f"{key}_reset_button", on_click=reset_fields, args=(key,))
     with st.form(key):
+        st.subheader("Personal details")
         name = st.text_input(
             "Member name", value=defaults["name"], max_chars=200, key=f"{key}_name"
         )
@@ -43,6 +51,7 @@ def member_form(key: str, member: Member | None = None) -> MemberInput | None:
         sex = b.selectbox(
             "Sex used by the current calculator",
             SEX,
+            format_func=humanize,
             index=SEX.index(defaults["sex"]),
             key=f"{key}_sex",
         )
@@ -50,16 +59,18 @@ def member_form(key: str, member: Member | None = None) -> MemberInput | None:
             "Height (cm)",
             min_value=100.0,
             max_value=250.0,
-            value=float(defaults["height_cm"]),
+            value=float(defaults["height_cm"]) if member else None,
             key=f"{key}_height",
         )
         weight = b.number_input(
             "Weight (kg)",
             min_value=30.0,
             max_value=350.0,
-            value=float(defaults["weight_kg"]),
+            value=float(defaults["weight_kg"]) if member else None,
             key=f"{key}_weight",
         )
+        st.subheader("Daily routine and goals")
+        a, b = st.columns(2)
         activity = a.selectbox(
             "Activity level",
             ACTIVITY,
@@ -132,6 +143,9 @@ def member_form(key: str, member: Member | None = None) -> MemberInput | None:
         submitted = st.form_submit_button("Save member" if member else "Add member", type="primary")
     if not submitted:
         return None
+    if age is None or height is None or weight is None:
+        st.error("Enter the member’s age, height, and weight before saving.")
+        return None
 
     def records(value):
         return value.astype(object).where(value.notna(), None).to_dict("records")
@@ -169,6 +183,7 @@ def render_members(
     api: APIClient, household: Household, show_error: Callable[[APIError], None]
 ) -> None:
     st.subheader("Household members")
+    st.write("Add a profile or select a member to update their details and food preferences.")
     try:
         with st.spinner("Loading members…"):
             members = load_members(api, household)
@@ -187,7 +202,10 @@ def render_members(
     )
     selected = None
     if mode != "Add member" and members:
-        labels = {str(m.id): m.name for m in members}
+        labels = {
+            str(key): value
+            for key, value in human_labels(members, context=lambda m: f"Age {m.age}").items()
+        }
         choice = st.selectbox(
             "Member", list(labels), format_func=labels.get, key=f"edit_member_{household.id}"
         )
@@ -210,18 +228,19 @@ def render_members(
             st.session_state[f"member_snapshot_{saved.id}"] = saved
             st.success(f"Saved {saved.name}.")
         if mode == "Delete member" and selected:
-            st.warning(
-                f"Deleting {selected.name} also removes their saved preferences and allergies."
-            )
-            confirmed = st.checkbox(
-                f"I confirm deletion of {selected.name}",
-                key=f"confirm_delete_{household.id}_{selected.id}_v{selected.version}",
-            )
-            if st.button("Delete member", disabled=not confirmed, type="primary") and confirmed:
-                with st.spinner("Deleting member…"):
-                    api.delete_member(household.id, selected.id, selected.version)
-                members = [m for m in members if m.id != selected.id]
-                st.success(f"Deleted {selected.name}.")
+            with st.expander("Confirm member deletion"):
+                st.warning(
+                    f"Deleting {selected.name} also removes their saved preferences and allergies."
+                )
+                confirmed = st.checkbox(
+                    f"I confirm deletion of {selected.name}",
+                    key=f"confirm_delete_{household.id}_{selected.id}_v{selected.version}",
+                )
+                if st.button("Delete member", disabled=not confirmed, type="primary") and confirmed:
+                    with st.spinner("Deleting member…"):
+                        api.delete_member(household.id, selected.id, selected.version)
+                    members = [m for m in members if m.id != selected.id]
+                    st.success(f"Deleted {selected.name}.")
     except APIError as error:
         show_error(error)
         st.info("The request was not retried. Refresh members before submitting again.")
@@ -230,9 +249,27 @@ def render_members(
     for member in sorted(members, key=lambda m: (m.name.casefold(), str(m.id))):
         with st.container(border=True):
             st.subheader(member.name)
+
+            def select_action(action, member_id):
+                st.session_state[f"member_action_{household.id}"] = action
+                st.session_state[f"edit_member_{household.id}"] = str(member_id)
+
+            edit_column, delete_column = st.columns(2)
+            edit_column.button(
+                "Edit",
+                key=f"card_edit_{member.id}",
+                on_click=select_action,
+                args=("Edit member", member.id),
+            )
+            delete_column.button(
+                "Delete",
+                key=f"card_delete_{member.id}",
+                on_click=select_action,
+                args=("Delete member", member.id),
+            )
             st.write(f"Age {member.age} · {member.height_cm:g} cm · {member.weight_kg:g} kg")
             st.write(
-                f"Calculator sex: {member.sex} · Activity: {member.activity_level.replace('_', ' ')} · Goal: {member.goal}"
+                f"Calculator sex: {humanize(member.sex)} · Activity: {humanize(member.activity_level)} · Goal: {GOAL_LABELS[member.goal]}"
             )
             st.write(
                 "Preferences: "
@@ -265,7 +302,10 @@ def render_nutrition(
         if not members:
             st.info("No saved members in this household. Add a member on the Household page first.")
             return
-        labels = {str(m.id): m.name for m in members}
+        labels = {
+            str(key): value
+            for key, value in human_labels(members, context=lambda m: f"Age {m.age}").items()
+        }
         choice = st.selectbox(
             "Saved member",
             list(labels),
@@ -279,9 +319,13 @@ def render_nutrition(
             plan = api.member_nutrition(household.id, selected.id)
         st.subheader(f"Nutrition estimate for {selected.name}")
         cards = [
-            ("BMR", f"{plan.bmr_calories:,} kcal/day", "Estimated energy your body uses at rest."),
             (
-                "Estimated TDEE",
+                "Resting energy (BMR)",
+                f"{plan.bmr_calories:,} kcal/day",
+                "Estimated energy your body uses at rest.",
+            ),
+            (
+                "Daily energy (TDEE)",
                 f"{plan.maintenance_calories:,} kcal/day",
                 "Estimated daily energy use including activity; the maintenance target.",
             ),

@@ -96,8 +96,12 @@ def api(monkeypatch):
         active_grocery_lists=0,
     )
     mock.search_foods.return_value = [FOOD]
-    mock.create_recipe.side_effect = lambda home, payload, key: record(payload, recipe_id=UUID(int=5))
-    mock.update_recipe.side_effect = lambda home, rid, payload, version: record(payload, recipe_id=rid)
+    mock.create_recipe.side_effect = lambda home, payload, key: record(
+        payload, recipe_id=UUID(int=5)
+    )
+    mock.update_recipe.side_effect = lambda home, rid, payload, version: record(
+        payload, recipe_id=rid
+    )
     monkeypatch.setattr("nourish_nest.streamlit_ui.create_api_client", lambda: mock)
     return mock
 
@@ -125,7 +129,7 @@ def test_browse_filter_and_system_read_only(api):
     assert any("100.125 g" in m.value for m in ui.markdown)
     assert any("recipe-nutrition-v1" in c.value for c in ui.caption)
     assert any("Missing data" in w.value for w in ui.warning)
-    assert any("soy" in m.value for m in ui.markdown)
+    assert any("Soy" in m.value for m in ui.markdown)
     ui.selectbox(key=f"recipe_cuisine_{HOME.id}").select("Thai").run()
     assert not ui.exception
     assert any("read-only" in i.value for i in ui.info)
@@ -351,7 +355,9 @@ def test_creation_retry_retains_key_and_explicit_reset_changes_it(api):
     assert draft(ui)["idempotency_key"] == key
     button(ui, "Save recipe").click().run()
     assert [call.args[2] for call in api.create_recipe.call_args_list] == [key, key]
-    api.create_recipe.side_effect = lambda home, payload, key: record(payload, recipe_id=UUID(int=5))
+    api.create_recipe.side_effect = lambda home, payload, key: record(
+        payload, recipe_id=UUID(int=5)
+    )
     button(ui, "Save recipe").click().run()
     assert draft(ui) is None
     button(ui, "Create recipe").click().run()
@@ -366,7 +372,9 @@ def test_creation_retry_retains_key_and_explicit_reset_changes_it(api):
 def test_lineage_error_is_visible_without_losing_recipe(api):
     ui = app()
     api.delete_recipe.side_effect = APIResponseError(
-        "recipe_in_use", "Recipe is referenced by grocery source history and cannot be deleted.", "lineage-trace"
+        "recipe_in_use",
+        "Recipe is referenced by grocery source history and cannot be deleted.",
+        "lineage-trace",
     )
     ui.checkbox[0].check().run()
     button(ui, "Delete recipe").click().run()

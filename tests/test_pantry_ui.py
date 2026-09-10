@@ -249,7 +249,7 @@ def test_action_error_and_retry_key_retention(api, code):
     key = workspace(ui)["action"]["key"]
     button(ui, "Submit action").click().run()
     assert any(t.value == "Request ID: pantry-trace" for t in ui.text)
-    assert any(t.value == f"Error code: {code}" for t in ui.caption)
+    assert any(t.value == f"Error code: {code}" for t in ui.text)
     button(ui, "Refresh pantry").click().run()
     assert workspace(ui)["action"]["key"] == key
     button(ui, "Retry saved action").click().run()

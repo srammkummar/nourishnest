@@ -264,6 +264,7 @@ def test_ui_import_boundary():
     allowed = {
         "nourish_nest.api_client",
         "nourish_nest.ui_state",
+        "nourish_nest.ui_labels",
         "nourish_nest.streamlit_ui",
         "nourish_nest.member_ui",
         "nourish_nest.recipe_ui",
@@ -280,6 +281,7 @@ def test_ui_import_boundary():
             for name in (
                 "api_client",
                 "ui_state",
+                "ui_labels",
                 "streamlit_ui",
                 "member_ui",
                 "recipe_ui",

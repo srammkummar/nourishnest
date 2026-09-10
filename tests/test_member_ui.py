@@ -111,6 +111,9 @@ def test_create_member(api):
     api.members.return_value = []
     ui = app()
     ui.text_input(key=f"add_{HOME.id}_name").input("Sam")
+    ui.number_input(key=f"add_{HOME.id}_age").set_value(35)
+    ui.number_input(key=f"add_{HOME.id}_height").set_value(165.0)
+    ui.number_input(key=f"add_{HOME.id}_weight").set_value(68.0)
     button(ui, "Add member").click().run()
     assert not ui.exception
     payload = api.create_member.call_args.args[1]
@@ -166,6 +169,9 @@ def test_delete_confirmation_invalidated_by_new_version(api):
 def test_create_with_preference_and_allergy_rows(api):
     ui = app()
     ui.text_input(key=f"add_{HOME.id}_name").input("Sam")
+    ui.number_input(key=f"add_{HOME.id}_age").set_value(35)
+    ui.number_input(key=f"add_{HOME.id}_height").set_value(165.0)
+    ui.number_input(key=f"add_{HOME.id}_weight").set_value(68.0)
     ui.session_state[f"add_{HOME.id}_preferences"] = {
         "edited_rows": {},
         "added_rows": [{"preference_type": "vegan", "value": "Vegan"}],
@@ -217,6 +223,9 @@ def test_delete_requires_confirmation(api):
 def test_validation_before_submission(api, field, value):
     ui = app()
     ui.text_input(key=f"add_{HOME.id}_name").input("Sam")
+    ui.number_input(key=f"add_{HOME.id}_age").set_value(35)
+    ui.number_input(key=f"add_{HOME.id}_height").set_value(165.0)
+    ui.number_input(key=f"add_{HOME.id}_weight").set_value(68.0)
     if field == "name":
         ui.text_input(key=f"add_{HOME.id}_name").input(value)
     else:
@@ -233,6 +242,9 @@ def test_mutation_error_request_id(api):
     )
     ui = app()
     ui.text_input(key=f"add_{HOME.id}_name").input("Sam")
+    ui.number_input(key=f"add_{HOME.id}_age").set_value(35)
+    ui.number_input(key=f"add_{HOME.id}_height").set_value(165.0)
+    ui.number_input(key=f"add_{HOME.id}_weight").set_value(68.0)
     button(ui, "Add member").click().run()
     assert not ui.exception
     assert any(e.value == "Invalid member" for e in ui.error)
@@ -368,3 +380,28 @@ def test_member_mutations_never_retry(operation):
                 ),
             )
     assert len(calls) == 1
+
+
+def test_blank_measurements_and_named_card_actions(api):
+    ui = app()
+    for field in ("age", "height", "weight"):
+        assert ui.number_input(key=f"add_{HOME.id}_{field}").value is None
+    ui.button(key=f"card_edit_{PERSON.id}").click().run()
+    assert ui.radio(key=f"member_action_{HOME.id}").value == "Edit member"
+    assert ui.selectbox(key=f"edit_member_{HOME.id}").value == str(PERSON.id)
+    assert all(str(PERSON.id) not in option for box in ui.selectbox for option in box.options)
+
+
+def test_member_error_keeps_fields_and_collapses_diagnostics(api):
+    api.update_member.side_effect = APIResponseError(
+        "stale_member_version", "Refresh this member", "trace-kept", 409
+    )
+    ui = app()
+    ui.button(key=f"card_edit_{PERSON.id}").click().run()
+    ui.text_input(key=f"edit_{PERSON.id}_v1_name").input("My entered name")
+    button(ui, "Save member").click().run()
+    assert ui.text_input(key=f"edit_{PERSON.id}_v1_name").value == "My entered name"
+    details = [e for e in ui.expander if e.label == "Technical details"]
+    assert details and all(not e.proto.expanded for e in details)
+    assert any("trace-kept" in text.value for e in details for text in e.text)
+    assert not any("trace-kept" in message.value for message in ui.error)

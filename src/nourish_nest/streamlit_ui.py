@@ -13,6 +13,8 @@ from nourish_nest.grocery_ui import render_groceries
 from nourish_nest.member_ui import render_members, render_nutrition
 from nourish_nest.pantry_ui import render_pantry
 from nourish_nest.recipe_ui import render_recipes
+from nourish_nest.ui_labels import friendly_message, technical_details
+from nourish_nest.ui_labels import labels as human_labels
 from nourish_nest.ui_state import (
     PAGES,
     navigate,
@@ -46,15 +48,24 @@ SIDEBAR_STYLE = """
     min-width: 0;
     max-width: 100%;
 }
+@media (max-width: 1100px) {
+    [data-testid="stMainBlockContainer"] { padding-inline: 2rem; }
+    [data-testid="stMetricValue"], [data-testid="stMetricValue"] > div {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        font-size: 1.5rem;
+    }
+}
 </style>
 """
 
 
 def show_error(error: APIError) -> None:
-    st.error(error.message)
-    st.caption(f"Error code: {error.code}")
-    if error.request_id:
-        st.text(f"Request ID: {error.request_id}")
+    st.error(friendly_message(error.message))
+    technical_details(
+        error_code=error.code, request_ID=error.request_id, original_message=error.message
+    )
 
 
 def create_household_form(api: APIClient) -> None:
@@ -91,7 +102,7 @@ def quick_actions() -> None:
         ("Calculate nutrition", "Nutrition"),
         ("Browse recipes", "Recipes"),
     ]
-    for column, (label, page) in zip(st.columns(len(actions)), actions, strict=True):
+    for column, (label, page) in zip(st.columns(3) + st.columns(2), actions, strict=True):
         column.button(
             label,
             key=f"action_{page}",
@@ -99,9 +110,7 @@ def quick_actions() -> None:
             args=(st.session_state, page, label),
             use_container_width=True,
         )
-    st.caption(
-        "Manage members, recipes, nutrition, pantry inventory, and grocery lists."
-    )
+    st.caption("Manage members, recipes, nutrition, pantry inventory, and grocery lists.")
 
 
 def dashboard_cards(counts: DashboardCounts) -> None:
@@ -121,11 +130,19 @@ def dashboard_cards(counts: DashboardCounts) -> None:
                 st.metric(label, value)
                 st.caption(caption)
                 if label in ("Expiring items", "Low-stock items"):
-                    st.button(f"View {label.lower()}", on_click=navigate,
-                              args=(st.session_state, "Pantry", label), use_container_width=True)
+                    st.button(
+                        f"View {label.lower()}",
+                        on_click=navigate,
+                        args=(st.session_state, "Pantry", label),
+                        use_container_width=True,
+                    )
                 elif label == "Active grocery lists":
-                    st.button("View active grocery lists", on_click=navigate,
-                              args=(st.session_state, "Grocery Lists", label), use_container_width=True)
+                    st.button(
+                        "View active grocery lists",
+                        on_click=navigate,
+                        args=(st.session_state, "Grocery Lists", label),
+                        use_container_width=True,
+                    )
     if not any(counts.model_dump().values()):
         st.info(
             "Your household is ready. There is no dashboard data yet. Use Add member to get started."
@@ -148,7 +165,7 @@ def selected_page(api: APIClient, household: Household) -> None:
     elif page == "Household":
         with st.container(border=True):
             st.subheader(household.name)
-            st.text(f"Household ID: {household.id}")
+            technical_details(household_ID=household.id)
             st.write(f"Timezone: {household.timezone} · Currency: {household.currency}")
         st.caption("Change the selected household using the sidebar selector.")
         with st.expander(
@@ -184,11 +201,14 @@ def main() -> None:
                 with st.spinner("Checking API…"):
                     health = api.health()
                 st.success("API connected")
-                st.caption(f"API version {health.version}")
+                technical_details(application_version=health.version)
             with st.spinner("Loading households…"):
                 households = sorted(api.households(), key=lambda h: (h.name.casefold(), str(h.id)))
             selected = sync_household_selection(st.session_state, households)
-            labels = {str(h.id): h.name for h in households}
+            labels = {
+                str(key): value
+                for key, value in human_labels(households, context=lambda h: h.timezone).items()
+            }
             with st.sidebar:
                 if households:
                     st.selectbox(

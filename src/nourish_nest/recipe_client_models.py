@@ -10,6 +10,8 @@ class StoredFood(BaseModel):
     id: UUID
     name: str
     brand: str | None = None
+    source_type: str = "manual"
+    source_provider: str | None = None
 
 
 class StoredFoodSearch(BaseModel):
