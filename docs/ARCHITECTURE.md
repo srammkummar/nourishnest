@@ -14,6 +14,17 @@ is retained as the pre-rename roadmap; it does not represent completed integrati
 
 ## Product boundary
 
+Phase 6B3 adds `pantry_ui.py` and standalone `pantry_client_models.py` contracts.
+Household-specific session state holds API snapshots, food labels, and pending
+inventory actions. Each submitted action retains its typed payload, loaded version
+(where accepted by the API), and idempotency key until success or explicit reset.
+Expiration/FEFO/conversion/low-stock decisions remain exclusively in the backend.
+Pantry reads that can mark lots expired are not automatically retried. History is
+unavailable because the API exposes no transaction-read route. The UI documents
+whole-lot transfer, increase-only adjustment, discard semantics, and food-scoped
+unversioned FEFO consumption rather than changing these contracts. No migrations
+or backend business rules are added in this phase.
+
 Phase 6B2 implements Recipes using `recipe_ui.py` and standalone typed wire contracts
 in `recipe_client_models.py`. All persisted data comes from `APIClient`; the UI
 contains no ORM/service imports or nutrition/conversion formulas. Session state holds

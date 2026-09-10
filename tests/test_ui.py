@@ -207,9 +207,9 @@ def test_ui_populated_selection_and_placeholder(monkeypatch):
     assert ui.session_state["household_id"] == second["id"]
     ui.run()
     assert ui.session_state["household_id"] == second["id"]
-    ui.button(key="action_Pantry").click().run()
+    ui.button(key="action_Grocery Lists").click().run()
     assert not ui.exception
-    assert ui.session_state["page"] == "Pantry"
+    assert ui.session_state["page"] == "Grocery Lists"
     assert any("Phase 6B" in x.value for x in ui.info)
 
 
@@ -268,6 +268,8 @@ def test_ui_import_boundary():
         "nourish_nest.member_ui",
         "nourish_nest.recipe_ui",
         "nourish_nest.recipe_client_models",
+        "nourish_nest.pantry_ui",
+        "nourish_nest.pantry_client_models",
     }
     for path in [
         ROOT / "streamlit_app.py",
@@ -280,6 +282,8 @@ def test_ui_import_boundary():
                 "member_ui",
                 "recipe_ui",
                 "recipe_client_models",
+                "pantry_ui",
+                "pantry_client_models",
             )
         ),
     ]:

@@ -205,6 +205,49 @@ Downgrading 0009 removes creation-key history and recipe versions; re-upgrading 
 versions to 1. Reload clients after a downgrade. PostgreSQL DDL is tested offline;
 concurrent integration tests run against SQLite, not a live PostgreSQL server.
 
+### Phase 6B3: Pantry
+
+The Pantry page uses the typed HTTP client for summary counts, inventory search and
+location/status filters, storage-location creation/deletion, adding existing foods
+as inventory lots, quantity increases, FEFO consumption, whole-lot transfer, discard,
+and low-stock threshold creation/update. Dashboard actions open Add item, Expiring
+soon, and Low stock views. Expiration alerts and low-stock results come from the API;
+the UI does not calculate stock, conversions, or FEFO ordering. Quantities are entered
+as decimal text. Successful actions reset their form and refresh only Pantry data.
+
+Endpoints used under `/v1/households/{household_id}/pantry`:
+
+- `GET summary`, `items`, `expiring`, `expired`, `low-stock`, `stock-rules`, `locations`.
+- `POST locations`, `DELETE locations/{location_id}`, `POST items`.
+- `POST items/{item_id}/adjust`, `items/{item_id}/discard`, `consume`, `transfer`.
+- `PUT stock-rules/{food_id}`; food lookup uses `GET /v1/foods/search` and `GET /v1/foods/{food_id}`.
+
+Existing backend limits are intentionally preserved:
+
+- History has no read endpoint. Its section explains this limitation; transaction
+  rows cannot yet be displayed without a separate backend change. No history is
+  fabricated from the current inventory snapshot.
+- Adjustment only increases quantity. Transfer moves an entire lot. Discard marks
+  the whole lot discarded even when a smaller quantity is specified; the UI warns
+  that any remainder becomes unusable and requires explicit confirmation.
+- Adjust, transfer, and discard send the loaded expected version using the API's
+  `version` field. FEFO consumption is food-scoped across locations and has no
+  request-version field. No unsupported version field is invented by the client.
+- Inventory actions retain their key and submitted payload across manual retries,
+  refreshes, and navigation. The API reports `duplicate_idempotency_key` for an
+  already-used key rather than replaying a successful response. Check refreshed
+  inventory before **Reset action with current stock** starts a new request.
+  A lost browser session also loses pending UI state. No mutation is automatically retried.
+- Lot/location creation and stock-rule writes have no version/idempotency inputs.
+  After an ambiguous creation timeout, check refreshed data before submitting again.
+  A location with any lot records, including depleted/discarded records, is not empty.
+- Legacy inventory/summary/expiration/low-stock GETs may mark expired lots and update
+  versions. The client does not retry those reads automatically. Snapshot counts
+  may change between requests; **Refresh pantry** reloads current data.
+
+Use the two-terminal launch commands above. No migrations or backend rules changed;
+the database remains at `20260909_0009`.
+
 ## Tests
 
 ```bash

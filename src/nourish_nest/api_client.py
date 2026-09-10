@@ -9,6 +9,18 @@ import httpx
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from nourish_nest.pantry_client_models import (
+    AdjustmentInput,
+    ConsumeInput,
+    LocationInput,
+    LocationRecord,
+    PantryItemInput,
+    PantryLot,
+    PantryOverview,
+    StockRule,
+    StockRuleInput,
+    TransferInput,
+)
 from nourish_nest.recipe_client_models import (
     RecipeInput,
     RecipeNutrition,
@@ -371,12 +383,143 @@ class APIClient:
             "GET", f"/v1/households/{household_id}/recipes", TypeAdapter(list[RecipeRecord])
         )
 
+    def stored_food(self, food_id: uuid.UUID) -> StoredFood:
+        return self._request("GET", f"/v1/foods/{food_id}", TypeAdapter(StoredFood))
+
+    def pantry_locations(self, household_id: uuid.UUID) -> list[LocationRecord]:
+        return self._request(
+            "GET",
+            f"/v1/households/{household_id}/pantry/locations",
+            TypeAdapter(list[LocationRecord]),
+        )
+
+    def create_pantry_location(
+        self, household_id: uuid.UUID, data: LocationInput
+    ) -> LocationRecord:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/pantry/locations",
+            TypeAdapter(LocationRecord),
+            body=data.model_dump(mode="json"),
+            expected_status=201,
+        )
+
+    def delete_pantry_location(self, household_id: uuid.UUID, location_id: uuid.UUID) -> None:
+        self._request(
+            "DELETE",
+            f"/v1/households/{household_id}/pantry/locations/{location_id}",
+            TypeAdapter(type(None)),
+            expected_status=204,
+        )
+
+    def pantry_items(self, household_id: uuid.UUID) -> list[PantryLot]:
+        return self._request(
+            "GET",
+            f"/v1/households/{household_id}/pantry/items",
+            TypeAdapter(list[PantryLot]),
+            retry_safe=False,
+        )
+
+    def pantry_overview(self, household_id: uuid.UUID) -> PantryOverview:
+        return self._request(
+            "GET",
+            f"/v1/households/{household_id}/pantry/summary",
+            TypeAdapter(PantryOverview),
+            retry_safe=False,
+        )
+
+    def pantry_expiring(self, household_id: uuid.UUID) -> list[PantryLot]:
+        return self._request(
+            "GET",
+            f"/v1/households/{household_id}/pantry/expiring",
+            TypeAdapter(list[PantryLot]),
+            retry_safe=False,
+        )
+
+    def pantry_expired(self, household_id: uuid.UUID) -> list[PantryLot]:
+        return self._request(
+            "GET",
+            f"/v1/households/{household_id}/pantry/expired",
+            TypeAdapter(list[PantryLot]),
+            retry_safe=False,
+        )
+
+    def pantry_low_stock(self, household_id: uuid.UUID) -> list[StockRule]:
+        return self._request(
+            "GET",
+            f"/v1/households/{household_id}/pantry/low-stock",
+            TypeAdapter(list[StockRule]),
+            retry_safe=False,
+        )
+
+    def pantry_stock_rules(self, household_id: uuid.UUID) -> list[StockRule]:
+        return self._request(
+            "GET", f"/v1/households/{household_id}/pantry/stock-rules", TypeAdapter(list[StockRule])
+        )
+
+    def save_pantry_stock_rule(
+        self, household_id: uuid.UUID, food_id: uuid.UUID, data: StockRuleInput
+    ) -> StockRule:
+        return self._request(
+            "PUT",
+            f"/v1/households/{household_id}/pantry/stock-rules/{food_id}",
+            TypeAdapter(StockRule),
+            body=data.model_dump(mode="json"),
+        )
+
+    def create_pantry_item(self, household_id: uuid.UUID, data: PantryItemInput) -> PantryLot:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/pantry/items",
+            TypeAdapter(PantryLot),
+            body=data.model_dump(mode="json"),
+            expected_status=201,
+        )
+
+    def adjust_pantry_item(
+        self, household_id: uuid.UUID, item_id: uuid.UUID, data: AdjustmentInput
+    ) -> PantryLot:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/pantry/items/{item_id}/adjust",
+            TypeAdapter(PantryLot),
+            body=data.model_dump(mode="json"),
+        )
+
+    def discard_pantry_item(
+        self, household_id: uuid.UUID, item_id: uuid.UUID, data: AdjustmentInput
+    ) -> PantryLot:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/pantry/items/{item_id}/discard",
+            TypeAdapter(PantryLot),
+            body=data.model_dump(mode="json"),
+        )
+
+    def consume_pantry(self, household_id: uuid.UUID, data: ConsumeInput) -> list[PantryLot]:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/pantry/consume",
+            TypeAdapter(list[PantryLot]),
+            body=data.model_dump(mode="json"),
+        )
+
+    def transfer_pantry(self, household_id: uuid.UUID, data: TransferInput) -> PantryLot:
+        return self._request(
+            "POST",
+            f"/v1/households/{household_id}/pantry/transfer",
+            TypeAdapter(PantryLot),
+            body=data.model_dump(mode="json"),
+        )
+
     def get_recipe(self, household_id: uuid.UUID, recipe_id: uuid.UUID) -> RecipeRecord:
         return self._request(
             "GET", f"/v1/households/{household_id}/recipes/{recipe_id}", TypeAdapter(RecipeRecord)
         )
 
-    def create_recipe(self, household_id: uuid.UUID, recipe: RecipeInput, idempotency_key: str) -> RecipeRecord:
+    def create_recipe(
+        self, household_id: uuid.UUID, recipe: RecipeInput, idempotency_key: str
+    ) -> RecipeRecord:
         return self._request(
             "POST",
             f"/v1/households/{household_id}/recipes",
@@ -387,7 +530,11 @@ class APIClient:
         )
 
     def update_recipe(
-        self, household_id: uuid.UUID, recipe_id: uuid.UUID, recipe: RecipeInput, expected_version: int
+        self,
+        household_id: uuid.UUID,
+        recipe_id: uuid.UUID,
+        recipe: RecipeInput,
+        expected_version: int,
     ) -> RecipeRecord:
         return self._request(
             "PUT",
@@ -396,7 +543,9 @@ class APIClient:
             body={**recipe.model_dump(mode="json"), "expected_version": expected_version},
         )
 
-    def delete_recipe(self, household_id: uuid.UUID, recipe_id: uuid.UUID, expected_version: int) -> None:
+    def delete_recipe(
+        self, household_id: uuid.UUID, recipe_id: uuid.UUID, expected_version: int
+    ) -> None:
         self._request(
             "DELETE",
             f"/v1/households/{household_id}/recipes/{recipe_id}?expected_version={expected_version}",

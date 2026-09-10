@@ -10,6 +10,7 @@ from nourish_nest.api_client import (
     create_api_client,
 )
 from nourish_nest.member_ui import render_members, render_nutrition
+from nourish_nest.pantry_ui import render_pantry
 from nourish_nest.recipe_ui import render_recipes
 from nourish_nest.ui_state import (
     PAGES,
@@ -19,7 +20,6 @@ from nourish_nest.ui_state import (
 )
 
 PLACEHOLDERS = {
-    "Pantry": "Manage inventory lots, storage locations, expiration dates, and stock levels.",
     "Grocery Lists": "Create grocery lists, calculate recipe shortages, and record purchases with optional pantry intake.",
 }
 
@@ -103,7 +103,7 @@ def quick_actions() -> None:
             use_container_width=True,
         )
     st.caption(
-        "Manage members and calculate nutrition now. Pantry and grocery workflows are coming next."
+        "Manage members, recipes, nutrition, and pantry inventory. Grocery list workflows are coming next."
     )
 
 
@@ -123,6 +123,9 @@ def dashboard_cards(counts: DashboardCounts) -> None:
             with column.container(border=True):
                 st.metric(label, value)
                 st.caption(caption)
+                if label in ("Expiring items", "Low-stock items"):
+                    st.button(f"View {label.lower()}", on_click=navigate,
+                              args=(st.session_state, "Pantry", label), use_container_width=True)
     if not any(counts.model_dump().values()):
         st.info(
             "Your household is ready. There is no dashboard data yet. Use Add member to get started."
@@ -157,6 +160,8 @@ def selected_page(api: APIClient, household: Household) -> None:
         render_nutrition(api, household, show_error)
     elif page == "Recipes":
         render_recipes(api, household, show_error)
+    elif page == "Pantry":
+        render_pantry(api, household, show_error)
     else:
         with st.container(border=True):
             st.subheader(page)
