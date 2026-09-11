@@ -1,5 +1,6 @@
 """Preview-only presentation. Only member reads and the assistant HTTP endpoint are callable."""
 
+import re
 from uuid import UUID
 
 import streamlit as st
@@ -210,9 +211,20 @@ def render_assistant(api, household, show_error):
     st.session_state.setdefault(prompt_key, workspace["prompt"])
     st.session_state.setdefault(continue_key, workspace["continue"])
     result = workspace["preview"]
-    if UISettings().ai_provider == "fake" or (result and result.model_version == "fake-intent-v1"):
+    settings = UISettings()
+    local_model = settings.ai_provider == "ollama" or bool(result and result.model_version.startswith("ollama:"))
+    if local_model:
+        model = (result.model_version.removeprefix("ollama:").split("@", 1)[0]
+                 if result and result.model_version.startswith("ollama:") else settings.ai_model)
+        if model and not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}", model):
+            model = "Check the local model name in configuration."
+        st.info("Local Ollama mode")
+        st.caption(f"Model: {friendly_message(model) if model else 'Choose an installed local model in configuration.'}")
+        st.caption("Describe days, one meal slot, servings, and any supported preferences. Review the interpreted constraints before using a preview.")
+    elif settings.ai_provider == "fake" or (result and result.model_version == "fake-intent-v1"):
         st.info("Local demo mode — a limited deterministic interpreter, not a generative model. No external model calls or paid AI credits.")
-    st.caption("For a complete local demo request, include days, one meal slot, and servings. Short examples may ask for clarification; unsupported wording needs a complete rewrite.")
+    if not local_model:
+        st.caption("For a complete local demo request, include days, one meal slot, and servings. Short examples may ask for clarification; unsupported wording needs a complete rewrite.")
     with st.expander("Try an example"):
         for index, prompt in enumerate(EXAMPLES):
             st.button(prompt, key=f"{prefix}_example_{index}", use_container_width=True,
@@ -252,7 +264,10 @@ def render_assistant(api, household, show_error):
         show_error(error)
         st.caption("Your request and last successful preview have been kept. No data was changed.")
         if error.code == "assistant_provider_unavailable":
-            st.info("For the free local demo, start FastAPI with APP_AI_PROVIDER=fake, then try again.")
+            if local_model:
+                st.info("Start local Ollama and check that your configured model is already installed, then retry this request. No model is downloaded automatically. You can also return to fake demo mode.")
+            else:
+                st.info("For the free local demo, start FastAPI with APP_AI_PROVIDER=fake, then try again.")
     if workspace["preview"]:
         if workspace["error"]:
             st.info("Previous successful preview — the latest request did not complete.")

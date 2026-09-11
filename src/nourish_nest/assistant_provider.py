@@ -28,6 +28,10 @@ class ChatUnavailable(Exception):
     pass
 
 
+class ChatMalformedResponse(Exception):
+    pass
+
+
 def user_messages(data: AssistantRequest) -> tuple[str, ...]:
     return tuple(m.content for m in data.conversation_context if m.role == "user") + (
         data.user_message,
@@ -139,4 +143,9 @@ class DisabledChatProvider:
 
 
 def get_chat_provider() -> ChatProvider:
-    return FakeChatProvider() if get_settings().ai_provider == "fake" else DisabledChatProvider()
+    settings = get_settings()
+    if settings.ai_provider == "ollama":
+        from nourish_nest.ollama_provider import OllamaChatProvider
+
+        return OllamaChatProvider(settings)
+    return FakeChatProvider() if settings.ai_provider == "fake" else DisabledChatProvider()

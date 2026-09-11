@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     ai_api_key: SecretStr | None = Field(default=None, repr=False)
     ai_timeout_seconds: float = Field(default=10, gt=0, le=60)
     ai_max_tool_calls: int = Field(default=4, ge=1, le=4)
+    ollama_base_url: str = "http://127.0.0.1:11434"
 
 
 @lru_cache

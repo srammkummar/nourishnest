@@ -651,3 +651,125 @@ in both terminals to restore configuration fallback. If `.env` contains
 the shell variable alone does not override `.env`.
 
 Focused UI/client tests: `uv run python -m pytest tests/test_assistant_ui.py tests/test_ui.py`.
+
+## Phase 8C: optional local Ollama interpretation
+
+`disabled` remains the code default. `fake` remains the deterministic demonstration
+and test provider. `ollama` optionally interprets conversational wording into the
+same typed intent. It cannot calculate nutrition, pantry stock, shortages, scores,
+or ingredient quantities; existing services retrieve records and calculate results.
+There are no model tools, database writes, cloud fallback, new dependencies, or migrations.
+
+Prerequisites: install Ollama yourself following its [official documentation](https://docs.ollama.com/),
+and obtain a local completion model suitable for structured JSON and your hardware.
+This project never installs Ollama or downloads models. Use `ollama list` to choose
+an **already installed** model. Cloud aliases are not supported. Before starting
+the Ollama server, disable its cloud features as described in the
+[Ollama FAQ](https://docs.ollama.com/faq). Quit an existing tray/server instance first
+so this environment setting takes effect; do not start two servers on port 11434.
+
+PowerShell terminal for the local model server:
+
+```powershell
+$env:OLLAMA_NO_CLOUD = '1'
+ollama serve
+```
+
+Check reachability in another terminal (these commands do not generate text or download models):
+
+```powershell
+Invoke-RestMethod 'http://127.0.0.1:11434/api/version'
+ollama list
+```
+
+In the NourishNest project directory, FastAPI terminal:
+
+```powershell
+$env:APP_AI_PROVIDER = 'ollama'
+$env:APP_AI_MODEL = '<exact local model name from ollama list>'
+$env:APP_OLLAMA_BASE_URL = 'http://127.0.0.1:11434'
+$env:APP_AI_TIMEOUT_SECONDS = '60'
+uv run uvicorn nourish_nest.api:app --host 127.0.0.1 --port 8000
+```
+
+Streamlit terminal, using the same model name and timeout:
+
+```powershell
+$env:APP_AI_PROVIDER = 'ollama'
+$env:APP_AI_MODEL = '<same local model name>'
+$env:APP_AI_TIMEOUT_SECONDS = '60'
+$env:APP_API_BASE_URL = 'http://127.0.0.1:8000'
+uv run streamlit run streamlit_app.py --server.address 127.0.0.1 --server.port 8501
+```
+
+Open **AI Assistant** at `http://127.0.0.1:8501`. **Local Ollama mode** shows the model
+name. Try “Could you suggest vegan dinners for the next three nights for 2 people,
+with shopping?” Review interpreted constraints and warnings. Errors keep your prompt
+so you can start Ollama and retry. A missing/unsupported model produces a structured
+unavailable error, never an automatic pull. To return to demonstrations or disable
+AI, set `$env:APP_AI_PROVIDER = 'fake'` or `'disabled'` in both application terminals
+and restart both processes. Check `.env` too, as documented above.
+
+The adapter uses [Ollama's chat API](https://docs.ollama.com/api/chat) with a JSON schema,
+non-streaming output, temperature zero, and bounded context/output. A compatible Ollama
+version must support `format` and `think=false`. Only HTTP loopback addresses are accepted;
+proxy environment variables and redirects are ignored. A metadata check requires a local
+GGUF completion model and rejects remote aliases **before** sending user text. Keep
+`OLLAMA_NO_CLOUD=1` on the server as defense against server-side routing/configuration changes.
+Remote inference servers, cloud models, and model downloading endpoints are never used.
+
+The versioned prompt is `ollama-meal-intent-v1`. At most six prior messages and the
+current request are allowed; assistant-role context is ignored for interpretation.
+User text is separated from system instructions. Prompts are capped at 32 KiB,
+HTTP response bodies at 64 KiB, and intent text at 8,192 characters. Partial objects,
+extra fields, duplicate JSON keys, unknown tools, and unfinished output fail validation.
+Complete outer JSON fences are accepted; prose and arbitrary JSON extraction are not.
+UUID-bearing prompts are clarified locally. No application records or saved member
+health data are included in the model request. User-entered personal information
+in free text can still reach the local model: avoid including sensitive details.
+
+Existing deterministic guardrails run before and after interpretation. The fake
+grammar check remains unchanged on the fake path. Ollama accepts paraphrases with
+explicit numeric evidence and preserves constraints recognized by the existing
+interpreter. It may still misunderstand language; review the displayed interpretation.
+Ambiguity, unsupported units, cuisine/budget/free-text allergy constraints, or missing
+servings require clarification or produce a structured invalid-output error. Saved
+allergen filtering and adult-only target calculation remain deterministic. Models
+cannot override them. One interpretation and at most four allowlisted service calls
+remain the limit; no LLM performs scoring or safety decisions.
+
+Connect timeout is 2 seconds, write/pool timeouts 5/2 seconds, and read/overall model
+timeout uses `APP_AI_TIMEOUT_SECONDS` (maximum 60). There are at most two HTTP attempts
+per model endpoint for connection/protocol failures or temporary 502/503/504 responses.
+Read/write timeouts, malformed responses, and permanent 4xx responses are not retried.
+Ollama-mode Streamlit allows the configured model timeout plus 5 seconds and does not
+automatically repeat the preview POST; fake mode keeps its existing retry behavior.
+Cold model loading and CPU inference can exceed the timeout. Latency and interpretation
+quality depend on model and hardware; use an installed model that fits available memory.
+
+Local inference is not a privacy guarantee: the local server, OS, and other software
+can inspect memory, and server logging is outside this adapter's control. NourishNest
+does not log full prompts, model response bodies, records, or secrets. Local operation
+does not make nutrition output medical advice. RAG, embeddings, reranking, and multiple
+agents remain deferred because the model's only role here is bounded intent extraction;
+deterministic services already retrieve all application facts.
+
+Optional **real local-model** evaluation, after configuring the API variables above:
+
+```powershell
+uv run python -m nourish_nest.evals.ollama_meal_planning
+```
+
+It uses isolated in-memory fixtures and the unchanged `meal-planning-eval-v1` dataset,
+excluding synthetic fake-provider fault-injection cases. It records model, prompt and
+evaluation versions, per-metric scores, failures, HTTP chat attempts, and end-to-end
+case latency in `artifacts/ai-evals/ollama-meal-planning-v1/`. These are real local-model
+scores, not the existing deterministic fake scores. Fake reports cannot be overwritten.
+Unavailable local inference exits cleanly with setup instructions. This command is
+optional, may take several minutes, and is never run by standard tests.
+
+Mocked provider/UI verification (requires no installed model):
+
+```powershell
+uv run python -m pytest tests/test_ollama.py tests/test_ollama_ui.py tests/test_assistant.py tests/test_assistant_ui.py
+```

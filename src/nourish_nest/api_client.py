@@ -39,6 +39,8 @@ class UISettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="APP_", env_file=".env", extra="ignore")
     api_base_url: str = "http://127.0.0.1:8000"
     ai_provider: str = "disabled"
+    ai_model: str = ""
+    ai_timeout_seconds: float = Field(default=10, gt=0, le=60)
 
 
 class APIError(RuntimeError):
@@ -222,6 +224,7 @@ class APIClient:
         expected_status: int = 200,
         retry_safe: bool = True,
         read_only_preview: bool = False,
+        timeout: httpx.Timeout | None = None,
     ) -> T:
         request_id = str(uuid.uuid4())
         preview_retry = (
@@ -237,7 +240,7 @@ class APIClient:
                     f"{self.base_url}{path}",
                     json=body,
                     headers={**(headers or {}), "x-request-id": request_id},
-                    timeout=self.timeout,
+                    timeout=timeout or self.timeout,
                 )
             except httpx.TimeoutException:
                 if attempt + 1 < attempts:
@@ -294,10 +297,15 @@ class APIClient:
         return self._request("GET", "/health", TypeAdapter(Health))
 
     def assistant_preview(self, household_id: uuid.UUID, data: AssistantInput) -> AssistantPreview:
+        settings = UISettings()
+        local_model = settings.ai_provider == "ollama"
         return self._request(
             "POST", f"/v1/households/{household_id}/assistant/meal-plan-preview",
             TypeAdapter(AssistantPreview), body=data.model_dump(mode="json"),
             read_only_preview=True,
+            retry_safe=not local_model,
+            timeout=(httpx.Timeout(connect=2, read=settings.ai_timeout_seconds + 5, write=8, pool=2)
+                     if local_model else None),
         )
 
     def households(self) -> list[Household]:

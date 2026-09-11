@@ -19,6 +19,7 @@ from nourish_nest.assistant_contracts import (
 )
 from nourish_nest.assistant_provider import (
     AssistantError,
+    ChatMalformedResponse,
     ChatRateLimited,
     expected_tools,
     extract_fake_intent,
@@ -28,6 +29,7 @@ from nourish_nest.assistant_provider import (
 from nourish_nest.config import get_settings
 from nourish_nest.grocery_requirement_schemas import GroceryRequirementsRequest
 from nourish_nest.grocery_shortage_services import GroceryShortageService
+from nourish_nest.ollama_provider import OllamaChatProvider, validate_interpretation
 from nourish_nest.planning_contracts import RecommendationRequest, ServingNutrition
 from nourish_nest.planning_services import RecommendationService, dietary_check
 from nourish_nest.repositories import HouseholdRepository, MemberRepository, RecipeRepository
@@ -116,6 +118,8 @@ class MealPlanningAssistant:
                     "assistant_provider_rate_limited", "The meal assistant is busy. Please retry later.",
                     429,
                 ) from None
+            except ChatMalformedResponse:
+                raise malformed() from None
             except Exception:  # noqa: BLE001 - untrusted adapter errors must not leak credentials
                 raise AssistantError(
                     "assistant_provider_unavailable", "The meal assistant is unavailable.", 503
@@ -126,12 +130,12 @@ class MealPlanningAssistant:
                 intent = PlanningIntent.model_validate(json.loads(
                     raw, parse_float=Decimal, object_pairs_hook=unique_object
                 ))
-                # This release supports the fake provider's declared grammar only. It also
-                # prevents a replaced/misbehaving provider from dropping explicit constraints
-                # or inventing quantities; extending language support needs new evaluations.
-                grounded = extract_fake_intent(messages)
-                if intent != grounded or intent.tools != expected_tools(intent):
+                if isinstance(self.provider, OllamaChatProvider):
+                    validate_interpretation(intent, messages)
+                elif intent != extract_fake_intent(messages):
                     raise ValueError("Ungrounded intent")
+                if intent.tools != expected_tools(intent):
+                    raise ValueError("Invalid tool selection")
             except (ValidationError, ValueError, TypeError):
                 raise malformed() from None
             if len(intent.tools) > self.settings.ai_max_tool_calls:
@@ -141,7 +145,8 @@ class MealPlanningAssistant:
             response = AssistantResponse(
                 household_id=household_id, status="clarification", assistant_message="",
                 interpreted_constraints=intent, request_id=request_id,
-                model_version="fake-intent-v1", warnings=[DISCLAIMER],
+                model_version=(self.provider.model_version if isinstance(self.provider, OllamaChatProvider)
+                               else "fake-intent-v1"), warnings=[DISCLAIMER],
             )
             if intent.action == "clarify":
                 response.assistant_message = (
