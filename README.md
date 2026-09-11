@@ -575,3 +575,79 @@ execution. These measure fake-provider orchestration, **not real-model quality**
 No developer database, secrets, network model calls, RAG, or multi-agent runtime is used.
 RAG and multi-agent behavior are deferred because this task needs structured household
 data and a single auditable deterministic tool boundary, not document retrieval or delegation.
+
+## Phase 8B: Streamlit AI Assistant
+
+Choose **AI Assistant** in the sidebar, or **Preview meals with AI Assistant** on the
+dashboard. Select a household and optionally a member by name, choose an example or
+enter a request, then click **Preview meals**. This page only reads member profiles
+and calls the Phase 8A preview endpoint. It cannot save plans, change pantry stock,
+generate grocery lists, or record purchases. Nutrition is informational, not medical advice.
+
+Free local demonstration, terminal 1 (PowerShell, FastAPI):
+
+```powershell
+Set-Location 'C:\Users\sramm\OneDrive\Documents\Mastering-Agentic-AI\UV-Project\nourishnest'
+$env:APP_AI_PROVIDER = 'fake'
+uv run uvicorn nourish_nest.api:app --host 127.0.0.1 --port 8000
+```
+
+Terminal 2 (PowerShell, Streamlit):
+
+```powershell
+Set-Location 'C:\Users\sramm\OneDrive\Documents\Mastering-Agentic-AI\UV-Project\nourishnest'
+$env:APP_API_BASE_URL = 'http://127.0.0.1:8000'
+$env:APP_AI_PROVIDER = 'fake'
+uv run streamlit run streamlit_app.py --server.address 127.0.0.1 --server.port 8501
+```
+
+Open `http://127.0.0.1:8501`. Both terminals use fake mode so the initial page can
+display **Local demo mode**; a returned `fake-intent-v1` response also identifies demo
+mode. This is a limited deterministic interpreter, not a real generative model.
+It makes no external model calls and uses no paid AI API credits. `.env.example`
+includes `APP_AI_PROVIDER=fake`; no AI key is needed. Run normal database setup from
+the earlier installation instructions first, and use stored recipes with appropriate
+structured dietary tags. The assistant does not import or invent recipes.
+
+Complete supported example:
+
+> Plan 1 vegan dinner for 2 people within 30 minutes, prioritize expiring pantry items, and show what I need to buy.
+
+Other supported requests include `Plan five vegetarian dinners for 2 people under
+600 calories.` and `Plan weekly dinners for 1 person allow repeats.` The short
+clickable examples deliberately illustrate requests that may need clarification.
+For missing servings, enable **Continue clarification using previous messages** and
+answer `for 2 people`. Wording such as `quick` or `Use ingredients expiring soon` is
+outside the fake grammar: leave continuation off and rewrite as the complete example
+above. Phase 8A guardrails and language support have not been loosened.
+
+Prompts, latest successful previews, and up to six context messages are session-local
+and separated by household/member. The input is limited to 1,000 characters so complete
+user constraints fit a context message without truncation. Context is sent only when
+continuation is selected. An example starts a fresh conversation. **Clear
+conversation/preview** removes the current member's prompt, preview, context, and error.
+Nothing is stored in the database; browser session loss removes this state.
+
+Results show constraints, clarification, a seven-day preview, recipe cards, daily and
+weekly nutrition, shortages, and all returned warnings. IDs, safe tool traces, request
+IDs, and exact calculation/model versions are in collapsed **Technical details**.
+Provider/API errors preserve the prompt and label any previous successful preview.
+There is no confirmation/write action even if a future response requests confirmation.
+
+The typed client permits at most two total HTTP attempts for this read-only POST on
+transport failures or 502/503/504, keeping the request ID. It does not retry 422/429,
+invalid success JSON, or any mutation automatically. Existing connection/read timeouts
+remain unchanged. Ordinary reruns/navigation do not submit previews again.
+
+To disable the assistant, stop and restart both processes after setting:
+
+```powershell
+$env:APP_AI_PROVIDER = 'disabled'
+```
+
+Alternatively use `Remove-Item Env:APP_AI_PROVIDER -ErrorAction SilentlyContinue`
+in both terminals to restore configuration fallback. If `.env` contains
+`APP_AI_PROVIDER=fake`, remove that entry or set it to `disabled` there too; clearing
+the shell variable alone does not override `.env`.
+
+Focused UI/client tests: `uv run python -m pytest tests/test_assistant_ui.py tests/test_ui.py`.

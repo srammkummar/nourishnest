@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError, model_valid
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 import nourish_nest.grocery_client_models as grocery
+from nourish_nest.assistant_client_models import AssistantInput, AssistantPreview
 from nourish_nest.pantry_client_models import (
     AdjustmentInput,
     ConsumeInput,
@@ -37,6 +38,7 @@ T = TypeVar("T")
 class UISettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="APP_", env_file=".env", extra="ignore")
     api_base_url: str = "http://127.0.0.1:8000"
+    ai_provider: str = "disabled"
 
 
 class APIError(RuntimeError):
@@ -219,9 +221,15 @@ class APIClient:
         headers: dict[str, str] | None = None,
         expected_status: int = 200,
         retry_safe: bool = True,
+        read_only_preview: bool = False,
     ) -> T:
         request_id = str(uuid.uuid4())
-        attempts = 2 if method == "GET" and retry_safe else 1
+        preview_retry = (
+            read_only_preview and method == "POST"
+            and path.endswith("/assistant/meal-plan-preview")
+            and body is not None and body.get("dry_run") is True
+        )
+        attempts = 2 if retry_safe and (method == "GET" or preview_retry) else 1
         for attempt in range(attempts):
             try:
                 response = self._client.request(
@@ -284,6 +292,13 @@ class APIClient:
 
     def health(self) -> Health:
         return self._request("GET", "/health", TypeAdapter(Health))
+
+    def assistant_preview(self, household_id: uuid.UUID, data: AssistantInput) -> AssistantPreview:
+        return self._request(
+            "POST", f"/v1/households/{household_id}/assistant/meal-plan-preview",
+            TypeAdapter(AssistantPreview), body=data.model_dump(mode="json"),
+            read_only_preview=True,
+        )
 
     def households(self) -> list[Household]:
         return self._request("GET", "/v1/households", TypeAdapter(list[Household]))

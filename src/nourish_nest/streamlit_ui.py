@@ -9,6 +9,7 @@ from nourish_nest.api_client import (
     Household,
     create_api_client,
 )
+from nourish_nest.assistant_ui import render_assistant
 from nourish_nest.grocery_ui import render_groceries
 from nourish_nest.member_ui import render_members, render_nutrition
 from nourish_nest.pantry_ui import render_pantry
@@ -102,8 +103,9 @@ def quick_actions() -> None:
         ("Create grocery list", "Grocery Lists"),
         ("Calculate nutrition", "Nutrition"),
         ("Browse recipes", "Recipes"),
+        ("Preview meals with AI Assistant", "AI Assistant"),
     ]
-    for column, (label, page) in zip(st.columns(3) + st.columns(2), actions, strict=True):
+    for column, (label, page) in zip(st.columns(3) + st.columns(3), actions, strict=True):
         column.button(
             label,
             key=f"action_{page}",
@@ -184,6 +186,8 @@ def selected_page(api: APIClient, household: Household) -> None:
         render_groceries(api, household, show_error)
     elif page == "Meal Planner":
         render_planner(api, household, show_error)
+    elif page == "AI Assistant":
+        render_assistant(api, household, show_error)
 
 
 def main() -> None:

@@ -378,3 +378,30 @@ metadata; 50 ranked candidate cap; pantry snapshots rather than reservations; no
 or assistant persistence. Medical treatment and guaranteed outcomes are unsupported.
 Any future write tool must introduce explicit confirmation. RAG, embeddings, and
 multi-agent delegation are deferred to avoid expanding this auditable boundary.
+
+## Phase 8B assistant presentation
+
+`assistant_ui.py` uses the existing HTTP client exclusively. Independent wire models
+in `assistant_client_models.py` avoid importing the Phase 8A backend schema graph into
+Streamlit. The only page data operations are household-scoped member reads and
+`APIClient.assistant_preview`, which always submits `dry_run=true` to the existing
+endpoint. No deterministic calculations, guardrails, migrations, or backend routes changed.
+
+The central HTTP request method allows a narrow read-only POST retry exception for
+the assistant-preview path: two total attempts on transport or 502/503/504 failures,
+with the same request ID and existing timeouts. Mutation retry policy is unchanged.
+The UI performs no automatic preview calls on reruns. Successful identical submissions
+reuse the latest result; recoverable errors preserve input and previous results.
+
+Durable session dictionaries are keyed by household/member; widget values are copied
+into these dictionaries to survive Streamlit widget cleanup during navigation. Context
+is limited to six messages of at most 1,000 characters each, and only sent through an
+explicit continuation option. Complete new requests and example buttons start fresh
+context, preventing old constraints from silently affecting a new plan. State is never
+persisted to the database. Clear resets the currently selected conversation.
+
+Visible results use names, text, and vertically stacked cards; no backend JSON is
+displayed. UUIDs are removed from friendly messages and confined with request IDs,
+trace data, and exact versions to collapsed Technical details. All warnings remain
+available in their result sections and the main safety section. The page has no write
+controls. Fake mode is labelled a local deterministic demo, with no paid/live model calls.
