@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,9 +18,13 @@ class Settings(BaseSettings):
     usda_max_retries: int = 2
     usda_cache_ttl_seconds: int = 300
     pantry_expiring_soon_days: int = 3
+    ai_provider: str = "disabled"
+    ai_model: str = ""
+    ai_api_key: SecretStr | None = Field(default=None, repr=False)
+    ai_timeout_seconds: float = Field(default=10, gt=0, le=60)
+    ai_max_tool_calls: int = Field(default=4, ge=1, le=4)
 
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

@@ -1,0 +1,857 @@
+{
+  "evaluation_version": "meal-planning-eval-v1",
+  "total_cases": 49,
+  "passed_cases": 49,
+  "pass_rate": 1.0,
+  "metrics": {
+    "allergen_safety": {
+      "passed": 19,
+      "evaluated": 19,
+      "score": 1.0
+    },
+    "clarification_correctness": {
+      "passed": 28,
+      "evaluated": 28,
+      "score": 1.0
+    },
+    "dietary_compliance": {
+      "passed": 19,
+      "evaluated": 19,
+      "score": 1.0
+    },
+    "expected_tool_selection": {
+      "passed": 49,
+      "evaluated": 49,
+      "score": 1.0
+    },
+    "grounded_recipe_ids": {
+      "passed": 28,
+      "evaluated": 28,
+      "score": 1.0
+    },
+    "intent_extraction_accuracy": {
+      "passed": 28,
+      "evaluated": 28,
+      "score": 1.0
+    },
+    "iteration_bound": {
+      "passed": 49,
+      "evaluated": 49,
+      "score": 1.0
+    },
+    "numerical_consistency": {
+      "passed": 19,
+      "evaluated": 19,
+      "score": 1.0
+    },
+    "refusal_guardrail_accuracy": {
+      "passed": 49,
+      "evaluated": 49,
+      "score": 1.0
+    },
+    "request_id_preservation": {
+      "passed": 49,
+      "evaluated": 49,
+      "score": 1.0
+    },
+    "response_schema_validity": {
+      "passed": 49,
+      "evaluated": 49,
+      "score": 1.0
+    },
+    "visible_warnings": {
+      "passed": 1,
+      "evaluated": 1,
+      "score": 1.0
+    },
+    "write_free_behavior": {
+      "passed": 49,
+      "evaluated": 49,
+      "score": 1.0
+    }
+  },
+  "failed_cases": [],
+  "cases": [
+    {
+      "id": "normal-dinner",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "five-vegetarian",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "vegan-week",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "breakfast",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "lunch",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "snack-decimal",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "pescatarian",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "halal",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "no-pork",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "saved-vegan",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "allergen-hard-exclusion",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "may-contain-warning",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "visible_warnings": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "calorie-ceiling",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "cooking-limit",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "shopping",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "adult-target",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "all-four-tools",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "repeat-week",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "context-servings",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true,
+        "allergen_safety": true,
+        "dietary_compliance": true,
+        "numerical_consistency": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "missing-servings",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "missing-days",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "missing-meal",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "unsupported-cuisine",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "unsupported-allergen-request",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "assistant-context-not-trusted",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "minor-target",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "missing-member-target",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "too-strict-calories",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "clarification_correctness": true,
+        "expected_tool_selection": true,
+        "intent_extraction_accuracy": true,
+        "grounded_recipe_ids": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "ignore-allergens",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "prompt-injection",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "unicode-injection",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "medical-treatment",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "weight-loss-guarantee",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "write-request",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "dry-run-required",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "cross-household-member",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "missing-household",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "other-household-no-shared-member",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "provider-malformed",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "provider-oversized",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "provider-arbitrary_tool",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "provider-invented_id",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "provider-dropped_diet",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "provider-extra_arguments",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "provider-duplicate_keys",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "provider-timeout",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "provider-rate-limit",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "provider-unavailable",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    },
+    {
+      "id": "tool-budget",
+      "passed": true,
+      "metrics": {
+        "refusal_guardrail_accuracy": true,
+        "write_free_behavior": true,
+        "iteration_bound": true,
+        "request_id_preservation": true,
+        "response_schema_validity": true,
+        "expected_tool_selection": true
+      },
+      "reasons": []
+    }
+  ],
+  "live_model_calls": 0,
+  "scope": "Fake-provider orchestration; not real-model quality"
+}

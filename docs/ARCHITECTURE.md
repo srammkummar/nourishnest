@@ -324,3 +324,57 @@ grocery purchases. Refunds, reversals, and external shopping/payment flows are d
 Database migrations use `uv run alembic upgrade head` to upgrade and
 `uv run alembic downgrade -1` to roll back one revision. Local development uses
 SQLite; the schema uses portable SQLAlchemy UUID, timestamp, enum, and cascade definitions.
+
+## Phase 8A assistant boundary
+
+The new assistant is a single coordinator in `assistant_services.py`; it does not
+use the legacy task graph, agents, or RAG. Data flow is bounded HTTP request → household
+and member ownership checks → guardrails → one async `ChatProvider.interpret` call →
+strict intent validation → server-bound deterministic tools → typed read-only response.
+No household records, member profiles, pantry data, tool credentials, recipe IDs, or
+tool arguments are provided to the interpreter. Conversation input is bounded and
+untrusted. Provider-generated prose, arbitrary fields/tool names/arguments, duplicate
+JSON keys, oversized output, and interpretations outside the declared local grammar
+are rejected. The server generates response prose and never exposes provider exception text.
+
+Tools are explicitly limited to `recommendations`, `nutrition_summary`,
+`member_nutrition`, and `grocery_shortage`, in that order where requested. Their
+arguments come exclusively from scoped request IDs and validated server results.
+The coordinator permits one interpretation and at most four top-level tool invocations,
+with an async provider deadline and no retry/iteration loop. Existing recommendation
+internals may invoke shortage calculations per candidate; the cap counts coordinator
+tools, not SQL queries or those unchanged internal calculations.
+
+`RecommendationService` remains the ranking and saved-profile safety authority;
+additional requested diets use its existing `dietary_check`. Recipe nutrition is
+server-provided and only scaled/summed by the wrapper. Adult target calculation uses
+`HouseholdService.calculate_member_nutrition`; combined shortages use
+`GroceryShortageService.preview` directly. Decimal arithmetic uses precision 28 and
+half-even context, matching the core. No service HTTP calls or mutations occur.
+Reads run under `session.no_autoflush` so pending ORM state is not inadvertently saved.
+There is no commit, flush, lock, generation, reservation, or purchase capability.
+
+`Settings` adds `APP_AI_PROVIDER` (disabled/fake), reserved model/key settings, timeout,
+and a bounded tool budget. The key is a repr-hidden `SecretStr`. This repository lacks
+an installed/configured chat SDK pattern, so no real adapter or paid call was added.
+The fake grammar and validation are intentionally limited; a future real adapter
+requires evaluated language-policy expansion, not simply changing the provider name.
+Error codes distinguish unavailable (503), timeout (504), rate limit (429), malformed
+output (502), preview-only/tool-budget/unsafe requests (422), and existing scoped 404s.
+
+The isolated `evals` package seeds data outside the application database and runs
+49 versioned cases through the actual FastAPI endpoint. SQL statement capture plus
+before/after snapshots of every table test write-free behavior; independent core
+service calls verify recommendation data, nutrition, and combined shortages. Golden
+intent/tool expectations and stored metadata verify language extraction, clarification,
+allergen/dietary safety, and grounding. JSON/Markdown reports expose metric denominators
+and failed IDs/reasons. Focused tests additionally corrupt responses to ensure evaluators
+detect numerical/schema/write violations and verify no-autoflush with pending ORM state.
+Run `uv run python -m nourish_nest.evals.meal_planning`; no external model calls occur.
+
+Limitations: local fake grammar only; one meal slot per requested day; no guaranteed
+complete diet, calorie optimization, or allergy safety beyond available structured
+metadata; 50 ranked candidate cap; pantry snapshots rather than reservations; no UI
+or assistant persistence. Medical treatment and guaranteed outcomes are unsupported.
+Any future write tool must introduce explicit confirmation. RAG, embeddings, and
+multi-agent delegation are deferred to avoid expanding this auditable boundary.

@@ -485,3 +485,93 @@ Only explicitly saving grocery needs writes a grocery generation. The catalog is
 memory using existing services; this MVP does not add pagination, persistence, authentication,
 LLM scoring, or external integrations. Missing nutrition may be incomplete or unavailable and is
 shown with warnings. Results are estimates, not medical advice.
+
+## Phase 8A: read-only meal assistant
+
+`POST /v1/households/{household_id}/assistant/meal-plan-preview` adds one bounded
+interpretation/coordinator layer over the deterministic planner. It does not change
+the Streamlit pages or save a plan. No migrations or core calculation rules changed.
+
+The default provider is disabled (503). To try the local fake interpreter in PowerShell:
+
+```powershell
+$env:APP_AI_PROVIDER = "fake"
+$env:APP_AI_TIMEOUT_SECONDS = "10"
+uv run uvicorn nourish_nest.api:app --host 127.0.0.1 --port 8000
+```
+
+`APP_AI_MODEL` and secret `APP_AI_API_KEY` are reserved for a future adapter; neither
+is used by fake/disabled mode. No chat SDK or existing chat credential integration
+was present, so this phase adds no real provider, dependency, or paid/live model call.
+Unknown provider settings fail closed. `APP_AI_MAX_TOOL_CALLS` defaults to 4 (range 1–4).
+
+Example body (replace the URL household with an existing household):
+
+```json
+{
+  "user_message": "Plan five vegetarian dinners for 2 people under 600 calories, prioritize expiring pantry items, and show what I need to buy.",
+  "member_id": null,
+  "conversation_context": [],
+  "dry_run": true
+}
+```
+
+The request accepts up to 2,000 message characters and six context messages of up to
+1,000 characters each. Context roles are `user`/`assistant`; only user text can supply
+constraints. Household/member ownership is verified before contacting a provider.
+`dry_run=false` is rejected. Responses preserve the API error envelope and request ID.
+
+The fake is a deterministic demonstration grammar, **not a real language model**.
+Specify 1–7 days, one meal slot (`breakfast`, `lunch`, `dinner`, or `snack`), and positive
+servings (up to 100). It recognizes vegetarian, vegan, pescatarian, halal, no beef,
+no pork; `under N calories` (strictly below, per serving) / `at most N calories`;
+`within N minutes` cooking time; shopping; `compare my target`; and `allow repeats`.
+The sample without servings asks for clarification. A following `for 2 people` can
+complete it using user context. Unsupported constraints, including free-text allergen
+names, cuisine, budget, or ambiguous multi-slot requests, require clarification.
+Personal allergies must be stored on the selected member. No safety constraint is
+silently relaxed to fill a plan.
+
+Preview responses include `interpreted_constraints`, seven `proposed_plan` day entries
+(unrequested days empty), `recommendations_used`, daily/weekly `nutrition_summary`,
+optional `member_nutrition_target`, optional `grocery_shortage_preview`, warnings,
+safe tool trace, `confirmation_required=false`, `request_id`,
+`calculation_version=meal-planning-assistant-v1`, and `model_version=fake-intent-v1`.
+Clarifications use `status=clarification` and an empty plan. Traces expose only tool
+name, completion status, and duration in milliseconds. Provider text is never returned
+as assistant prose, and providers cannot submit recipe IDs or tool arguments.
+
+The server considers at most 50 existing ranked recommendations, applies additional
+structured dietary/per-serving calorie filters, and takes distinct recipes unless
+repeats were explicitly allowed. Ranking remains the existing pantry/expiring score
+at saved recipe yields. Combined shortage preview uses requested servings. Nutrition
+summaries scale server-provided nutrition; they cover **all planned servings and only
+the selected meals**, not a complete individual diet. Adult targets require an owned
+adult member and are presented separately; no target is applied to a minor.
+Unknown nutrition cannot satisfy a calorie ceiling. Unsupported conversions produce
+warnings, never inferred density. Missing allergen metadata and synonyms remain
+limitations of the existing structured data; results are not an allergy-safety guarantee.
+
+Nothing is written, consumed, reserved, or locked. Pantry results are point-in-time
+estimates. Future write actions need a separate explicitly confirmed path, which is
+not implemented here. Nutrition is informational, not medical advice. The conservative
+guardrails reject medical treatment, guaranteed weight loss, allergen bypasses, and
+recognized injection/write instructions; the fake grammar rejects other unsupported
+language. These checks are not a validated general-purpose clinical or injection detector.
+
+Run all evaluations offline (an isolated, seeded in-memory SQLite database):
+
+```powershell
+uv run python -m nourish_nest.evals.meal_planning
+uv run python -m pytest tests/test_assistant.py
+```
+
+The versioned dataset has 49 golden cases. The runner exits nonzero on failure and
+writes `artifacts/ai-evals/meal-planning-v1/results.json` and `summary.md`, including
+totals, pass rate, failed IDs/reasons, and per-metric passed/evaluated counts. Metrics
+cover intent extraction, tools, allergens, diets, grounding, numerical agreement with
+core services, clarification, guardrails, schema, request IDs, call bounds, and write-free
+execution. These measure fake-provider orchestration, **not real-model quality**.
+No developer database, secrets, network model calls, RAG, or multi-agent runtime is used.
+RAG and multi-agent behavior are deferred because this task needs structured household
+data and a single auditable deterministic tool boundary, not document retrieval or delegation.

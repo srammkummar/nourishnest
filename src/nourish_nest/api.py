@@ -8,6 +8,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from nourish_nest import __version__
+from nourish_nest.assistant_contracts import AssistantRequest, AssistantResponse
+from nourish_nest.assistant_provider import AssistantError, get_chat_provider
+from nourish_nest.assistant_services import MealPlanningAssistant
 from nourish_nest.database import get_db
 from nourish_nest.domain import ErrorBody, NutritionPlan, NutritionProfile
 from nourish_nest.food_schemas import (
@@ -113,6 +116,23 @@ async def recipe_mutation_error(request: Request, exc: RecipeMutationError):
 
 DB_DEPENDENCY = Depends(get_db)
 PROVIDER_DEPENDENCY = Depends(get_food_data_provider)
+CHAT_DEPENDENCY = Depends(get_chat_provider)
+
+
+@app.exception_handler(AssistantError)
+async def assistant_error(request: Request, exc: AssistantError):
+    return _provider_error(exc.code, str(exc), request, exc.status_code)
+
+
+@app.post("/v1/households/{household_id}/assistant/meal-plan-preview",
+          response_model=AssistantResponse)
+async def assistant_meal_plan_preview(
+    household_id: uuid.UUID, data: AssistantRequest, request: Request,
+    db: Session = DB_DEPENDENCY, provider=CHAT_DEPENDENCY,
+):
+    return await MealPlanningAssistant(db, provider).preview(
+        household_id, data, request.state.request_id
+    )
 
 
 @app.middleware("http")
