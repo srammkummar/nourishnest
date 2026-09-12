@@ -96,7 +96,9 @@ def app():
         str(Path(__file__).resolve().parents[1] / "streamlit_app.py"), default_timeout=20
     )
     ui.session_state["page"] = "Pantry"
-    return ui.run()
+    ui.run()
+    refresh = next((b for b in ui.button if b.label == "Refresh pantry"), None)
+    return refresh.click().run() if refresh else ui
 
 
 def button(ui, label):

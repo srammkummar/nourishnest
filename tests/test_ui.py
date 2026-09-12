@@ -189,10 +189,11 @@ def test_ui_empty_create_household_and_dashboard(monkeypatch):
     next(b for b in ui.button if b.label == "Create household").click().run()
     assert not ui.exception
     assert ui.session_state["household_id"] == HOME["id"]
-    assert len(ui.metric) == 6
-    assert all(m.value == "0" for m in ui.metric)
-    assert any("no dashboard data" in x.value for x in ui.info)
     assert any("Created Maple House" in x.value for x in ui.success)
+    next(b for b in ui.button if b.label == "Refresh dashboard").click().run()
+    assert len(ui.metric) == 10
+    assert all(m.value == "0" for m in ui.metric[4:])
+    assert any("no dashboard data" in x.value for x in ui.info)
     assert sum(r.method == "POST" for r in server.calls) == 1
 
 
@@ -201,7 +202,8 @@ def test_ui_populated_selection_and_grocery_navigation(monkeypatch):
     server = Server([HOME, second], populated=True)
     ui = app(monkeypatch, server)
     assert not ui.exception
-    assert [m.value for m in ui.metric] == ["1", "1", "3", "1", "1", "1"]
+    next(b for b in ui.button if b.label == "Refresh dashboard").click().run()
+    assert [m.value for m in ui.metric[4:]] == ["1", "1", "3", "1", "1", "1"]
     ui.selectbox(key="household_id").select(second["id"]).run()
     assert not ui.exception
     assert ui.session_state["household_id"] == second["id"]
@@ -255,13 +257,16 @@ def test_dashboard_failure_not_zero_and_pantries_not_retried(monkeypatch):
     server = Server([HOME])
     server.fail_path = f"/v1/households/{HOME['id']}/pantry/summary"
     ui = app(monkeypatch, server)
+    next(b for b in ui.button if b.label == "Refresh dashboard").click().run()
     assert not ui.exception
-    assert not ui.metric
+    assert [m.value for m in ui.metric[:2]] == ["—", "—"]
     assert sum(r.url.path == server.fail_path for r in server.calls) == 1
 
 
 def test_ui_import_boundary():
     allowed = {
+        "nourish_nest.ui_design",
+        "nourish_nest.dashboard_ui",
         "nourish_nest.assistant_ui",
         "nourish_nest.assistant_client_models",
         "nourish_nest.api_client",
@@ -283,6 +288,8 @@ def test_ui_import_boundary():
         *(
             ROOT / "src" / "nourish_nest" / f"{name}.py"
             for name in (
+                "ui_design",
+                "dashboard_ui",
                 "assistant_ui",
                 "assistant_client_models",
                 "api_client",

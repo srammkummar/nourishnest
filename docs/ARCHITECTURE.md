@@ -405,3 +405,13 @@ displayed. UUIDs are removed from friendly messages and confined with request ID
 trace data, and exact versions to collapsed Technical details. All warnings remain
 available in their result sections and the main safety section. The page has no write
 controls. Fake mode is labelled a local deterministic demo, with no paid/live model calls.
+
+## Phase 9A presentation system
+
+`ui_design.py` owns the page-header registry, grouped navigation mapping, safe HTML labels, local image registry, status badges, profile initials, workflow steps and seven-day cards. `static/assets/theme.css` centralizes tokens, responsive breakpoints (1100 and 768 pixels), keyboard focus and reduced-motion rules. Existing Streamlit widgets provide forms, selectors and confirmation controls. `dashboard_ui.py` composes household-local snapshots and existing HTTP responses; no new server contract is introduced.
+
+All application data still arrives through the typed HTTP API client. UI modules do not import ORM models, repositories, database sessions or backend services. Asset loading reads only packaged presentation files: small original SVGs and CSS are cached, and WebP photos use local Streamlit static URLs, including the configured base URL path. User-provided names are escaped and IDs are filtered from custom markup. Source and license records live in `static/assets/ATTRIBUTION.md`.
+
+The existing pantry read endpoints can persist expiration status. Pantry/dashboard snapshots therefore require an explicit Refresh action (or refresh following an authorized stock mutation); ordinary initial page rendering does not invoke those endpoints. This is a presentation boundary, not a change to expiration rules. Recommendation, nutrition and recipe card reads reuse existing read-only HTTP operations. Nutrition card results are cached by recipe/version and invalidated on recipe refresh/save; pantry matches require an explicit request.
+
+Recipe create/edit/delete versions and retained idempotency keys, pantry FEFO and inventory actions, grocery generation/purchase transactions, adult nutrition restrictions, and assistant safety/provider behavior remain owned by their existing layers. The configured assistant provider is informational in collapsed Technical details; the UI never invokes a model directly.

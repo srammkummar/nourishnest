@@ -16,6 +16,7 @@ from nourish_nest.pantry_client_models import (
     StockRuleInput,
     TransferInput,
 )
+from nourish_nest.ui_design import badge, steps
 from nourish_nest.ui_labels import (
     food_labels,
     humanize,
@@ -60,7 +61,8 @@ def load_snapshot(api: APIClient, home, workspace: dict) -> dict:
 
 def finish(workspace: dict, message: str) -> None:
     workspace.update(
-        snapshot=None, action=None, search={}, notice=message, epoch=workspace["epoch"] + 1
+        snapshot=None, action=None, search={}, notice=message, epoch=workspace["epoch"] + 1,
+        load_requested=True,
     )
 
 
@@ -176,10 +178,10 @@ def inventory(snapshot: dict, workspace: dict, prefix: str) -> None:
 def locations_page(api: APIClient, home, snapshot: dict, workspace: dict, prefix: str):
     locations = snapshot["locations"]
     if locations:
-        st.dataframe(
-            [{"Name": r.name, "Type": humanize(r.location_type)} for r in locations],
-            hide_index=True,
-        )
+        for location in locations:
+            with st.container(border=True):
+                st.subheader(location.name)
+                badge(humanize(location.location_type))
     else:
         st.info("No storage locations yet. Create one below.")
     with st.form(f"{prefix}_create"):
@@ -215,6 +217,7 @@ def locations_page(api: APIClient, home, snapshot: dict, workspace: dict, prefix
 
 
 def add_item(api: APIClient, home, snapshot: dict, workspace: dict, prefix: str):
+    steps(("Choose food", "Choose storage", "Add amount & dates"))
     if not snapshot["locations"]:
         st.info("Create a storage location in Locations before adding inventory.")
         return
@@ -319,7 +322,7 @@ def actions(
     st.write(f"{workspace['foods'][item.food_id].name} · {item.quantity} {item.unit}")
     technical_details(pantry_lot_ID=item.id, version=item.version)
     if st.button("Reset action with current stock"):
-        workspace.update(action=None, snapshot=None)
+        workspace.update(action=None, snapshot=None, load_requested=True)
         st.rerun()
     if action["payload"] is not None:
         st.info(
@@ -466,6 +469,11 @@ def render_pantry(api: APIClient, household: Household, show_error: Callable) ->
         workspace["notice"] = None
     if st.button("Refresh pantry"):
         workspace["snapshot"] = None
+        workspace["load_requested"] = True
+    st.caption("Refresh checks freshness and marks overdue lots expired. Your last loaded snapshot stays available while you browse.")
+    if workspace["snapshot"] is None and not workspace.pop("load_requested", False):
+        st.info("Refresh pantry to load your inventory and check freshness. Opening this page does not change stock.")
+        return
     try:
         with st.spinner("Loading pantry…"):
             snapshot = load_snapshot(api, household.id, workspace)

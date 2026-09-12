@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from nourish_nest.api_client import APIError, UISettings
 from nourish_nest.assistant_client_models import AssistantInput, ConversationMessage
+from nourish_nest.ui_design import badge, illustration, recipe_image
 from nourish_nest.ui_labels import friendly_message, humanize, labels, validation_errors
 
 EXAMPLES = (
@@ -71,7 +72,8 @@ def internal_ids(value, path="response"):
 
 def render_result(result):
     st.subheader("Assistant summary")
-    st.write(friendly_message(result.assistant_message))
+    with st.chat_message("assistant", avatar="🌿"):
+        st.write(friendly_message(result.assistant_message))
     if result.status == "clarification":
         st.subheader("Clarification needed")
         st.info(friendly_message(result.assistant_message))
@@ -108,6 +110,7 @@ def render_result(result):
         st.subheader("Recipes behind this plan")
         for recipe in result.recommendations_used:
             with st.container(border=True):
+                illustration(recipe_image(recipe.cuisine))
                 st.subheader(friendly_message(recipe.recipe_name))
                 st.caption("System recipe" if recipe.system_recipe else "Household recipe")
                 st.write(friendly_message(recipe.classification))
@@ -218,11 +221,15 @@ def render_assistant(api, household, show_error):
                  if result and result.model_version.startswith("ollama:") else settings.ai_model)
         if model and not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}", model):
             model = "Check the local model name in configuration."
-        st.info("Local Ollama mode")
-        st.caption(f"Model: {friendly_message(model) if model else 'Choose an installed local model in configuration.'}")
+        with st.expander("Technical details", expanded=False):
+            st.info("Local Ollama mode")
+            st.caption(f"Model: {friendly_message(model) if model else 'Choose an installed local model in configuration.'}")
         st.caption("Describe days, one meal slot, servings, and any supported preferences. Review the interpreted constraints before using a preview.")
     elif settings.ai_provider == "fake" or (result and result.model_version == "fake-intent-v1"):
-        st.info("Local demo mode — a limited deterministic interpreter, not a generative model. No external model calls or paid AI credits.")
+        badge("Local preview mode")
+        st.caption("A deterministic preview, not a live generative model.")
+        with st.expander("Technical details", expanded=False):
+            st.info("Local demo mode — a limited deterministic interpreter, not a generative model. No external model calls or paid AI credits.")
     if not local_model:
         st.caption("For a complete local demo request, include days, one meal slot, and servings. Short examples may ask for clarification; unsupported wording needs a complete rewrite.")
     with st.expander("Try an example"):
@@ -244,7 +251,7 @@ def render_assistant(api, household, show_error):
                                   conversation_context=workspace["context"] if continuation else [])
             signature = data.model_dump_json()
             if workspace["last_submission"] != signature or workspace["error"] is not None:
-                with st.spinner("Checking recipes, nutrition, and pantry needs…"):
+                with st.spinner("Building your meal plan…"):
                     response = api.assistant_preview(home, data)
                 if response.household_id != home:
                     raise APIError("invalid_response", "The preview did not match the selected household.")

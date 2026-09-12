@@ -7,6 +7,7 @@ import streamlit as st
 from pydantic import ValidationError
 
 from nourish_nest.api_client import APIClient, APIError, Household, Member, MemberInput
+from nourish_nest.ui_design import avatar, steps
 from nourish_nest.ui_labels import humanize, reset_fields
 from nourish_nest.ui_labels import labels as human_labels
 
@@ -18,6 +19,7 @@ PREFERENCES = ["vegetarian", "vegan", "pescatarian", "halal", "no-beef", "no-por
 
 
 def member_form(key: str, member: Member | None = None) -> MemberInput | None:
+    steps(("Personal details", "Daily routine", "Food preferences"))
     defaults = (
         member.model_dump()
         if member
@@ -248,6 +250,7 @@ def render_members(
         st.info("No members yet. Add a saved profile to calculate nutrition.")
     for member in sorted(members, key=lambda m: (m.name.casefold(), str(m.id))):
         with st.container(border=True):
+            avatar(member.name)
             st.subheader(member.name)
 
             def select_action(action, member_id):

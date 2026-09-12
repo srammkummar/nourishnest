@@ -10,6 +10,7 @@ from nourish_nest.api_client import APIError
 from nourish_nest.grocery_client_models import GenerationInput, RecipeSelection, RequirementsInput
 from nourish_nest.grocery_ui import item_rows, render_preview, render_warnings
 from nourish_nest.planning_contracts import RecommendationRequest
+from nourish_nest.ui_design import badge, illustration, recipe_image, week_cards
 from nourish_nest.ui_labels import friendly_message, labels, technical_details, validation_errors
 
 DAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
@@ -91,6 +92,7 @@ def render_recommendations(api, home, member, workspace, prefix):
         )
         submitted = st.form_submit_button("Find recipes", type="primary")
     if submitted:
+        workspace.pop("focus_recipe", None)
         with st.spinner("Checking pantry and recipe details…"):
             workspace["recommendations"] = api.recipe_recommendations(
                 home,
@@ -115,8 +117,12 @@ def render_recommendations(api, home, member, workspace, prefix):
         st.info(
             "No recipes meet these filters and stored dietary requirements. Try different filters or review food data."
         )
-    for recipe in response.recommendations:
+    selected_recipes = [r for r in response.recommendations if workspace.get("focus_recipe") in (None, r.recipe_id)]
+    if workspace.get("focus_recipe") and not selected_recipes:
+        st.info("That recipe was not returned in the eligible pantry matches. Find recipes to explore available choices; dietary filters remain in effect.")
+    for recipe in selected_recipes:
         with st.container(border=True):
+            illustration(recipe_image(recipe.cuisine))
             st.subheader(recipe.recipe_name)
             st.caption("System recipe" if recipe.system_recipe else "Household recipe")
             st.write(
@@ -131,6 +137,7 @@ def render_recommendations(api, home, member, workspace, prefix):
             if recipe.missing_ingredients:
                 st.dataframe(need_rows(recipe.missing_ingredients), hide_index=True)
             if recipe.expiring_ingredients:
+                badge("Uses expiring ingredients", "success")
                 st.write(
                     "Use soon: "
                     + "; ".join(
@@ -373,13 +380,24 @@ def render_planner(api, household, show_error):
             format_func=lambda key: "Whole household" if key is None else choices[key],
             key=f"planner_member_{household.id}",
         )
+        st.session_state[f"planner_profile_{household.id}"] = selection
         member = next((m for m in members if m.id == selection), None)
         prefix = f"planner_{household.id}_{selection}"
         workspace = st.session_state.setdefault(prefix, new_plan())
+        requested = st.session_state.pop("planner_recipe", None)
+        if requested and requested["household_id"] == household.id:
+            workspace["focus_recipe"] = requested["recipe_id"]
+            workspace["recommendations"] = api.recipe_recommendations(
+                household.id, RecommendationRequest(member_id=selection, maximum_missing_ingredients=100, limit=50)
+            )
+        overview = st.container()
         if workspace["error"]:
             show_error(workspace["error"])
             workspace["error"] = None
         render_recommendations(api, household.id, member, workspace, prefix)
+        with overview:
+            st.subheader("This week at your table")
+            week_cards(workspace["meals"], DAYS)
         render_week(api, household.id, member, workspace, prefix)
         grocery_handoff(api, household.id, workspace, prefix)
     except ValidationError as error:

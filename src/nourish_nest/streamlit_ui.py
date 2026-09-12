@@ -7,60 +7,24 @@ from nourish_nest.api_client import (
     APIError,
     DashboardCounts,
     Household,
+    UISettings,
     create_api_client,
 )
 from nourish_nest.assistant_ui import render_assistant
+from nourish_nest.dashboard_ui import render_dashboard
 from nourish_nest.grocery_ui import render_groceries
 from nourish_nest.member_ui import render_members, render_nutrition
 from nourish_nest.pantry_ui import render_pantry
 from nourish_nest.planning_ui import render_planner
 from nourish_nest.recipe_ui import render_recipes
+from nourish_nest.ui_design import ASSETS, NAV_PAGES, apply_design, badge, brand, page_header
 from nourish_nest.ui_labels import friendly_message, technical_details
 from nourish_nest.ui_labels import labels as human_labels
 from nourish_nest.ui_state import (
-    PAGES,
     navigate,
     remember_created_household,
     sync_household_selection,
 )
-
-# Keep the scroll container and its contents within the sidebar's available width.
-# Scope these rules to the sidebar so dashboard and form layouts stay unchanged.
-SIDEBAR_STYLE = """
-<style>
-[data-testid="stSidebarContent"] {
-    box-sizing: border-box;
-    padding-inline: 0;
-    overflow-x: hidden;
-    scrollbar-gutter: stable;
-}
-[data-testid="stSidebarHeader"],
-[data-testid="stSidebarUserContent"] {
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    margin-inline: 0;
-    padding-inline: 1.25rem;
-}
-[data-testid="stSidebarUserContent"] p,
-[data-testid="stSidebarUserContent"] label {
-    overflow-wrap: anywhere;
-}
-[data-testid="stSidebarUserContent"] [data-testid="stSelectbox"] {
-    min-width: 0;
-    max-width: 100%;
-}
-@media (max-width: 1100px) {
-    [data-testid="stMainBlockContainer"] { padding-inline: 2rem; }
-    [data-testid="stMetricValue"], [data-testid="stMetricValue"] > div {
-        white-space: normal;
-        overflow: visible;
-        text-overflow: clip;
-        font-size: 1.5rem;
-    }
-}
-</style>
-"""
 
 
 def show_error(error: APIError) -> None:
@@ -153,18 +117,10 @@ def dashboard_cards(counts: DashboardCounts) -> None:
 
 
 def selected_page(api: APIClient, household: Household) -> None:
-    st.caption(f"{household.name} · {household.timezone} · {household.currency}")
     page = st.session_state["page"]
+    page_header(page, household)
     if page == "Dashboard":
-        st.write("Your household at a glance. Refresh to retrieve the latest API data.")
-        st.button("Refresh dashboard")
-        try:
-            with st.spinner("Loading household overview…"):
-                dashboard_cards(api.dashboard(household.id))
-        except APIError as error:
-            show_error(error)
-            st.info("The overview could not be loaded. Refresh to try again.")
-        quick_actions()
+        render_dashboard(api, household, show_error, dashboard_cards, quick_actions)
     elif page == "Household":
         with st.container(border=True):
             st.subheader(household.name)
@@ -191,24 +147,23 @@ def selected_page(api: APIClient, household: Household) -> None:
 
 
 def main() -> None:
-    st.set_page_config(page_title="NourishNest", page_icon="🌿", layout="wide")
-    st.html(SIDEBAR_STYLE)
+    st.set_page_config(page_title="NourishNest", page_icon=str(ASSETS / "brand/favicon.svg"), layout="wide")
+    apply_design()
     st.session_state.setdefault("page", "Dashboard")
     if "pending_page" in st.session_state:
         navigate(st.session_state, st.session_state.pop("pending_page"))
     with st.sidebar:
-        st.title("🌿 NourishNest")
-        st.caption("A little more order. A healthier home.")
-        st.radio("Workspace", PAGES, key="page")
+        brand()
+        household_picker = st.container()
+        st.radio("Workspace", NAV_PAGES, key="page", label_visibility="collapsed")
         st.divider()
-    st.title(st.session_state["page"])
     try:
         with create_api_client() as api:
             with st.sidebar:
                 with st.spinner("Checking API…"):
                     health = api.health()
-                st.success("API connected")
-                technical_details(application_version=health.version)
+                badge("Connected", "success")
+                technical_details(application_version=health.version, configured_provider=UISettings().ai_provider)
             with st.spinner("Loading households…"):
                 households = sorted(api.households(), key=lambda h: (h.name.casefold(), str(h.id)))
             selected = sync_household_selection(st.session_state, households)
@@ -216,7 +171,7 @@ def main() -> None:
                 str(key): value
                 for key, value in human_labels(households, context=lambda h: h.timezone).items()
             }
-            with st.sidebar:
+            with household_picker:
                 if households:
                     st.selectbox(
                         "Household", list(labels), format_func=labels.get, key="household_id"
@@ -232,6 +187,7 @@ def main() -> None:
             if "success_message" in st.session_state:
                 st.success(st.session_state.pop("success_message"))
             if selected is None:
+                page_header(st.session_state["page"])
                 st.subheader("Welcome home")
                 st.write(
                     "Create your first household to bring meals, pantry stock, and grocery planning together."

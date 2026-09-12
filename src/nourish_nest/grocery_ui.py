@@ -9,6 +9,7 @@ from pydantic import ValidationError
 import nourish_nest.grocery_client_models as wire
 from nourish_nest.api_client import APIClient, APIError, Household
 from nourish_nest.pantry_ui import UNITS, choose_food
+from nourish_nest.ui_design import badge, steps
 from nourish_nest.ui_labels import (
     humanize,
     labels,
@@ -457,6 +458,7 @@ def submit_purchase(api, home, workspace, record):
 
 
 def purchase(api, home, workspace, record, prefix):
+    steps(("Choose item", "Record this purchase", "Optional pantry intake"))
     receipt = record["purchase_result"]
     if receipt:
         st.success(
@@ -560,7 +562,8 @@ def purchase(api, home, workspace, record, prefix):
 
 def render_groceries(api: APIClient, household: Household, show_error: Callable):
     st.write("Plan your shopping, check what is already at home, and record purchases as you go.")
-    with st.expander("Shopping guide", expanded=True):
+    steps(("Choose a list", "Preview needs", "Check pantry", "Generate", "Shop"))
+    with st.expander("Shopping guide", expanded=False):
         st.markdown(
             "1. **Create/select list** in Lists.\n2. **Select recipes** in Recipe planning.\n3. **Preview needs** to see ingredients.\n4. **Check pantry shortages** to see what to buy.\n5. **Generate list** to save those shortages.\n6. **Record purchases** in Purchase, optionally adding food to your pantry."
         )
@@ -589,6 +592,9 @@ def render_groceries(api: APIClient, household: Household, show_error: Callable)
             # A refresh failure must never turn a saved purchase back into a pending write.
             workspace["pantry_summary"] = api.pantry_overview(home)
             workspace["dashboard"] = api.dashboard(home)
+            overview = st.session_state.get(f"home_overview_{home}")
+            if overview is not None:
+                overview["counts"] = workspace["dashboard"]
             workspace["refresh_purchase"] = False
         if workspace["lists"] is None:
             with st.spinner("Loading grocery lists…"):
@@ -641,7 +647,14 @@ def render_groceries(api: APIClient, household: Household, show_error: Callable)
                 checked * 100 // total if total else 0, text=f"Purchased items: {checked} / {total}"
             )
             if items:
-                st.dataframe(item_rows(items), hide_index=True, use_container_width=True)
+                needed = [item for item in items if not item.checked]
+                completed = [item for item in items if item.checked]
+                if needed:
+                    badge(f"Still to shop · {len(needed)} items", "warning")
+                    st.dataframe(item_rows(needed), hide_index=True, use_container_width=True)
+                if completed:
+                    with st.expander(f"Purchased · {len(completed)} items"):
+                        st.dataframe(item_rows(completed), hide_index=True, use_container_width=True)
             else:
                 st.info("This list is empty. Add manual items or generate recipe shortages.")
         else:

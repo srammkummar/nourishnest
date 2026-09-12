@@ -773,3 +773,36 @@ Mocked provider/UI verification (requires no installed model):
 ```powershell
 uv run python -m pytest tests/test_ollama.py tests/test_ollama_ui.py tests/test_assistant.py tests/test_assistant_ui.py
 ```
+
+## Phase 9A: visual design and local artwork
+
+The Streamlit application uses a shared forest-green, sage and warm-cream design system, with terracotta focus indicators, grouped navigation, household greetings, visual recipe cards, profile initials, a seven-day plan overview, and clearer shopping stages. Existing API contracts and calculation rules are unchanged. Recipe pictures are serving inspiration rather than photographs of saved recipes.
+
+Artwork is bundled in `static/assets/`: five optimized WebP photographs (about 269 KiB total), an original SVG wordmark/favicon, and two original planning illustrations. There are no runtime remote image requests. See [asset attribution](static/assets/ATTRIBUTION.md) for the Pexels source pages and license. Small SVG illustrations are embedded locally; photographs use Streamlit static serving. Keep `server.enableStaticServing = true` and launch from the repository root.
+
+Pantry and Dashboard now load pantry snapshots through their explicit **Refresh** actions. Existing pantry GET endpoints can mark overdue lots expired; gating those calls avoids an inventory change simply from opening a page. Previously loaded snapshots remain available while browsing. Refresh after changing stock elsewhere. Recommendation and planning previews remain read-only.
+
+Recipe cards cache nutrition by recipe ID/version and show the first 12 matching recipes; the existing selector still exposes every matching recipe. Pantry matches are requested explicitly and follow the existing recommendation result limit. The week preview uses the selected planning profile's session-local plan. Shared fallback photography does not indicate recipe ingredients or allergen safety.
+
+### Screenshots
+
+Screenshot slots for release documentation: Dashboard; Recipes; Pantry; Grocery Lists; Household; Nutrition; Meal Planner; AI Assistant. Capture with synthetic household data at 1366×768 and 1024×768, keeping Technical details collapsed. The visual QA report records the actual inspection results separately.
+
+### Start in two Windows PowerShell terminals
+
+From the repository root, terminal 1:
+
+```powershell
+$env:APP_AI_PROVIDER = "fake"
+uv run python -m uvicorn nourish_nest.api:app --host 127.0.0.1 --port 8000
+```
+
+Terminal 2:
+
+```powershell
+$env:APP_API_BASE_URL = "http://127.0.0.1:8000"
+$env:APP_AI_PROVIDER = "fake"
+uv run python -m streamlit run streamlit_app.py --server.address 127.0.0.1 --server.port 8501
+```
+
+Open `http://127.0.0.1:8501`. Fake mode is a limited deterministic local preview, not a live generative model. If port 8000 is occupied, choose another API port and set `APP_API_BASE_URL` to match; do not stop an unrelated service.

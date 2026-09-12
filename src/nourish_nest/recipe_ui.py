@@ -7,7 +7,9 @@ import streamlit as st
 from pydantic import ValidationError
 
 from nourish_nest.api_client import APIClient, APIError, Household
+from nourish_nest.planning_contracts import RecommendationRequest
 from nourish_nest.recipe_client_models import RecipeInput, RecipeNutrition, RecipeRecord, StoredFood
+from nourish_nest.ui_design import badge, illustration, recipe_image, steps
 from nourish_nest.ui_labels import (
     food_labels,
     humanize,
@@ -17,6 +19,7 @@ from nourish_nest.ui_labels import (
 from nourish_nest.ui_labels import (
     labels as human_labels,
 )
+from nourish_nest.ui_state import navigate
 
 # Input choices mirror the API's supported units; conversion remains server-side.
 UNITS = ("g", "kg", "oz", "lb", "ml", "l", "cup", "tbsp", "tsp", "item")
@@ -98,6 +101,7 @@ def build_payload(draft: dict) -> RecipeInput:
 
 
 def finish_save(workspace: dict, saved: RecipeRecord) -> None:
+    workspace.pop("card_nutrition", None)
     workspace["recipes"] = [r for r in workspace["recipes"] if r.id != saved.id] + [saved]
     workspace["selected"] = str(saved.id)
     workspace["detail"] = saved
@@ -151,6 +155,7 @@ def row_controls(rows: list[dict], index: int, key: str) -> None:
 
 
 def editor(api: APIClient, household: Household, workspace: dict, show_error: Callable) -> None:
+    steps(("Recipe overview", "Ingredients", "Cooking instructions", "Review & save"))
     draft = workspace["draft"]
     token, values = draft["token"], draft["values"]
     st.caption(
@@ -300,6 +305,7 @@ def details(
     st.subheader(recipe.name)
     system = recipe.household_id is None
     st.caption("System recipe" if system else "Household recipe")
+    illustration(recipe_image(recipe.cuisine))
     st.write(recipe.description or "No description provided.")
     st.write(
         f"Cuisine: {recipe.cuisine or 'Not specified'} · Preparation: {recipe.preparation_minutes} min · Cooking: {recipe.cooking_minutes} min · Servings: {recipe.servings}"
@@ -321,7 +327,11 @@ def details(
     try:
         if workspace["nutrition"] is None:
             with st.spinner("Loading recipe nutrition…"):
-                workspace["nutrition"] = api.recipe_nutrition(household.id, recipe.id)
+                cache = workspace.setdefault("card_nutrition", {})
+                cache_key = (recipe.id, recipe.version)
+                if cache_key not in cache:
+                    cache[cache_key] = api.recipe_nutrition(household.id, recipe.id)
+                workspace["nutrition"] = cache[cache_key]
         result = workspace["nutrition"]
         st.dataframe(nutrition_rows(result), hide_index=True, use_container_width=True)
         st.write(
@@ -368,6 +378,56 @@ def details(
                 show_error(error)
 
 
+def select_card(workspace, key, recipe_id):
+    workspace["selected"] = str(recipe_id)
+    st.session_state[key] = str(recipe_id)
+
+
+def plan_recipe(home, recipe_id):
+    st.session_state["planner_recipe"] = {"household_id": home, "recipe_id": recipe_id}
+    navigate(st.session_state, "Meal Planner")
+
+
+def recipe_cards(api, home, recipes, workspace, show_error):
+    if st.button("Check pantry matches"):
+        workspace["matches"] = api.recipe_recommendations(home, RecommendationRequest(maximum_missing_ingredients=100, limit=50))
+    response = workspace.get("matches")
+    matches = {r.recipe_id: r for r in response.recommendations} if response else {}
+    if response:
+        st.caption("Pantry matches are a point-in-time household preview, without personal allergy filtering.")
+        for warning in response.warnings:
+            st.warning(warning.message)
+    cache = workspace.setdefault("card_nutrition", {})
+    for start in range(0, min(len(recipes), 12), 3):
+        for column, recipe in zip(st.columns(3), recipes[start:start + 3], strict=False):
+            with column.container(border=True):
+                illustration(recipe_image(recipe.cuisine))
+                st.subheader(recipe.name)
+                st.caption("System recipe" if recipe.household_id is None else "Household recipe")
+                st.caption(f"{recipe.cuisine or 'Everyday cooking'} · {recipe.cooking_minutes} min cooking")
+                key = (recipe.id, recipe.version)
+                try:
+                    if key not in cache:
+                        cache[key] = api.recipe_nutrition(home, recipe.id)
+                    nutrition = cache[key]
+                    st.write(f"{nutrition.calories_per_serving if nutrition.calories_per_serving is not None else 'Unavailable'} kcal / serving")
+                    st.caption(", ".join(humanize(t) for t in nutrition.dietary_tags) or "Dietary tags not recorded")
+                except APIError as error:
+                    show_error(error)
+                match = matches.get(recipe.id)
+                if match:
+                    badge(f"{match.coverage_percentage}% pantry match")
+                    for warning in match.warnings:
+                        st.warning(warning.message)
+                else:
+                    st.caption("Pantry match: check matches above" if response is None else "Not in the returned pantry matches")
+                st.button("View recipe", key=f"recipe_view_{recipe.id}", on_click=select_card,
+                          args=(workspace, f"selected_recipe_{home}", recipe.id), use_container_width=True)
+                st.button("Add to plan", key=f"recipe_plan_{recipe.id}", on_click=plan_recipe,
+                          args=(home, recipe.id), use_container_width=True)
+    st.caption("Images are serving inspiration, not photographs of your saved recipes. Use the selector below for all matching recipes.")
+
+
 def render_recipes(api: APIClient, household: Household, show_error: Callable) -> None:
     st.write(
         "Choose a recipe to see ingredients and nutrition, or create your own household recipe."
@@ -400,6 +460,8 @@ def render_recipes(api: APIClient, household: Household, show_error: Callable) -
             workspace["draft"] = new_draft()
             st.rerun()
         if b.button("Refresh recipes"):
+            workspace.pop("card_nutrition", None)
+            workspace.pop("matches", None)
             workspace["recipes"] = workspace["detail"] = workspace["nutrition"] = None
             st.rerun()
         if workspace.pop("reset_filters", False):
@@ -438,6 +500,7 @@ def render_recipes(api: APIClient, household: Household, show_error: Callable) -
             ).items()
         }
         selected = workspace["selected"] if workspace["selected"] in labels else next(iter(labels))
+        recipe_cards(api, household.id, recipes, workspace, show_error)
         widget_key = f"selected_recipe_{household.id}"
         # Pending selection after save is applied before the selector is instantiated.
         if (
