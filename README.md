@@ -1,821 +1,388 @@
 # NourishNest
 
-Phase 10C adds an offline **AI-assisted, human-approved** grocery workflow: deterministic critic review, immutable proposals, explicit approval, and separately triggered atomic grocery creation. Agents remain read-only. See [Human approval and controlled execution](docs/HUMAN_APPROVAL_AND_EXECUTION.md) for the API, local demo, audit model and authentication limitations.
+NourishNest is a production-oriented household nutrition and food-management application. It connects household profiles, nutrition targets, recipes, pantry inventory, meal planning, grocery generation, purchasing, grounded knowledge retrieval, and human-approved agent execution.
 
-NourishNest is a production-oriented household management platform. The first working vertical slice calculates evidence-based adult calorie and macro targets and generates a structured daily nutrition plan. The architecture is ready to expand into meal planning, grocery optimization, pantry inventory, chores, RAG, and multi-agent orchestration.
+The central engineering principle is separation of responsibility:
 
-## Current capabilities
+- AI interprets supported natural-language requests and coordinates bounded, read-only tools.
+- RAG supplies household-safe, citation-backed explanatory evidence.
+- Deterministic services own calories, nutrients, quantities, conversions, recipe scaling, inventory, shortages, and safety checks.
+- A deterministic critic validates agent output.
+- A human must explicitly approve an immutable proposal.
+- A controlled executor performs the only agent-assisted write—grocery-list creation—exactly once.
 
-- Streamlit household dashboard, household selection/creation, and navigation shell
-- HTTP-only typed API client with timeouts, safe GET retries, and request-ID errors
-- Saved household member management and API-based nutrition estimates
-- Recipe browsing, editing, and API-calculated nutrition
-- Pantry inventory, shopping previews, grocery generation, and purchase workflows
-- FastAPI health and nutrition-calculation endpoints
-- Deterministic Mifflin–St Jeor calorie calculation
-- Goal-aware calorie adjustment with conservative safety bounds
+## Current status
+
+Implementation is complete through **Phase 10C**.
+
+| Area | Implemented capability |
+| --- | --- |
+| Household | Households, members, measurements, preferences, allergies, scoped access, and optimistic versions |
+| Nutrition | Adult calorie and macronutrient targets with deterministic formulas and warnings |
+| Foods | Manual foods plus USDA FoodData Central search, import, refresh, provenance, caching, and retries |
+| Recipes | System and household recipes, ingredients, instructions, nutrition, search, editing, and version integrity |
+| Pantry | Locations, versioned lots, expiration, FEFO consumption, transfers, adjustments, discards, low-stock rules, and audit events |
+| Grocery | Lists and items, requirement and shortage previews, generated lists with lineage, purchases, and optional pantry intake |
+| Planning | Pantry-aware recipe ranking, expiring-stock prioritization, weekly meal plans, nutrition summaries, and grocery previews |
+| Assistant | Typed intent, clarification, refusals, guardrails, bounded tools, and preview-only planning |
+| RAG | Offline ingestion, revisions, deterministic chunking, BM25 retrieval, reranking, exact citations, and injection warnings |
+| Multi-agent | Supervisor plus Pantry, Recipe, Nutrition, Grocery, and Knowledge specialists with typed state and durable redacted traces |
+| Human control | Deterministic critic, immutable proposals, explicit approval, controlled execution, and exactly-once replay protection |
+
+## End-to-end workflow
+
+```mermaid
+flowchart TD
+    A[Household profile and constraints] --> B[Foods, recipes, and pantry state]
+    B --> C[Deterministic recommendations]
+    C --> D[Supervisor creates bounded plan]
+    K[Approved knowledge documents] --> R[Chunk, BM25 retrieve, rerank, cite]
+    R --> D
+    D --> S[Five read-only specialists]
+    S --> P[Meal-plan preview and shortages]
+    P --> V[Deterministic critic]
+    V -->|Blocked| X[Return reasons and warnings]
+    V -->|Eligible| I[Immutable proposal and SHA-256 hash]
+    I --> H{Human decision}
+    H -->|Reject or cancel| X
+    H -->|Approve| E[Controlled executor]
+    E --> G[Create grocery list exactly once]
+    G --> T[Persist audit and execution evidence]
+```
+
+## System architecture
+
+```mermaid
+flowchart TD
+    UI[Streamlit UI] --> API[FastAPI and Pydantic contracts]
+    API --> AG[Agent and knowledge plane]
+    API --> DS[Deterministic domain services]
+    AG --> DS
+    AG --> RAG[Offline RAG and exact citations]
+    DS --> DB[SQLAlchemy 2 and Alembic]
+    DB --> SQL[(SQLite development / PostgreSQL target)]
+    AG --> AU[Redacted agent traces]
+    AG --> CR[Critic, proposal, and approval]
+    CR --> EX[Controlled idempotent executor]
+    EX --> DB
+    EV[pytest and versioned AI evaluations] --> API
+```
+
+### Technology stack
+
+- **Frontend:** Streamlit
+- **API:** FastAPI
+- **Contracts and validation:** Pydantic
+- **Persistence:** SQLAlchemy 2
+- **Migrations:** Alembic
+- **Development database:** SQLite
+- **Production database target:** PostgreSQL
+- **HTTP integrations:** httpx
+- **Retrieval:** deterministic BM25-style lexical retrieval
+- **Reranking:** deterministic term, phrase, title, heading, and source-priority signals
+- **Testing:** pytest
+- **Static analysis:** Ruff
+- **Environment and dependency management:** uv
+
+## AI and agentic capabilities
+
+### Assistant provider modes
+
+| Mode | Use | External model | API cost |
+| --- | --- | --- | --- |
+| `disabled` | Safe default | None | $0 |
+| `fake` | Deterministic local demo and evaluation | None | $0 |
+| `ollama` | Optional local-language interpretation | Local Ollama process | $0 API cost |
+
+The project does not require Ollama. Use `APP_AI_PROVIDER=fake` for the reproducible free demo.
+
+### Multi-agent design
+
+The Phase 10B runtime contains one supervisor and five specialists:
+
+| Agent | Responsibility |
+| --- | --- |
+| Supervisor | Validate intent, select specialists, enforce budgets, order work, and synthesize typed results |
+| Pantry | Read stock, expiration, and low-stock information |
+| Recipe | Select accessible recipes under household constraints |
+| Nutrition | Calculate recipe, member, daily, and weekly nutrition through deterministic services |
+| Grocery | Calculate requirements and pantry shortages |
+| Knowledge | Retrieve approved evidence with exact RAG citations |
+
+Agents are read-only. They cannot call arbitrary functions, create other agents, recursively delegate, change permissions, or mutate domain records.
+
+### Bounded orchestration
+
+- Typed request, state, tool arguments, and outputs
+- Allowlisted agent-to-tool permissions
+- Maximum agent and tool-call budgets
+- Stable execution ordering
+- Timeouts, cancellation, and partial-failure behavior
+- Household isolation
+- Durable traces containing safe summaries, statuses, tool names, warnings, and timing
+- No stored secrets, full prompts, document bodies, or chain-of-thought
+
+## RAG architecture
+
+Phase 10A implements an offline, auditable retrieval pipeline:
+
+1. Accept an approved local text or Markdown source.
+2. Validate and normalize its content.
+3. Create a stable content hash and document revision.
+4. Apply deterministic structure-aware chunking with overlap.
+5. Persist chunks, ordering, visibility, and source metadata.
+6. Retrieve candidates with BM25-style lexical scoring.
+7. Rerank using explainable deterministic signals.
+8. Return exact stored excerpts and structured citations.
+9. Flag common prompt-injection language as untrusted evidence.
+
+RAG is used for explanatory nutrition, food-safety, storage, preparation, and household guidance. It is not authoritative for calories, nutrients, unit conversion, recipe scaling, pantry quantities, expiration state, shortages, permissions, or database mutations.
+
+## Critic, approval, and controlled execution
+
+Phase 10C adds a human-controlled action boundary:
+
+1. Multi-agent planning produces a read-only result.
+2. The deterministic critic checks household scope, allergens, dietary constraints, quantities, lineage, citations, tool budgets, injection warnings, and source-run integrity.
+3. An eligible result becomes an immutable grocery-action proposal.
+4. Canonical identifiers, Decimal strings, versions, timestamps, lineage, and calculation versions are hashed with SHA-256.
+5. A human explicitly approves the matching proposal hash.
+6. Approval performs no grocery or pantry write.
+7. A separate controlled executor revalidates the proposal and creates the grocery list.
+8. Database transactions and idempotency provide exactly-once behavior.
+9. Replaying the identical execution returns the saved result without duplication.
+
+The executor cannot purchase groceries or mutate pantry inventory.
+
+## Deterministic domain rules
+
+### Nutrition
+
+- Adult-only nutrition calculation
+- Mifflin–St Jeor energy estimation
+- Goal-aware calorie adjustment with conservative bounds
 - Deterministic protein, fat, carbohydrate, and meal allocation
-- Structured warnings for low calorie targets and unsupported minors
-- Request IDs and consistent API error responses
-- Agent routing contracts and a deterministic coordinator
-- Offline, household-scoped knowledge ingestion, lexical retrieval, reranking and exact citations
-- Unit and API tests
-- Docker packaging
+- Structured warnings for incomplete or unsupported inputs
 
-## Architecture principle
+### Quantities and conversions
 
-Phase 10B adds an offline, bounded supervisor-and-specialist meal-plan preview with
-read-only tools, Phase 10A citations and durable redacted execution traces. Fake mode
-is deterministic and free; no real LLM or multi-agent framework is required.
-See [multi-agent architecture and local demo](docs/MULTI_AGENT_ARCHITECTURE.md).
+- Application arithmetic uses `Decimal`.
+- Operational quantities use `NUMERIC(18,6)` where applicable.
+- Mass, volume, and count remain separate dimensions.
+- Compatible quantities normalize to grams, milliliters, or items.
+- Density is never guessed.
+- Unsupported and incompatible conversions return structured warnings or errors.
 
-Phase 10A adds a read-only local knowledge endpoint and explicit admin ingestion CLI.
-It requires no LLM, embedding model, cloud service, or new dependency. See the
-[Phase 10A knowledge guide](docs/PHASE10A_KNOWLEDGE.md) for exact migration, ingestion,
-retrieval, test/lint/evaluation commands, ownership rules and lexical limitations.
-Reports are in `artifacts/ai-evals/knowledge-retrieval-v1/`.
+### Pantry
 
-LLMs will interpret requests, coordinate agents, retrieve context, and draft plans. Deterministic code owns calculations, dietary constraints, validation, budget totals, and external transactions. Purchases and calendar changes require explicit user approval.
+- Multiple lots per food and location
+- First-expiring-first-out consumption
+- Expired, depleted, and discarded status handling
+- Optimistic concurrency and PostgreSQL-compatible row-lock queries
+- Atomic consume, adjust, transfer, discard, restock, and audit operations
+- Database-backed idempotency
+
+### Grocery
+
+- Recipe scaling to desired servings
+- Ingredient aggregation by food and canonical dimension
+- Point-in-time pantry shortage calculation
+- Generated-item lineage
+- Versioned list and item updates
+- Purchase audit records
+- Optional exactly-once pantry intake
+
+### Recipe recommendation
+
+The deterministic ranking formula is:
+
+```text
+score = 80 × mean(quantity coverage) + 20 × mean(expiring-stock coverage)
+```
+
+Coverage is capped at one per required food and unit. Unsupported conversions contribute zero and generate warnings. Ties resolve by coverage, recipe name, and recipe ID.
 
 ## Quick start
 
-With uv installed, run these commands in two Windows PowerShell terminals.
-Terminal 1 (FastAPI; keep it running):
+### Prerequisites
+
+- Python supported by the project's `pyproject.toml`
+- [uv](https://docs.astral.sh/uv/)
+- Two PowerShell terminals
+
+### Install and migrate
 
 ```powershell
-Set-Location 'C:\Users\sramm\OneDrive\Documents\Mastering-Agentic-AI\UV-Project\nourishnest'
+$env:UV_LINK_MODE = "copy"
 uv sync --extra dev
 uv run alembic upgrade head
+```
+
+### Run the free local demo
+
+Terminal 1 — FastAPI:
+
+```powershell
+$env:UV_LINK_MODE = "copy"
+$env:APP_AI_PROVIDER = "fake"
 uv run python -m uvicorn nourish_nest.api:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Terminal 2 (Streamlit; keep it running):
+Terminal 2 — Streamlit:
 
 ```powershell
-Set-Location 'C:\Users\sramm\OneDrive\Documents\Mastering-Agentic-AI\UV-Project\nourishnest'
-$env:APP_API_BASE_URL = 'http://127.0.0.1:8000'
+$env:UV_LINK_MODE = "copy"
+$env:APP_AI_PROVIDER = "fake"
+$env:APP_API_BASE_URL = "http://127.0.0.1:8000"
 uv run python -m streamlit run streamlit_app.py --server.address 127.0.0.1 --server.port 8501
 ```
 
-API documentation is available at `http://localhost:8000/docs`.
-The Streamlit interface is available at `http://localhost:8501`.
-The distribution is `nourish-nest`; Python imports use `nourish_nest`.
-See [architecture decisions](docs/ARCHITECTURE.md) for implementation and roadmap details.
+Open:
 
-`APP_API_BASE_URL` defaults to `http://127.0.0.1:8000`. Set it in the Streamlit
-terminal or in `.env`; environment variables take precedence. Restart Streamlit
-after changing configuration. Docker Compose uses `http://api:8000` internally.
-The existing `uv run streamlit run streamlit_app.py` entrypoint remains supported.
-The commands above use Python modules to avoid stale Windows console launchers
-(for example, `uv trampoline failed to canonicalize script path`).
+- Application: <http://127.0.0.1:8501>
+- API health: <http://127.0.0.1:8000/health>
+- Interactive API documentation: <http://127.0.0.1:8000/docs>
 
-If port 8000 is unavailable, check the API terminal for startup errors and run:
+## Verification
 
 ```powershell
-Test-NetConnection 127.0.0.1 -Port 8000
-Invoke-RestMethod http://127.0.0.1:8000/health
-Get-NetTCPConnection -LocalPort 8000 -State Listen
-```
-
-If another application owns the port, use `--port 8001` in terminal 1 and
-`$env:APP_API_BASE_URL = 'http://127.0.0.1:8001'` in terminal 2 before restarting
-Streamlit. Do not stop unrelated processes. The health badge checks API reachability;
-a dashboard error may still indicate missing migrations or unavailable storage.
-Errors include a request ID for matching API logs. Household creation is never
-automatically retried; after a timeout, refresh and check the selector before
-submitting again.
-
-### Phase 6A UI scope
-
-The dashboard shows member and readable recipe counts, active pantry lots,
-expiring lots (the API's configured expiration window), foods below saved stock
-thresholds, and grocery lists whose status is `active`. Refresh retrieves current
-values. Empty households have a friendly starting state. Quick actions open member
-management and nutrition; pantry and grocery actions remain explanatory placeholders.
-The selected household persists within the Streamlit session.
-
-The selector uses the new `GET /v1/households` collection route. This application
-currently assumes a trusted deployment: household selection is not authentication
-or authorization. Do not expose it publicly without an access-control layer.
-Counts come from separate requests and are not a single database snapshot.
-Existing pantry summary/expiration GET routes can mark expired lots; the UI client
-does not retry those calls. Other safe GETs retry once on transport failures or
-502/503/504 responses; POSTs are sent once. No migrations change in Phase 6A.
-
-### Phase 6B1: members and nutrition
-
-On **Household**, use the sidebar to select a household or create another one.
-The page displays its name and ID, saved member cards, and Add/Edit/Delete actions.
-Forms include the existing profile fields with units, editable preference rows,
-and allergy rows with severity and notes. Select a row in either table to remove it.
-Deletion requires a member-specific confirmation checkbox. Successful changes
-update the member cards without loading unrelated dashboard data.
-
-On **Nutrition**, select a saved member and choose **Calculate nutrition**. The UI
-calls `POST /v1/households/{household_id}/members/{member_id}/nutrition/calculate` and displays BMR, estimated
-TDEE, calorie and macro targets, the returned calculation version, and API warnings.
-Calculations are not persisted and results disappear on navigation or another
-rerun, avoiding display of an estimate for a different member. All calculations
-remain in FastAPI. Results are estimates, not medical advice.
-
-Contract limits: member profiles accept ages 13–100, but the current nutrition
-calculator rejects minors. Calculator sex options are female/male. Height must
-exceed 100 cm and weight must exceed 30 kg. Loss/gain needs a positive weekly
-change; maintenance saves zero. Nutrition profile numbers follow the existing
-floating-point API contract. Member updates replace the complete profile and
-preference/allergy collections. Pantry and Grocery Lists remain placeholders.
-
-### Phase 6B1.1: member API integrity
-
-Apply migration `20260909_0008` with `uv run alembic upgrade head` before starting
-the updated API. Existing members receive integer `version = 1`. Migrations
-0001–0007 are unchanged. Restart FastAPI and Streamlit together after upgrading.
-
-All individual member operations now use `/v1/households/{household_id}/members/{member_id}`:
-
-- `GET`: read a member, including `version`.
-- `PUT`: replace the complete profile with required `expected_version` in the JSON body.
-- `DELETE`: require `?expected_version=N`; success remains HTTP 204.
-- `POST .../nutrition/calculate`: calculate from the owned member without persisting results.
-
-Cross-household access returns the existing structured `not_found` response.
-Stale writes return HTTP 409 with `stale_member_version` and the request ID.
-Successful updates increment the version, including preference/allergy-only edits.
-The edit form retains its loaded version; use **Refresh members** after a conflict
-to load current data before resubmitting. Deletion confirmation resets on a new version.
-
-This is an intentional pre-release compatibility break: all `/v1/members/{member_id}`
-routes, including nutrition, are removed. Collection create/list routes and standalone
-`POST /v1/nutrition/calculate` remain compatible. Clients must migrate to scoped paths
-and supply versions for mutations. Household ownership checks do not replace user
-authentication, which remains future work. Nutrition remains adult-only (18+), although
-saved profiles permit ages 13–100. Downgrading 0008 removes version history; re-upgrading
-resets versions to 1, so reload all clients after a downgrade/re-upgrade.
-
-### Phase 6B2: Recipes
-
-Open **Recipes** in the sidebar or **Browse recipes** on the dashboard. Search recipe
-names and filter by available cuisines. Household and shared system recipes are
-labeled separately; system recipes have no edit/delete controls. Details display
-ordered ingredients and instructions, metadata, and API-provided nutrition totals,
-per-serving values, allergens, dietary tags, warnings, and calculation version.
-
-Choose **Create recipe**, search the stored food catalog, select a food, and add
-ingredients. Enter positive quantities (up to three decimal places) and servings
-(up to two decimal places). Use Move up/Move down/Remove for ingredients and steps;
-instruction numbers are assigned in display order. **Save recipe** sends one request.
-Successful creation clears the draft; edits prepopulate the complete recipe. Delete
-requires a confirmation checkbox. Drafts and selections are household-specific within
-the Streamlit session. **Refresh recipes** reloads the recipe data and nutrition.
-
-All food search uses `GET /v1/foods/search?q=...`; recipe CRUD uses
-`/v1/households/{household_id}/recipes[/{recipe_id}]`, and nutrition uses
-`GET /v1/households/{household_id}/recipes/{recipe_id}/nutrition`. No backend
-calculations, migrations, or external imports are added.
-
-Recipe updates replace all ingredients/instructions and require their loaded
-version. Creation uses a durable idempotency key; mutations are never automatically
-retried. After an ambiguous creation timeout, retry with unchanged fields and the
-same draft. Recipe lists are not
-paginated, so name/cuisine filters operate locally on the retrieved collection.
-Nutrition can be incomplete or unavailable for missing food data or unsupported
-conversions; the UI displays API warnings and does not infer density. Recipes
-referenced by grocery lineage may reject deletion. Existing unusual ingredient
-units remain visible during editing; new ingredients use supported unit choices.
-Foods must already exist in the catalog; USDA search/import remains outside this UI.
-
-### Recipe mutation integrity
-
-Run `uv run alembic upgrade head` before starting the updated API. Migration
-`20260909_0009` adds `Recipe.version` (existing rows start at 1) and normalized
-`recipe_creation_records`. Migrations 0001–0008 are unchanged.
-
-- Recipe responses include `version`. `PUT /v1/households/{household_id}/recipes/{recipe_id}`
-  requires `expected_version` in the complete recipe body. `DELETE` on that URL
-  requires `?expected_version=N`. Stale writes return HTTP 409 `stale_recipe_version`.
-- `POST /v1/households/{household_id}/recipes` requires a nonblank `Idempotency-Key`
-  header of at most 128 characters. The unique household/key record stores a
-  SHA-256 canonical request hash, resulting recipe ID, and creation timestamp.
-  Validated defaults, Decimal values, object keys, and ingredient/instruction ordering
-  are canonicalized. Identical replay returns the existing recipe (HTTP 201);
-  changed payloads return HTTP 409 `idempotency_conflict`.
-- Creation of the recipe, ingredients, instructions, and key record commits in one
-  transaction. A database uniqueness conflict rolls back the losing transaction
-  before resolving the winning request. Updates and deletes also roll back on failure.
-- Streamlit retains its creation key through reruns, navigation, and manual retries.
-  Success clears the draft; **Cancel editing** explicitly discards it and its key.
-  For a stale update, cancel and refresh before editing again. Grocery-lineage
-  deletion restrictions return `recipe_in_use` with the existing message/request-ID
-  envelope. System recipes remain read-only.
-
-These are intentional API contract changes: older clients must send creation keys
-and mutation versions. Replay returns the recipe's current representation, including
-later edits, rather than a saved response snapshot. Key records live until household
-deletion; deleting a recipe nulls their recipe reference and subsequent replay returns
-`idempotency_result_deleted`, preventing accidental recreation. Browser-session loss
-loses the UI's draft/key; refresh and check existing recipes before creating again.
-Downgrading 0009 removes creation-key history and recipe versions; re-upgrading resets
-versions to 1. Reload clients after a downgrade. PostgreSQL DDL is tested offline;
-concurrent integration tests run against SQLite, not a live PostgreSQL server.
-
-### Phase 6B3: Pantry
-
-The Pantry page uses the typed HTTP client for summary counts, inventory search and
-location/status filters, storage-location creation/deletion, adding existing foods
-as inventory lots, quantity increases, FEFO consumption, whole-lot transfer, discard,
-and low-stock threshold creation/update. Dashboard actions open Add item, Expiring
-soon, and Low stock views. Expiration alerts and low-stock results come from the API;
-the UI does not calculate stock, conversions, or FEFO ordering. Quantities are entered
-as decimal text. Successful actions reset their form and refresh only Pantry data.
-
-Endpoints used under `/v1/households/{household_id}/pantry`:
-
-- `GET summary`, `items`, `expiring`, `expired`, `low-stock`, `stock-rules`, `locations`.
-- `POST locations`, `DELETE locations/{location_id}`, `POST items`.
-- `POST items/{item_id}/adjust`, `items/{item_id}/discard`, `consume`, `transfer`.
-- `PUT stock-rules/{food_id}`; food lookup uses `GET /v1/foods/search` and `GET /v1/foods/{food_id}`.
-
-Existing backend limits are intentionally preserved:
-
-- History has no read endpoint. Its section explains this limitation; transaction
-  rows cannot yet be displayed without a separate backend change. No history is
-  fabricated from the current inventory snapshot.
-- Adjustment only increases quantity. Transfer moves an entire lot. Discard marks
-  the whole lot discarded even when a smaller quantity is specified; the UI warns
-  that any remainder becomes unusable and requires explicit confirmation.
-- Adjust, transfer, and discard send the loaded expected version using the API's
-  `version` field. FEFO consumption is food-scoped across locations and has no
-  request-version field. No unsupported version field is invented by the client.
-- Inventory actions retain their key and submitted payload across manual retries,
-  refreshes, and navigation. The API reports `duplicate_idempotency_key` for an
-  already-used key rather than replaying a successful response. Check refreshed
-  inventory before **Reset action with current stock** starts a new request.
-  A lost browser session also loses pending UI state. No mutation is automatically retried.
-- Lot/location creation and stock-rule writes have no version/idempotency inputs.
-  After an ambiguous creation timeout, check refreshed data before submitting again.
-  A location with any lot records, including depleted/discarded records, is not empty.
-- Legacy inventory/summary/expiration/low-stock GETs may mark expired lots and update
-  versions. The client does not retry those reads automatically. Snapshot counts
-  may change between requests; **Refresh pantry** reloads current data.
-
-Use the two-terminal launch commands above. No migrations or backend rules changed;
-the database remains at `20260909_0009`.
-
-### Phase 6B4: Grocery Lists
-
-Grocery Lists now supports list creation, status filtering, versioned name/status
-updates and confirmed deletion; exact-Decimal manual items with optional catalog
-food links; recipe requirement and pantry shortage previews; pantry-aware generation;
-and partial/complete purchase increments with optional pantry intake. Purchases support
-explicit overpurchase, expiration, and an optional total price in household currency.
-The dashboard opens list creation or the active-list filter. List/item status and
-purchased-item progress come from API records; the UI performs no stock/unit calculations.
-
-All requests use the typed HTTP client. Existing endpoints used:
-
-- `/v1/households/{household_id}/grocery-lists`: GET/POST.
-- The same path plus `/{list_id}`: GET/PUT/DELETE; updates send `expected_version`
-  in JSON and deletes send it as a query parameter.
-- `/{list_id}/items`: GET/POST; `/{list_id}/items/{item_id}`: GET/PUT/DELETE,
-  with the same version conventions.
-- `POST /v1/households/{household_id}/grocery-requirements/preview` and
-  `/shortage-preview` use recipe IDs and desired servings. Results show canonical
-  requirements, recipe contributions, pantry-lot contributions, and structured warnings.
-- `POST .../grocery-lists/{list_id}/generations` sends `expected_list_version` and
-  an idempotency key. `POST .../{list_id}/items/{item_id}/purchase` sends
-  `expected_item_version`, an idempotency key, and the purchase/intake options.
-- Existing recipe collection, food search/get, pantry-location, pantry-summary,
-  and dashboard data endpoints supply selections and refreshes.
-
-Recipe selections/servings and selected lists survive navigation within a Streamlit
-session. Once submitted, generation and purchase requests retain their entire payload
-and key through retries, refreshes, and household navigation. Only success or explicit
-reset clears the pending request. No mutation is automatically retried. A successful
-purchase invalidates the Pantry snapshot and refreshes grocery versions, pantry
-summary, and dashboard counts; a subsequent read failure does not resubmit the purchase.
-
-Backend limitations remain visible:
-
-- One successful generation per list; only draft/active lists are eligible. No
-  regeneration/replacement is implemented. Fully covered recipes can produce an empty run.
-- Shortages are point-in-time estimates, not reservations. Generation recalculates
-  them. Lineage quantities describe the full recipe contribution before pantry subtraction.
-- Generation replay does not recover original warnings (`warnings_available=false`).
-  Receipts/lineage are retained in this UI session; no generation/purchase history-read
-  endpoints exist. Losing the browser session loses its pending keys and displayed receipts.
-- List/manual-item creation has no idempotency contract: check refreshed data after
-  ambiguous failures. CRUD does not infer completion; the UI displays API status.
-- Manual items without a food reference cannot enter pantry. Purchase intake needs
-  an existing owned location. CRUD preserves purchase totals/checked state and still
-  enforces its required-versus-purchased invariant; purchased-item units are read-only
-  in the edit form. Use Purchase for converted increments.
-
-Launch with the existing two-terminal commands above. No migrations or backend
-business rules changed; Alembic remains at `20260909_0009`.
-
-## Tests
-
-```bash
-uv run pytest
+uv sync --extra dev
+uv run alembic upgrade head
+uv run python -m pytest
 uv run ruff check .
+git diff --check
 ```
 
-## Database Phase 1
+Final documented verification through Phase 10C:
 
-Local development uses SQLite at `APP_DATABASE_URL` (default:
-`sqlite:///./nourish_nest.db`). The schema uses SQLAlchemy 2 models and UUID,
-timestamp, enum, and cascading foreign-key definitions compatible with PostgreSQL.
-Apply or roll back migrations with:
+| Suite | Result |
+| --- | --- |
+| Full software regression | **865 tests passed** |
+| Meal-planning assistant evaluation | **49/49 passed** |
+| Knowledge retrieval evaluation | **36/36 passed; nine metrics 1.00** |
+| Multi-agent planning evaluation | **54/54 passed; accuracy metrics 1.00** |
+| Approval and execution evaluation | **58/58 passed; required metrics 1.00** |
+| Static analysis | Ruff passed |
+| Patch hygiene | `git diff --check` passed |
 
-```bash
-uv run alembic upgrade head
-uv run alembic downgrade -1
-```
-
-Database tests use temporary SQLite files and do not write to the development database.
-
-## Database Phase 2
-
-Food and recipe persistence is available through the `/v1/foods` and household
-recipe endpoints. Recipe nutrition is deterministic and uses `recipe-nutrition-v1`.
-Mass calculations use grams internally; volume uses milliliters; count uses items.
-Known conversions include grams, kilograms, ounces, pounds, milliliters, liters,
-cups, tablespoons, teaspoons, and item/count. Volume-to-mass conversion is never
-guessed without density data. Unknown units return `unsupported_conversion`, while
-known units with missing density produce a nutrition warning.
-
-Development-only fixtures are opt-in and blocked when `APP_ENV=production`:
-
-```bash
-uv run python -m nourish_nest.seed_data
-```
-
-Fixture values are illustrative and are not authoritative production nutrition data.
-
-## Pantry Phase 4
-
-Pantry inventory is household-scoped and supports separate lots for the same food,
-location management, expiration tracking, low-stock rules, Decimal quantities,
-FEFO consumption, atomic transfers, optimistic item versions, and append-only
-transaction history. Mass, volume, and count use the existing deterministic unit
-conversion service; density-dependent conversions are rejected rather than guessed.
-Expiring-soon behavior defaults to three days and is configurable with
-`APP_PANTRY_EXPIRING_SOON_DAYS`.
-
-Pantry item versions use SQLAlchemy optimistic concurrency and mutations use
-database transactions. PostgreSQL uses row locks for concurrent consumption;
-SQLite serializes writers at the database level and does not provide equivalent
-row-level locking. Pantry transactions are append-only during normal operation.
-Deleting a household cascades its pantry lots and their audit history because the
-history has no meaning outside that household.
-
-Example workflow:
-
-```bash
-uv run alembic upgrade head
-curl -X POST http://localhost:8000/v1/households/{household_id}/pantry/locations \
-	-H 'content-type: application/json' \
-	-d '{"name":"Refrigerator","location_type":"refrigerator"}'
-curl http://localhost:8000/v1/households/{household_id}/pantry/expiring
-curl http://localhost:8000/v1/households/{household_id}/pantry/low-stock
-```
-
-Pantry operations never place store orders or perform external mutations.
-
-## USDA FoodData Central
-
-Phase 3 provides an isolated USDA FoodData Central provider. Obtain an API key
-from the [official USDA FoodData Central API documentation](https://fdc.nal.usda.gov/api-guide.html), then configure it in
-your local `.env` file. Never commit the key:
-
-```bash
-APP_FOOD_DATA_PROVIDER=usda
-APP_USDA_API_KEY=your-local-key
-APP_USDA_BASE_URL=https://api.nal.usda.gov/fdc/v1
-APP_USDA_TIMEOUT_SECONDS=10
-APP_USDA_MAX_RETRIES=2
-APP_USDA_CACHE_TTL_SECONDS=300
-```
-
-Search and detail requests do not persist foods. Import and refresh requests do.
-Imported records retain USDA FDC ID, data type, attribution, and retrieval time,
-with `source_provider=usda_fdc`; refreshing preserves the NourishNest food UUID.
-Manual foods may leave `source_provider` and external identifiers empty. Local development and tests use
-the fake provider; automated tests never call USDA. USDA credentials are sent only
-to the provider request and are not included in logs or API responses.
-
-## Docker
-
-```bash
-docker compose up --build
-```
-
-- API: `http://localhost:8000`
-- Streamlit: `http://localhost:8501`
-
-## Delivery roadmap
-
-1. **Foundation — started:** nutrition domain, API, Streamlit, error contracts, tests.
-2. **Persistence:** household profiles, pantry, food catalog, meal plans, feedback, migrations.
-3. **Planning:** recipe library, deterministic allergen filters, meal-plan generator, shopping-list deduplication.
-4. **RAG:** ingestion, chunking, hybrid retrieval, reranking, citations, golden dataset.
-5. **Agents:** LangGraph supervisor with nutrition, meal, inventory, shopping, budget, and chore agents.
-6. **Integrations:** USDA nutrition, grocery catalog, calendar, notifications, human approvals.
-7. **Production hardening:** authentication, secrets, rate limits, retries, audit logs, observability, security review, deployment.
-
-## Important boundary
-
-Version 0.1 supports adults only and is intended for planning and education, not diagnosis or treatment. Pregnancy, eating-disorder risk, medical conditions, and therapeutic diets require qualified professional guidance.
-
-
-### Phase 6C: household-friendly presentation
-
-Selectors use names and friendly context while keeping IDs in HTTP payloads and session state.
-Identical names with identical context use numbered options; UUIDs, versions, and request IDs
-are available in collapsed **Technical details** sections. Errors keep your entered values.
-New member age, height, and weight start blank; enter actual measurements. Member cards offer
-Edit and Delete actions, and destructive actions have confirmation sections. Nutrition remains
-adult-only and is calculated by the API. The grocery Shopping guide explains the six steps from
-list selection to purchases. Unit choices include their full names.
-
-The existing theme is retained, with narrow-screen spacing and wrapping metric values. Large
-inventory tables can still scroll horizontally; drafts and retry keys remain session-local.
-Pantry history and one-generation-per-list limitations are unchanged.
-
-### Phase 7: deterministic Smart Planning MVP
-
-Open **Meal Planner**, choose a member or the whole household, and select **Find recipes**.
-Filter by cuisine (case-insensitive exact match), cooking time, and acceptable missing foods.
-Cards explain pantry coverage, missing quantities, food expiring soon, nutrition per serving,
-and stored allergen/dietary warnings. Add a recipe to Monday–Sunday breakfast, lunch, dinner,
-or an optional snack; adjust portions in the day sections. There is one recipe per meal slot;
-replacement requires confirmation. Plans are separated by household and selected member.
-
-**The weekly plan is session-local and disappears when the Streamlit session ends.** It is an
-undated weekly plan, not a saved calendar. Nutrition totals multiply server-provided per-serving
-values by planned servings; no new nutrition formula runs in Streamlit. For member comparisons,
-enter only portions that member will eat. Unplanned meals are not a complete diet. Adult targets
-are never requested for members under 18. Nutrition values and recipe choices are snapshots;
-recheck recommendations and food labels when recipes, profiles, or pantry stock change.
-
-`POST /v1/households/{household_id}/recipe-recommendations` accepts:
-
-```json
-{"member_id": null, "maximum_missing_ingredients": 3,
- "maximum_cooking_minutes": null, "cuisine": null, "limit": 10}
-```
-
-Response: household/member IDs, ordered `recommendations`, warnings, `calculation_as_of`, and
-`calculation_version: "recipe-recommendations-v1"`. Each recommendation includes its recipe
-ID/name, saved serving yield, preparation/cooking time, cuisine, quantity requirements and
-missing amounts, expiring-food quantities, per-serving nutrition, classification, score components,
-and explanation. Missing counts use distinct foods, including foods with unresolved conversions.
-Request limits: missing foods 0–100, optional cooking minutes 1–1440, results 1–50.
-
-For each aggregated food/canonical-unit requirement, let **c = min(available / required, 1)**
-and **e = min(usable expiring-soon stock / required, 1)**. Coverage is `100 × mean(c)`;
-the score is **80 × mean(c) + 20 × mean(e)**. This measures partial quantity coverage, not
-binary ingredient presence. Grams, millilitres, and counts are never summed together. Unsupported
-food/unit groups contribute zero to both means and remain visible as unresolved shopping needs.
-Expiring soon uses the existing configured window and UTC expiration rules. Sort by score descending,
-coverage descending, then case-folded recipe name and recipe UUID. Ready means all requirements
-are covered; otherwise 1–2 missing foods yields “Missing 1–2 ingredients,” and more yields
-“Needs shopping.” Each recipe is assessed independently at its saved serving yield, without
-reserving shared pantry stock across recommendations.
-
-Member allergen checks run before conversions: case-insensitive, whitespace-normalized `contains`
-matches are hard exclusions, including ingredients with unsupported units. `may_contain` is shown
-as a warning. Allergen synonyms are not inferred; missing food metadata is not a safety guarantee.
-Structured dietary preferences require their explicit matching tag on every ingredient; untagged
-recipes are excluded for those preferences. Custom preferences are reported as unverified.
-Household planning has no personal allergy filters. No adult-target calculation is part of ranking.
-
-**Prepare grocery needs** consolidates repeated recipes and calls the existing requirement and
-shortage previews. Save through the existing generation endpoint into a draft/active list; the
-original request and idempotency key are retained on retry. One generation per list remains the
-backend rule. Planning and recommendations never consume, mutate, lock, or reserve pantry stock.
-Only explicitly saving grocery needs writes a grocery generation. The catalog is evaluated in
-memory using existing services; this MVP does not add pagination, persistence, authentication,
-LLM scoring, or external integrations. Missing nutrition may be incomplete or unavailable and is
-shown with warnings. Results are estimates, not medical advice.
-
-## Phase 8A: read-only meal assistant
-
-`POST /v1/households/{household_id}/assistant/meal-plan-preview` adds one bounded
-interpretation/coordinator layer over the deterministic planner. It does not change
-the Streamlit pages or save a plan. No migrations or core calculation rules changed.
-
-The default provider is disabled (503). To try the local fake interpreter in PowerShell:
-
-```powershell
-$env:APP_AI_PROVIDER = "fake"
-$env:APP_AI_TIMEOUT_SECONDS = "10"
-uv run uvicorn nourish_nest.api:app --host 127.0.0.1 --port 8000
-```
-
-`APP_AI_MODEL` and secret `APP_AI_API_KEY` are reserved for a future adapter; neither
-is used by fake/disabled mode. No chat SDK or existing chat credential integration
-was present, so this phase adds no real provider, dependency, or paid/live model call.
-Unknown provider settings fail closed. `APP_AI_MAX_TOOL_CALLS` defaults to 4 (range 1–4).
-
-Example body (replace the URL household with an existing household):
-
-```json
-{
-  "user_message": "Plan five vegetarian dinners for 2 people under 600 calories, prioritize expiring pantry items, and show what I need to buy.",
-  "member_id": null,
-  "conversation_context": [],
-  "dry_run": true
-}
-```
-
-The request accepts up to 2,000 message characters and six context messages of up to
-1,000 characters each. Context roles are `user`/`assistant`; only user text can supply
-constraints. Household/member ownership is verified before contacting a provider.
-`dry_run=false` is rejected. Responses preserve the API error envelope and request ID.
-
-The fake is a deterministic demonstration grammar, **not a real language model**.
-Specify 1–7 days, one meal slot (`breakfast`, `lunch`, `dinner`, or `snack`), and positive
-servings (up to 100). It recognizes vegetarian, vegan, pescatarian, halal, no beef,
-no pork; `under N calories` (strictly below, per serving) / `at most N calories`;
-`within N minutes` cooking time; shopping; `compare my target`; and `allow repeats`.
-The sample without servings asks for clarification. A following `for 2 people` can
-complete it using user context. Unsupported constraints, including free-text allergen
-names, cuisine, budget, or ambiguous multi-slot requests, require clarification.
-Personal allergies must be stored on the selected member. No safety constraint is
-silently relaxed to fill a plan.
-
-Preview responses include `interpreted_constraints`, seven `proposed_plan` day entries
-(unrequested days empty), `recommendations_used`, daily/weekly `nutrition_summary`,
-optional `member_nutrition_target`, optional `grocery_shortage_preview`, warnings,
-safe tool trace, `confirmation_required=false`, `request_id`,
-`calculation_version=meal-planning-assistant-v1`, and `model_version=fake-intent-v1`.
-Clarifications use `status=clarification` and an empty plan. Traces expose only tool
-name, completion status, and duration in milliseconds. Provider text is never returned
-as assistant prose, and providers cannot submit recipe IDs or tool arguments.
-
-The server considers at most 50 existing ranked recommendations, applies additional
-structured dietary/per-serving calorie filters, and takes distinct recipes unless
-repeats were explicitly allowed. Ranking remains the existing pantry/expiring score
-at saved recipe yields. Combined shortage preview uses requested servings. Nutrition
-summaries scale server-provided nutrition; they cover **all planned servings and only
-the selected meals**, not a complete individual diet. Adult targets require an owned
-adult member and are presented separately; no target is applied to a minor.
-Unknown nutrition cannot satisfy a calorie ceiling. Unsupported conversions produce
-warnings, never inferred density. Missing allergen metadata and synonyms remain
-limitations of the existing structured data; results are not an allergy-safety guarantee.
-
-Nothing is written, consumed, reserved, or locked. Pantry results are point-in-time
-estimates. Future write actions need a separate explicitly confirmed path, which is
-not implemented here. Nutrition is informational, not medical advice. The conservative
-guardrails reject medical treatment, guaranteed weight loss, allergen bypasses, and
-recognized injection/write instructions; the fake grammar rejects other unsupported
-language. These checks are not a validated general-purpose clinical or injection detector.
-
-Run all evaluations offline (an isolated, seeded in-memory SQLite database):
+Run the evaluation suites with:
 
 ```powershell
 uv run python -m nourish_nest.evals.meal_planning
-uv run python -m pytest tests/test_assistant.py
+uv run python -m nourish_nest.evals.knowledge_retrieval
+uv run python -m nourish_nest.evals.multi_agent_meal_planning
+uv run python -m nourish_nest.evals.approval_execution
 ```
 
-The versioned dataset has 49 golden cases. The runner exits nonzero on failure and
-writes `artifacts/ai-evals/meal-planning-v1/results.json` and `summary.md`, including
-totals, pass rate, failed IDs/reasons, and per-metric passed/evaluated counts. Metrics
-cover intent extraction, tools, allergens, diets, grounding, numerical agreement with
-core services, clarification, guardrails, schema, request IDs, call bounds, and write-free
-execution. These measure fake-provider orchestration, **not real-model quality**.
-No developer database, secrets, network model calls, RAG, or multi-agent runtime is used.
-RAG and multi-agent behavior are deferred because this task needs structured household
-data and a single auditable deterministic tool boundary, not document retrieval or delegation.
+These evaluations use frozen local datasets, fake providers, and isolated databases. They validate deterministic contracts, retrieval quality, agent/tool selection, constraints, citations, safety, approval transitions, rollback, and idempotency. They do not claim untested open-ended model quality.
 
-## Phase 8B: Streamlit AI Assistant
+## Database migrations
 
-Choose **AI Assistant** in the sidebar, or **Preview meals with AI Assistant** on the
-dashboard. Select a household and optionally a member by name, choose an example or
-enter a request, then click **Preview meals**. This page only reads member profiles
-and calls the Phase 8A preview endpoint. It cannot save plans, change pantry stock,
-generate grocery lists, or record purchases. Nutrition is informational, not medical advice.
+| Revision | Capability |
+| --- | --- |
+| 0001 | Households, members, dietary preferences, and allergies |
+| 0002 | Foods, recipes, ingredients, instructions, nutrition, and unit conversion |
+| 0003 | USDA provider provenance |
+| 0004 | Pantry locations, lots, stock rules, and transaction history |
+| 0005 | Grocery lists and versioned items |
+| 0006 | Grocery generations and recipe lineage |
+| 0007 | Purchase audit events and pantry-intake linkage |
+| 0008 | Member optimistic concurrency |
+| 0009 | Recipe optimistic concurrency and creation idempotency |
+| 0010 | RAG documents, revisions, chunks, hashes, visibility, and retrieval metadata |
+| 0011 | Multi-agent runs and redacted trace steps |
+| 0012 | Immutable proposals, approval events, executions, hashes, versions, and idempotency |
 
-Free local demonstration, terminal 1 (PowerShell, FastAPI):
+## Representative API endpoints
 
-```powershell
-Set-Location 'C:\Users\sramm\OneDrive\Documents\Mastering-Agentic-AI\UV-Project\nourishnest'
-$env:APP_AI_PROVIDER = 'fake'
-uv run uvicorn nourish_nest.api:app --host 127.0.0.1 --port 8000
-```
+| Domain | Endpoint |
+| --- | --- |
+| Health | `GET /health` |
+| Households | `GET/POST /v1/households` |
+| Members | `/v1/households/{household_id}/members` |
+| Nutrition | `POST /nutrition/calculate` |
+| Foods | `/v1/foods` and `/v1/foods/search` |
+| USDA | `/v1/providers/usda/search`, `/foods/{fdc_id}`, and food import/refresh routes |
+| Recipes | `/v1/households/{household_id}/recipes` |
+| Pantry | `/v1/households/{household_id}/pantry/...` |
+| Grocery lists | `/v1/households/{household_id}/grocery-lists/...` |
+| Requirements | `POST .../grocery-requirements/preview` |
+| Shortages | `POST .../grocery-requirements/shortage-preview` |
+| Recommendations | `POST .../recipe-recommendations` |
+| Assistant | `POST .../assistant/meal-plan-preview` |
+| Knowledge | `POST .../knowledge/retrieve` |
+| Multi-agent planning | `POST .../assistant/multi-agent-meal-plan-preview` |
+| Proposals and execution | Agent-run proposal, proposal decision, and controlled execution routes |
 
-Terminal 2 (PowerShell, Streamlit):
+See the running FastAPI application at `/docs` for the authoritative OpenAPI contracts.
 
-```powershell
-Set-Location 'C:\Users\sramm\OneDrive\Documents\Mastering-Agentic-AI\UV-Project\nourishnest'
-$env:APP_API_BASE_URL = 'http://127.0.0.1:8000'
-$env:APP_AI_PROVIDER = 'fake'
-uv run streamlit run streamlit_app.py --server.address 127.0.0.1 --server.port 8501
-```
+## Configuration
 
-Open `http://127.0.0.1:8501`. Both terminals use fake mode so the initial page can
-display **Local demo mode**; a returned `fake-intent-v1` response also identifies demo
-mode. This is a limited deterministic interpreter, not a real generative model.
-It makes no external model calls and uses no paid AI API credits. `.env.example`
-includes `APP_AI_PROVIDER=fake`; no AI key is needed. Run normal database setup from
-the earlier installation instructions first, and use stored recipes with appropriate
-structured dietary tags. The assistant does not import or invent recipes.
+Common environment settings include:
 
-Complete supported example:
+| Variable | Purpose | Typical local value |
+| --- | --- | --- |
+| `APP_DATABASE_URL` | Database connection | SQLite default or PostgreSQL URL |
+| `APP_API_BASE_URL` | Streamlit-to-FastAPI address | `http://127.0.0.1:8000` |
+| `APP_FOOD_DATA_PROVIDER` | External food source | `disabled` or USDA mode |
+| `USDA_API_KEY` | FoodData Central credential | Secret environment value |
+| `APP_AI_PROVIDER` | Assistant interpretation mode | `disabled`, `fake`, or `ollama` |
+| `APP_AI_MODEL` | Optional local model | Empty unless Ollama is used |
+| `APP_OLLAMA_BASE_URL` | Optional local endpoint | `http://127.0.0.1:11434` |
+| `APP_AI_TIMEOUT_SECONDS` | Bounded provider timeout | Configured positive value |
 
-> Plan 1 vegan dinner for 2 people within 30 minutes, prioritize expiring pantry items, and show what I need to buy.
+Never commit real credentials or `.env` secrets.
 
-Other supported requests include `Plan five vegetarian dinners for 2 people under
-600 calories.` and `Plan weekly dinners for 1 person allow repeats.` The short
-clickable examples deliberately illustrate requests that may need clarification.
-For missing servings, enable **Continue clarification using previous messages** and
-answer `for 2 people`. Wording such as `quick` or `Use ingredients expiring soon` is
-outside the fake grammar: leave continuation off and rewrite as the complete example
-above. Phase 8A guardrails and language support have not been loosened.
+## Safety and reliability controls
 
-Prompts, latest successful previews, and up to six context messages are session-local
-and separated by household/member. The input is limited to 1,000 characters so complete
-user constraints fit a context message without truncation. Context is sent only when
-continuation is selected. An example starts a fresh conversation. **Clear
-conversation/preview** removes the current member's prompt, preview, context, and error.
-Nothing is stored in the database; browser session loss removes this state.
+- Household-scoped routes and ownership validation
+- Consistent structured error envelopes with request IDs
+- Pydantic validation and strict enumerations
+- Decimal quantity contracts
+- Optimistic version checks and stale-write responses
+- Database-backed idempotency
+- Atomic service transactions and rollback
+- Safe-read retries, bounded timeouts, provider error classification, and TTL caching
+- Allergen, medical, tenant, injection, permission, budget, and proposal-integrity guardrails
+- Explicit confirmation before controlled execution
+- No direct agent writes
+- Append-only or durable audit evidence for critical workflows
 
-Results show constraints, clarification, a seven-day preview, recipe cards, daily and
-weekly nutrition, shortages, and all returned warnings. IDs, safe tool traces, request
-IDs, and exact calculation/model versions are in collapsed **Technical details**.
-Provider/API errors preserve the prompt and label any previous successful preview.
-There is no confirmation/write action even if a future response requests confirmation.
+## Current limitations
 
-The typed client permits at most two total HTTP attempts for this read-only POST on
-transport failures or 502/503/504, keeping the request ID. It does not retry 422/429,
-invalid success JSON, or any mutation automatically. Existing connection/read timeouts
-remain unchanged. Ordinary reruns/navigation do not submit previews again.
+- Authentication, identity federation, and role-based household authorization are not implemented.
+- SQLite is intended for development; live PostgreSQL concurrency has not been fully exercised.
+- Meal-plan drafts and conversational presentation state remain session-local.
+- Pantry availability and recommendation results are point-in-time estimates without inventory reservation.
+- Fake mode demonstrates orchestration, not open-ended language-model quality.
+- Ollama is optional and was implemented but not deployed for the documented workflow.
+- RAG is lexical and scans an in-memory candidate corpus; embeddings, a vector database, and distributed retrieval are not implemented.
+- Prompt-injection detection is heuristic.
+- Allergen matching uses normalized stored names without clinical synonym inference.
+- Nutrition output is informational and is not medical advice.
+- Existing grocery rules permit one generation per list; refunds and purchase reversals are deferred.
 
-To disable the assistant, stop and restart both processes after setting:
+## Production roadmap
 
-```powershell
-$env:APP_AI_PROVIDER = 'disabled'
-```
+1. Add authentication, identity-to-household membership, and authorization policies.
+2. Deploy and validate PostgreSQL with production concurrency tests.
+3. Add CI/CD, secret management, environment promotion, backups, restore testing, and rollback automation.
+4. Add structured logging, metrics, alerts, readiness checks, and audit-review tooling.
+5. Persist meal plans and privacy-safe conversation summaries.
+6. Scale retrieval with source governance, freshness, re-indexing, and semantic evaluation.
+7. Evaluate an approved language provider against frozen datasets for quality, latency, cost, privacy, and safety.
+8. Expand controlled actions only with dedicated critic, approval, rollback, and audit policies.
 
-Alternatively use `Remove-Item Env:APP_AI_PROVIDER -ErrorAction SilentlyContinue`
-in both terminals to restore configuration fallback. If `.env` contains
-`APP_AI_PROVIDER=fake`, remove that entry or set it to `disabled` there too; clearing
-the shell variable alone does not override `.env`.
+## Documentation
 
-Focused UI/client tests: `uv run python -m pytest tests/test_assistant_ui.py tests/test_ui.py`.
+- `docs/ARCHITECTURE.md` — application architecture and design decisions
+- `docs/PHASE10A_KNOWLEDGE.md` — offline RAG architecture and usage
+- `docs/MULTI_AGENT_ARCHITECTURE.md` — supervisor, specialists, tools, and trace model
+- `docs/PHASE10A_VERIFICATION.md` — RAG verification evidence
+- `docs/PHASE10B_VERIFICATION.md` — multi-agent verification evidence
+- `docs/PHASE10C_VERIFICATION.md` — critic, approval, and execution verification evidence
+- `docs/PHASE9A_VISUAL_QA.md` — visual design QA
 
-## Phase 8C: optional local Ollama interpretation
+## Disclaimer
 
-`disabled` remains the code default. `fake` remains the deterministic demonstration
-and test provider. `ollama` optionally interprets conversational wording into the
-same typed intent. It cannot calculate nutrition, pantry stock, shortages, scores,
-or ingredient quantities; existing services retrieve records and calculate results.
-There are no model tools, database writes, cloud fallback, new dependencies, or migrations.
-
-Prerequisites: install Ollama yourself following its [official documentation](https://docs.ollama.com/),
-and obtain a local completion model suitable for structured JSON and your hardware.
-This project never installs Ollama or downloads models. Use `ollama list` to choose
-an **already installed** model. Cloud aliases are not supported. Before starting
-the Ollama server, disable its cloud features as described in the
-[Ollama FAQ](https://docs.ollama.com/faq). Quit an existing tray/server instance first
-so this environment setting takes effect; do not start two servers on port 11434.
-
-PowerShell terminal for the local model server:
-
-```powershell
-$env:OLLAMA_NO_CLOUD = '1'
-ollama serve
-```
-
-Check reachability in another terminal (these commands do not generate text or download models):
-
-```powershell
-Invoke-RestMethod 'http://127.0.0.1:11434/api/version'
-ollama list
-```
-
-In the NourishNest project directory, FastAPI terminal:
-
-```powershell
-$env:APP_AI_PROVIDER = 'ollama'
-$env:APP_AI_MODEL = '<exact local model name from ollama list>'
-$env:APP_OLLAMA_BASE_URL = 'http://127.0.0.1:11434'
-$env:APP_AI_TIMEOUT_SECONDS = '60'
-uv run uvicorn nourish_nest.api:app --host 127.0.0.1 --port 8000
-```
-
-Streamlit terminal, using the same model name and timeout:
-
-```powershell
-$env:APP_AI_PROVIDER = 'ollama'
-$env:APP_AI_MODEL = '<same local model name>'
-$env:APP_AI_TIMEOUT_SECONDS = '60'
-$env:APP_API_BASE_URL = 'http://127.0.0.1:8000'
-uv run streamlit run streamlit_app.py --server.address 127.0.0.1 --server.port 8501
-```
-
-Open **AI Assistant** at `http://127.0.0.1:8501`. **Local Ollama mode** shows the model
-name. Try “Could you suggest vegan dinners for the next three nights for 2 people,
-with shopping?” Review interpreted constraints and warnings. Errors keep your prompt
-so you can start Ollama and retry. A missing/unsupported model produces a structured
-unavailable error, never an automatic pull. To return to demonstrations or disable
-AI, set `$env:APP_AI_PROVIDER = 'fake'` or `'disabled'` in both application terminals
-and restart both processes. Check `.env` too, as documented above.
-
-The adapter uses [Ollama's chat API](https://docs.ollama.com/api/chat) with a JSON schema,
-non-streaming output, temperature zero, and bounded context/output. A compatible Ollama
-version must support `format` and `think=false`. Only HTTP loopback addresses are accepted;
-proxy environment variables and redirects are ignored. A metadata check requires a local
-GGUF completion model and rejects remote aliases **before** sending user text. Keep
-`OLLAMA_NO_CLOUD=1` on the server as defense against server-side routing/configuration changes.
-Remote inference servers, cloud models, and model downloading endpoints are never used.
-
-The versioned prompt is `ollama-meal-intent-v1`. At most six prior messages and the
-current request are allowed; assistant-role context is ignored for interpretation.
-User text is separated from system instructions. Prompts are capped at 32 KiB,
-HTTP response bodies at 64 KiB, and intent text at 8,192 characters. Partial objects,
-extra fields, duplicate JSON keys, unknown tools, and unfinished output fail validation.
-Complete outer JSON fences are accepted; prose and arbitrary JSON extraction are not.
-UUID-bearing prompts are clarified locally. No application records or saved member
-health data are included in the model request. User-entered personal information
-in free text can still reach the local model: avoid including sensitive details.
-
-Existing deterministic guardrails run before and after interpretation. The fake
-grammar check remains unchanged on the fake path. Ollama accepts paraphrases with
-explicit numeric evidence and preserves constraints recognized by the existing
-interpreter. It may still misunderstand language; review the displayed interpretation.
-Ambiguity, unsupported units, cuisine/budget/free-text allergy constraints, or missing
-servings require clarification or produce a structured invalid-output error. Saved
-allergen filtering and adult-only target calculation remain deterministic. Models
-cannot override them. One interpretation and at most four allowlisted service calls
-remain the limit; no LLM performs scoring or safety decisions.
-
-Connect timeout is 2 seconds, write/pool timeouts 5/2 seconds, and read/overall model
-timeout uses `APP_AI_TIMEOUT_SECONDS` (maximum 60). There are at most two HTTP attempts
-per model endpoint for connection/protocol failures or temporary 502/503/504 responses.
-Read/write timeouts, malformed responses, and permanent 4xx responses are not retried.
-Ollama-mode Streamlit allows the configured model timeout plus 5 seconds and does not
-automatically repeat the preview POST; fake mode keeps its existing retry behavior.
-Cold model loading and CPU inference can exceed the timeout. Latency and interpretation
-quality depend on model and hardware; use an installed model that fits available memory.
-
-Local inference is not a privacy guarantee: the local server, OS, and other software
-can inspect memory, and server logging is outside this adapter's control. NourishNest
-does not log full prompts, model response bodies, records, or secrets. Local operation
-does not make nutrition output medical advice. RAG, embeddings, reranking, and multiple
-agents remain deferred because the model's only role here is bounded intent extraction;
-deterministic services already retrieve all application facts.
-
-Optional **real local-model** evaluation, after configuring the API variables above:
-
-```powershell
-uv run python -m nourish_nest.evals.ollama_meal_planning
-```
-
-It uses isolated in-memory fixtures and the unchanged `meal-planning-eval-v1` dataset,
-excluding synthetic fake-provider fault-injection cases. It records model, prompt and
-evaluation versions, per-metric scores, failures, HTTP chat attempts, and end-to-end
-case latency in `artifacts/ai-evals/ollama-meal-planning-v1/`. These are real local-model
-scores, not the existing deterministic fake scores. Fake reports cannot be overwritten.
-Unavailable local inference exits cleanly with setup instructions. This command is
-optional, may take several minutes, and is never run by standard tests.
-
-Mocked provider/UI verification (requires no installed model):
-
-```powershell
-uv run python -m pytest tests/test_ollama.py tests/test_ollama_ui.py tests/test_assistant.py tests/test_assistant_ui.py
-```
-
-## Phase 9A: visual design and local artwork
-
-The Streamlit application uses a shared forest-green, sage and warm-cream design system, with terracotta focus indicators, grouped navigation, household greetings, visual recipe cards, profile initials, a seven-day plan overview, and clearer shopping stages. Existing API contracts and calculation rules are unchanged. Recipe pictures are serving inspiration rather than photographs of saved recipes.
-
-Artwork is bundled in `static/assets/`: five optimized WebP photographs (about 269 KiB total), an original SVG wordmark/favicon, and two original planning illustrations. There are no runtime remote image requests. See [asset attribution](static/assets/ATTRIBUTION.md) for the Pexels source pages and license. Small SVG illustrations are embedded locally; photographs use Streamlit static serving. Keep `server.enableStaticServing = true` and launch from the repository root.
-
-Pantry and Dashboard now load pantry snapshots through their explicit **Refresh** actions. Existing pantry GET endpoints can mark overdue lots expired; gating those calls avoids an inventory change simply from opening a page. Previously loaded snapshots remain available while browsing. Refresh after changing stock elsewhere. Recommendation and planning previews remain read-only.
-
-Recipe cards cache nutrition by recipe ID/version and show the first 12 matching recipes; the existing selector still exposes every matching recipe. Pantry matches are requested explicitly and follow the existing recommendation result limit. The week preview uses the selected planning profile's session-local plan. Shared fallback photography does not indicate recipe ingredients or allergen safety.
-
-### Screenshots
-
-Screenshot slots for release documentation: Dashboard; Recipes; Pantry; Grocery Lists; Household; Nutrition; Meal Planner; AI Assistant. Capture with synthetic household data at 1366×768 and 1024×768, keeping Technical details collapsed. The visual QA report records the actual inspection results separately.
-
-### Start in two Windows PowerShell terminals
-
-From the repository root, terminal 1:
-
-```powershell
-$env:APP_AI_PROVIDER = "fake"
-uv run python -m uvicorn nourish_nest.api:app --host 127.0.0.1 --port 8000
-```
-
-Terminal 2:
-
-```powershell
-$env:APP_API_BASE_URL = "http://127.0.0.1:8000"
-$env:APP_AI_PROVIDER = "fake"
-uv run python -m streamlit run streamlit_app.py --server.address 127.0.0.1 --server.port 8501
-```
-
-Open `http://127.0.0.1:8501`. Fake mode is a limited deterministic local preview, not a live generative model. If port 8000 is occupied, choose another API port and set `APP_API_BASE_URL` to match; do not stop an unrelated service.
+NourishNest supports planning and education. It does not diagnose, treat, or replace a physician or registered dietitian. Pregnancy, eating-disorder risk, medical conditions, allergies, and therapeutic diets require qualified professional guidance.
