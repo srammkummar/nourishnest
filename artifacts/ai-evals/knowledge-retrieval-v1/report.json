@@ -1,0 +1,583 @@
+{
+  "version": "knowledge-retrieval-v1",
+  "passed": true,
+  "case_count": 36,
+  "metrics": {
+    "citation_correctness": "1",
+    "deterministic_repeat_accuracy": "1",
+    "hit_at_1": "1",
+    "hit_at_3": "1",
+    "hit_at_5": "1",
+    "household_isolation_accuracy": "1",
+    "mean_reciprocal_rank": "1",
+    "no_answer_accuracy": "1",
+    "source_filter_accuracy": "1"
+  },
+  "thresholds": {
+    "citation_correctness": "1",
+    "deterministic_repeat_accuracy": "1",
+    "hit_at_1": "0.85",
+    "hit_at_3": "0.95",
+    "hit_at_5": "0.95",
+    "household_isolation_accuracy": "1",
+    "mean_reciprocal_rank": "0.90",
+    "no_answer_accuracy": "1",
+    "source_filter_accuracy": "1"
+  },
+  "denominators": {
+    "hit_at_1": 29,
+    "hit_at_3": 29,
+    "hit_at_5": 29,
+    "mean_reciprocal_rank": 29,
+    "citation_correctness": 36,
+    "deterministic_repeat_accuracy": 36,
+    "household_isolation_accuracy": 36,
+    "no_answer_accuracy": 7,
+    "source_filter_accuracy": 6
+  },
+  "cases": [
+    {
+      "id": "01-direct-rice",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Rice storage"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "02-storage",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Rice storage",
+        "Pantry labels"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "03-paraphrase-rice",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Rice storage",
+        "Pantry labels"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "04-heading",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Rice storage",
+        "Nutrition notes"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "05-pantry",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Pantry labels",
+        "Untrusted text",
+        "Alpha packing",
+        "Beta packing",
+        "Freezer organization"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "06-paraphrase-pantry",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Pantry labels"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "07-heading-pantry",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Pantry labels",
+        "Freezer organization",
+        "Untrusted text"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "08-nutrition",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Nutrition notes"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "09-paraphrase-nutrition",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Nutrition notes"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "10-lentils",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Lentil recipe",
+        "Home A schedule"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "11-paraphrase-recipe",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Lentil recipe"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "12-own-a",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Home A schedule",
+        "Alpha packing",
+        "Beta packing"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "13-own-b",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Home B schedule",
+        "Alpha packing",
+        "Beta packing"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "14-isolation-a",
+      "rank": 0,
+      "answerable": false,
+      "titles": [],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": true,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "15-isolation-b",
+      "rank": 0,
+      "answerable": false,
+      "titles": [],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": true,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "16-global-a",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Rice storage"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "17-global-b",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Rice storage"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "18-source-safety",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Rice storage"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": true,
+      "extra_expectations": true
+    },
+    {
+      "id": "19-source-excluded",
+      "rank": 0,
+      "answerable": false,
+      "titles": [],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": true,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": true,
+      "extra_expectations": true
+    },
+    {
+      "id": "20-source-nutrition",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Nutrition notes"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": true,
+      "extra_expectations": true
+    },
+    {
+      "id": "21-source-recipe",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Lentil recipe"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": true,
+      "extra_expectations": true
+    },
+    {
+      "id": "22-source-docs",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Grocery workflow"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": true,
+      "extra_expectations": true
+    },
+    {
+      "id": "23-no-answer",
+      "rank": 0,
+      "answerable": false,
+      "titles": [],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": true,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "24-stopwords",
+      "rank": 0,
+      "answerable": false,
+      "titles": [],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": true,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "25-punctuation",
+      "rank": 0,
+      "answerable": false,
+      "titles": [],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": true,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "26-injection",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Untrusted text"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "27-injection-query",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Untrusted text"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "28-conflict",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Alpha packing",
+        "Beta packing"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "29-tie",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Alpha packing",
+        "Beta packing"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "30-deduplicate",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Rice storage"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "31-freezer",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Freezer organization"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "32-heading-freezer",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Freezer organization",
+        "Pantry labels"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "33-grocery",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Grocery workflow"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "34-paraphrase-grocery",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Grocery workflow"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    },
+    {
+      "id": "35-multiple-filters",
+      "rank": 1,
+      "answerable": true,
+      "titles": [
+        "Rice storage"
+      ],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": false,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": true,
+      "extra_expectations": true
+    },
+    {
+      "id": "36-unrelated",
+      "rank": 0,
+      "answerable": false,
+      "titles": [],
+      "citation_correctness": true,
+      "household_isolation_accuracy": true,
+      "no_answer_accuracy": true,
+      "deterministic_repeat_accuracy": true,
+      "source_filter_accuracy": true,
+      "filtered": false,
+      "extra_expectations": true
+    }
+  ]
+}

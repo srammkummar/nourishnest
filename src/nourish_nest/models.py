@@ -5,6 +5,7 @@ from enum import StrEnum
 from typing import ClassVar
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     CheckConstraint,
     DateTime,
@@ -19,14 +20,83 @@ from sqlalchemy import (
     UniqueConstraint,
     Uuid,
     false,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nourish_nest.database import Base
+from nourish_nest.knowledge_types import DocumentStatus, SourceType, Visibility
 
 
 def utc_now() -> datetime:
     return datetime.now(UTC)
+
+
+class KnowledgeDocument(Base):
+    __tablename__ = "knowledge_documents"
+    __table_args__ = (
+        CheckConstraint("(visibility = 'global' AND household_id IS NULL) OR "
+                        "(visibility = 'household' AND household_id IS NOT NULL)",
+                        name="ck_knowledge_ownership"),
+        CheckConstraint("version >= 1 AND lock_version >= 1", name="ck_knowledge_versions"),
+        CheckConstraint("length(content_hash) = 64", name="ck_knowledge_hash"),
+        CheckConstraint("length(trim(title)) > 0 AND length(trim(source_name)) > 0",
+                        name="ck_knowledge_labels"),
+        UniqueConstraint("lineage_key", "version", name="uq_knowledge_revision"),
+        Index("uq_knowledge_active_lineage", "lineage_key", unique=True,
+              sqlite_where=text("status = 'active'"), postgresql_where=text("status = 'active'")),
+        Index("uq_knowledge_active_hash", "scoped_hash", unique=True,
+              sqlite_where=text("status = 'active'"), postgresql_where=text("status = 'active'")),
+        Index("ix_knowledge_scope_source", "household_id", "status", "source_type"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(300))
+    source_name: Mapped[str] = mapped_column(String(300))
+    source_uri: Mapped[str | None] = mapped_column(String(2000))
+    source_type: Mapped[SourceType] = mapped_column(Enum(
+        SourceType, values_callable=lambda cls: [e.value for e in cls], native_enum=False,
+        create_constraint=True, name="knowledge_source_type"))
+    visibility: Mapped[Visibility] = mapped_column(Enum(
+        Visibility, values_callable=lambda cls: [e.value for e in cls], native_enum=False,
+        create_constraint=True, name="knowledge_visibility"))
+    household_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("households.id", ondelete="CASCADE"))
+    content_hash: Mapped[str] = mapped_column(String(64))
+    scoped_hash: Mapped[str] = mapped_column(String(64))
+    lineage_key: Mapped[str] = mapped_column(String(64))
+    status: Mapped[DocumentStatus] = mapped_column(Enum(
+        DocumentStatus, values_callable=lambda cls: [e.value for e in cls], native_enum=False,
+        create_constraint=True, name="knowledge_status"), default=DocumentStatus.ACTIVE)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    lock_version: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+    chunks: Mapped[list["KnowledgeChunk"]] = relationship(
+        back_populates="document", cascade="all, delete-orphan", passive_deletes=True)
+    __mapper_args__: ClassVar[dict] = {"version_id_col": lock_version}
+
+
+class KnowledgeChunk(Base):
+    __tablename__ = "knowledge_chunks"
+    __table_args__ = (
+        UniqueConstraint("document_id", "chunk_index", name="uq_knowledge_chunk_index"),
+        CheckConstraint("chunk_index >= 0 AND word_count > 0", name="ck_knowledge_chunk_counts"),
+        CheckConstraint("length(trim(content)) > 0 AND length(content_hash) = 64",
+                        name="ck_knowledge_chunk_content"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("knowledge_documents.id", ondelete="CASCADE"), index=True)
+    chunk_index: Mapped[int] = mapped_column(Integer)
+    heading_path: Mapped[str | None] = mapped_column(Text)
+    content: Mapped[str] = mapped_column(Text)
+    normalized_content: Mapped[str] = mapped_column(Text)
+    word_count: Mapped[int] = mapped_column(Integer)
+    content_hash: Mapped[str] = mapped_column(String(64))
+    metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    document: Mapped[KnowledgeDocument] = relationship(back_populates="chunks")
 
 
 class PreferenceType(StrEnum):

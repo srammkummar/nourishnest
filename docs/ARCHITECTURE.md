@@ -1,5 +1,32 @@
 # NourishNest architecture decisions
 
+## Phase 10A: local knowledge retrieval
+
+The [knowledge foundation guide](PHASE10A_KNOWLEDGE.md) documents migration 0010,
+revision/ownership constraints, deterministic chunking, BM25 and reranking formulas,
+citations, prompt-injection boundaries, evaluation thresholds and exact commands.
+This supersedes earlier roadmap statements deferring all RAG: lexical retrieval is now
+implemented separately from the assistant. Embeddings, semantic search and agent
+consumption remain future work. Existing APIs and the legacy `rag.py` interface remain.
+
+```mermaid
+flowchart LR
+    A[Approved local documents] --> B[Validation]
+    B --> C[Deterministic chunking]
+    C --> D[Document and chunk persistence]
+    D --> E[Household and source filters]
+    E --> F[Lexical candidate retrieval]
+    F --> G[Deterministic reranking]
+    G --> H[Exact citations and warnings]
+    H -. future .-> I[Agent consumption]
+```
+
+USDA structured API records, pantry quantities, calories, recipe scaling, shortages,
+and inventory operations remain deterministic application data rather than RAG evidence.
+Retrieved content is untrusted context and cannot change tool permissions or execute
+instructions. The new read-only POST uses the existing error envelope and request IDs;
+ingestion is an explicit local admin CLI, never a public endpoint.
+
 NourishNest is packaged as `nourish-nest`, with Python modules under
 `src/nourish_nest`. FastAPI starts with `uv run uvicorn nourish_nest.api:app --reload`;
 the UI starts with `uv run streamlit run streamlit_app.py`.

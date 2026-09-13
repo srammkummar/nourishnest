@@ -16,11 +16,17 @@ NourishNest is a production-oriented household management platform. The first wo
 - Structured warnings for low calorie targets and unsupported minors
 - Request IDs and consistent API error responses
 - Agent routing contracts and a deterministic coordinator
-- Metadata-aware document chunking foundation for RAG
+- Offline, household-scoped knowledge ingestion, lexical retrieval, reranking and exact citations
 - Unit and API tests
 - Docker packaging
 
 ## Architecture principle
+
+Phase 10A adds a read-only local knowledge endpoint and explicit admin ingestion CLI.
+It requires no LLM, embedding model, cloud service, or new dependency. See the
+[Phase 10A knowledge guide](docs/PHASE10A_KNOWLEDGE.md) for exact migration, ingestion,
+retrieval, test/lint/evaluation commands, ownership rules and lexical limitations.
+Reports are in `artifacts/ai-evals/knowledge-retrieval-v1/`.
 
 LLMs will interpret requests, coordinate agents, retrieve context, and draft plans. Deterministic code owns calculations, dietary constraints, validation, budget totals, and external transactions. Purchases and calendar changes require explicit user approval.
 

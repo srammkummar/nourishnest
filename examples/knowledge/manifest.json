@@ -1,0 +1,9 @@
+{
+  "documents": [{
+    "path": "kitchen-notes.md",
+    "title": "Fictional kitchen exercise",
+    "source_name": "NourishNest original demonstration",
+    "source_type": "nourishnest_documentation",
+    "visibility": "global"
+  }]
+}

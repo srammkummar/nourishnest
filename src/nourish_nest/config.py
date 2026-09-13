@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     ai_timeout_seconds: float = Field(default=10, gt=0, le=60)
     ai_max_tool_calls: int = Field(default=4, ge=1, le=4)
     ollama_base_url: str = "http://127.0.0.1:11434"
+    knowledge_ingestion_roots: list[str] = Field(default_factory=list)
+    knowledge_chunk_target: int = Field(default=180, ge=20, le=1000)
+    knowledge_chunk_overlap: int = Field(default=30, ge=0, le=200)
 
 
 @lru_cache

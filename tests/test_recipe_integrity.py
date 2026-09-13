@@ -203,7 +203,7 @@ def test_migration_roundtrip_and_postgresql(tmp_path, monkeypatch):
         "household_id",
         "idempotency_key",
     ]
-    command.downgrade(config, "-1")
+    command.downgrade(config, "20260909_0008")
     assert "version" not in {c["name"] for c in inspect(engine).get_columns("recipes")}
     command.upgrade(config, "head")
     engine.dispose()
