@@ -77,6 +77,58 @@ class KnowledgeDocument(Base):
     __mapper_args__: ClassVar[dict] = {"version_id_col": lock_version}
 
 
+class AgentRun(Base):
+    __tablename__ = "agent_runs"
+    __table_args__ = (
+        CheckConstraint("tool_call_count >= 0 AND tool_call_count <= 12", name="ck_agent_run_calls"),
+        CheckConstraint("warning_count >= 0 AND duration_ms >= 0", name="ck_agent_run_metrics"),
+        CheckConstraint("status IN ('completed','failed','refused','clarification_required')",
+                        name="ck_agent_run_status"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
+    request_id: Mapped[str] = mapped_column(String(64), index=True)
+    household_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("households.id", ondelete="CASCADE"), index=True)
+    status: Mapped[str] = mapped_column(String(32))
+    provider_mode: Mapped[str] = mapped_column(String(32))
+    orchestration_version: Mapped[str] = mapped_column(String(64))
+    interpreted_intent_json: Mapped[dict] = mapped_column(JSON)
+    selected_agents_json: Mapped[list] = mapped_column(JSON)
+    tool_call_count: Mapped[int] = mapped_column(Integer)
+    warning_count: Mapped[int] = mapped_column(Integer)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    duration_ms: Mapped[Decimal] = mapped_column(Numeric(18, 6))
+    failure_code: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    steps: Mapped[list["AgentStep"]] = relationship(
+        cascade="all, delete-orphan", passive_deletes=True)
+
+
+class AgentStep(Base):
+    __tablename__ = "agent_steps"
+    __table_args__ = (
+        UniqueConstraint("run_id", "sequence_number", name="uq_agent_step_sequence"),
+        CheckConstraint("sequence_number >= 0 AND duration_ms >= 0", name="ck_agent_step_metrics"),
+        CheckConstraint("status IN ('completed','failed','cancelled')", name="ck_agent_step_status"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    run_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("agent_runs.id", ondelete="CASCADE"), index=True)
+    agent_name: Mapped[str] = mapped_column(String(32))
+    sequence_number: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(16))
+    tool_name: Mapped[str | None] = mapped_column(String(64))
+    input_summary_json: Mapped[dict] = mapped_column(JSON)
+    output_summary_json: Mapped[dict] = mapped_column(JSON)
+    warning_codes_json: Mapped[list] = mapped_column(JSON)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    duration_ms: Mapped[Decimal] = mapped_column(Numeric(18, 6))
+    failure_code: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
 class KnowledgeChunk(Base):
     __tablename__ = "knowledge_chunks"
     __table_args__ = (

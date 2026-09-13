@@ -75,7 +75,7 @@ class RecommendationService:
     def __init__(self, session):
         self.session = session
 
-    def recommend(self, household_id, data):
+    def recommend(self, household_id, data, *, desired_servings=None, expiring_soon_days=None):
         with self.session.no_autoflush, localcontext() as context:
             context.prec = 28
             context.rounding = "ROUND_HALF_EVEN"
@@ -102,7 +102,7 @@ class RecommendationService:
                 preview = GroceryShortageService(self.session).preview(
                     household_id,
                     GroceryRequirementsRequest(
-                        recipes=[{"recipe_id": recipe.id, "desired_servings": recipe.servings}]
+                        recipes=[{"recipe_id": recipe.id, "desired_servings": desired_servings or recipe.servings}]
                     ),
                 )
                 warnings.extend(
@@ -110,7 +110,8 @@ class RecommendationService:
                 )
                 needs, expiring, fractions, expiry_fractions = [], [], [], []
                 expiry_end = preview.calculation_as_of.date() + timedelta(
-                    days=get_settings().pantry_expiring_soon_days
+                    days=(get_settings().pantry_expiring_soon_days
+                          if expiring_soon_days is None else expiring_soon_days)
                 )
                 for requirement in preview.requirements:
                     required = requirement.required_quantity
@@ -198,7 +199,7 @@ class RecommendationService:
                         recipe_id=recipe.id,
                         recipe_name=recipe.name,
                         system_recipe=recipe.household_id is None,
-                        servings=recipe.servings,
+                        servings=desired_servings or recipe.servings,
                         cuisine=recipe.cuisine,
                         preparation_minutes=recipe.preparation_minutes,
                         cooking_minutes=recipe.cooking_minutes,
@@ -209,7 +210,7 @@ class RecommendationService:
                         missing_ingredients=missing,
                         expiring_ingredients=expiring,
                         score=score,
-                        explanation=f"Pantry covers {coverage * 100:.1f}% of ingredient quantities for {recipe.servings} servings; {missing_count} foods need shopping. Expiring stock contributes {score.expiring_points:.1f} of 20 bonus points.",
+                        explanation=f"Pantry covers {coverage * 100:.1f}% of ingredient quantities for {desired_servings or recipe.servings} servings; {missing_count} foods need shopping. Expiring stock contributes {score.expiring_points:.1f} of 20 bonus points.",
                         nutrition_per_serving=serving_nutrition(recipe),
                         warnings=warnings,
                     )

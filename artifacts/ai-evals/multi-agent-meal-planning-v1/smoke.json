@@ -1,0 +1,1854 @@
+{
+  "passed": true,
+  "request": {
+    "message": "Create five vegetarian dinners for two adults, prioritize food expiring this week, stay under 35 minutes, avoid peanuts, and show the grocery shortages.",
+    "include_knowledge": true
+  },
+  "response": {
+    "run_id": "71418205-4e5d-4547-a2be-733c919dbc34",
+    "request_id": "phase10b-offline-smoke",
+    "household_id": "00000000-0000-0000-0000-0000000001f5",
+    "status": "completed",
+    "interpretation": {
+      "action": "plan",
+      "number_of_meals": 5,
+      "servings": "2",
+      "meal": "dinner",
+      "diets": [
+        "vegetarian"
+      ],
+      "allergens": [
+        "peanut"
+      ],
+      "cuisines": [],
+      "maximum_minutes": 34,
+      "maximum_missing_ingredients": 100,
+      "prioritize_expiring": true,
+      "groceries": true,
+      "result_limit": 50,
+      "knowledge_question": null,
+      "reason": null
+    },
+    "execution_plan": {
+      "selected_agents": [
+        "supervisor",
+        "pantry",
+        "recipe",
+        "knowledge",
+        "nutrition",
+        "grocery"
+      ],
+      "parallel": [
+        "pantry",
+        "recipe",
+        "knowledge"
+      ],
+      "dependent": [
+        "nutrition",
+        "grocery"
+      ]
+    },
+    "meal_plan": [
+      {
+        "day": 1,
+        "meals": [
+          {
+            "slot": "dinner",
+            "recipe_id": "00000000-0000-0000-0000-0000000002bc",
+            "recipe_name": "Fixture dinner 0",
+            "desired_servings": "2"
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "meals": [
+          {
+            "slot": "dinner",
+            "recipe_id": "00000000-0000-0000-0000-0000000002bd",
+            "recipe_name": "Fixture dinner 1",
+            "desired_servings": "2"
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "meals": [
+          {
+            "slot": "dinner",
+            "recipe_id": "00000000-0000-0000-0000-0000000002be",
+            "recipe_name": "Fixture dinner 2",
+            "desired_servings": "2"
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "meals": [
+          {
+            "slot": "dinner",
+            "recipe_id": "00000000-0000-0000-0000-0000000002bf",
+            "recipe_name": "Fixture dinner 3",
+            "desired_servings": "2"
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "meals": [
+          {
+            "slot": "dinner",
+            "recipe_id": "00000000-0000-0000-0000-0000000002c0",
+            "recipe_name": "Fixture dinner 4",
+            "desired_servings": "2"
+          }
+        ]
+      }
+    ],
+    "nutrition_summary": {
+      "summary": {
+        "daily": [
+          {
+            "calories": "200.0",
+            "protein_g": "10.0",
+            "carbohydrate_g": "20.0",
+            "fat_g": "3.0",
+            "warnings": []
+          },
+          {
+            "calories": "200.0",
+            "protein_g": "10.0",
+            "carbohydrate_g": "20.0",
+            "fat_g": "3.0",
+            "warnings": []
+          },
+          {
+            "calories": "200.0",
+            "protein_g": "10.0",
+            "carbohydrate_g": "20.0",
+            "fat_g": "3.0",
+            "warnings": []
+          },
+          {
+            "calories": "200.0",
+            "protein_g": "10.0",
+            "carbohydrate_g": "20.0",
+            "fat_g": "3.0",
+            "warnings": []
+          },
+          {
+            "calories": "200.0",
+            "protein_g": "10.0",
+            "carbohydrate_g": "20.0",
+            "fat_g": "3.0",
+            "warnings": []
+          }
+        ],
+        "weekly": {
+          "calories": "1000.0",
+          "protein_g": "50.0",
+          "carbohydrate_g": "100.0",
+          "fat_g": "15.0",
+          "warnings": []
+        },
+        "scope": "all planned servings; selected meals only"
+      },
+      "targets": [],
+      "disclaimer": "Nutrition estimates are informational, not medical advice."
+    },
+    "pantry_summary": {
+      "available": [
+        {
+          "item_id": "00000000-0000-0000-0000-000000000320",
+          "food_id": "00000000-0000-0000-0000-000000000258",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-18"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000321",
+          "food_id": "00000000-0000-0000-0000-000000000259",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000322",
+          "food_id": "00000000-0000-0000-0000-00000000025a",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000323",
+          "food_id": "00000000-0000-0000-0000-00000000025b",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000324",
+          "food_id": "00000000-0000-0000-0000-00000000025c",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000325",
+          "food_id": "00000000-0000-0000-0000-00000000025d",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000326",
+          "food_id": "00000000-0000-0000-0000-00000000025e",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000327",
+          "food_id": "00000000-0000-0000-0000-00000000025f",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000328",
+          "food_id": "00000000-0000-0000-0000-000000000260",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000329",
+          "food_id": "00000000-0000-0000-0000-000000000261",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        }
+      ],
+      "expiring": [
+        {
+          "item_id": "00000000-0000-0000-0000-000000000320",
+          "food_id": "00000000-0000-0000-0000-000000000258",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-18"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000321",
+          "food_id": "00000000-0000-0000-0000-000000000259",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000322",
+          "food_id": "00000000-0000-0000-0000-00000000025a",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000323",
+          "food_id": "00000000-0000-0000-0000-00000000025b",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000324",
+          "food_id": "00000000-0000-0000-0000-00000000025c",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000325",
+          "food_id": "00000000-0000-0000-0000-00000000025d",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000326",
+          "food_id": "00000000-0000-0000-0000-00000000025e",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000327",
+          "food_id": "00000000-0000-0000-0000-00000000025f",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000328",
+          "food_id": "00000000-0000-0000-0000-000000000260",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        },
+        {
+          "item_id": "00000000-0000-0000-0000-000000000329",
+          "food_id": "00000000-0000-0000-0000-000000000261",
+          "quantity": "30.000000",
+          "unit": "g",
+          "expiration_date": "2026-09-15"
+        }
+      ],
+      "low_stock_food_ids": [
+        "00000000-0000-0000-0000-000000000258"
+      ],
+      "expiring_window_days": 7
+    },
+    "grocery_shortages": {
+      "requirements": {
+        "household_id": "00000000-0000-0000-0000-0000000001f5",
+        "recipes": [
+          {
+            "recipe_id": "00000000-0000-0000-0000-0000000002bc",
+            "desired_servings": "2"
+          },
+          {
+            "recipe_id": "00000000-0000-0000-0000-0000000002bd",
+            "desired_servings": "2"
+          },
+          {
+            "recipe_id": "00000000-0000-0000-0000-0000000002be",
+            "desired_servings": "2"
+          },
+          {
+            "recipe_id": "00000000-0000-0000-0000-0000000002bf",
+            "desired_servings": "2"
+          },
+          {
+            "recipe_id": "00000000-0000-0000-0000-0000000002c0",
+            "desired_servings": "2"
+          }
+        ],
+        "requirements": [
+          {
+            "food_id": "00000000-0000-0000-0000-000000000258",
+            "food_name": "Fixture ingredient 0",
+            "required_quantity": "100.0",
+            "canonical_unit": "g",
+            "sources": [
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002bc",
+                "recipe_name": "Fixture dinner 0",
+                "ingredient_id": "0d1e6841-18c4-437d-b95f-d4200e72fadc",
+                "scaled_quantity": "100.0",
+                "original_unit": "g",
+                "required_quantity": "100.0"
+              }
+            ]
+          },
+          {
+            "food_id": "00000000-0000-0000-0000-000000000259",
+            "food_name": "Fixture ingredient 1",
+            "required_quantity": "100.0",
+            "canonical_unit": "g",
+            "sources": [
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002bd",
+                "recipe_name": "Fixture dinner 1",
+                "ingredient_id": "826bf966-1d33-48b7-a34b-d8d3a97277b8",
+                "scaled_quantity": "100.0",
+                "original_unit": "g",
+                "required_quantity": "100.0"
+              }
+            ]
+          },
+          {
+            "food_id": "00000000-0000-0000-0000-00000000025a",
+            "food_name": "Fixture ingredient 2",
+            "required_quantity": "100.0",
+            "canonical_unit": "g",
+            "sources": [
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002be",
+                "recipe_name": "Fixture dinner 2",
+                "ingredient_id": "15c2846e-03e7-448c-a981-3fc4c4c97ea6",
+                "scaled_quantity": "100.0",
+                "original_unit": "g",
+                "required_quantity": "100.0"
+              }
+            ]
+          },
+          {
+            "food_id": "00000000-0000-0000-0000-00000000025b",
+            "food_name": "Fixture ingredient 3",
+            "required_quantity": "100.0",
+            "canonical_unit": "g",
+            "sources": [
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002bf",
+                "recipe_name": "Fixture dinner 3",
+                "ingredient_id": "25695bdf-829e-415b-af46-9ece14a103ca",
+                "scaled_quantity": "100.0",
+                "original_unit": "g",
+                "required_quantity": "100.0"
+              }
+            ]
+          },
+          {
+            "food_id": "00000000-0000-0000-0000-00000000025c",
+            "food_name": "Fixture ingredient 4",
+            "required_quantity": "100.0",
+            "canonical_unit": "g",
+            "sources": [
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002c0",
+                "recipe_name": "Fixture dinner 4",
+                "ingredient_id": "c6104bec-222d-47e1-9ccd-78995e348848",
+                "scaled_quantity": "100.0",
+                "original_unit": "g",
+                "required_quantity": "100.0"
+              }
+            ]
+          }
+        ],
+        "warnings": [],
+        "calculation_version": "grocery-requirements-v1"
+      },
+      "shortages": {
+        "household_id": "00000000-0000-0000-0000-0000000001f5",
+        "recipes": [
+          {
+            "recipe_id": "00000000-0000-0000-0000-0000000002bc",
+            "desired_servings": "2"
+          },
+          {
+            "recipe_id": "00000000-0000-0000-0000-0000000002bd",
+            "desired_servings": "2"
+          },
+          {
+            "recipe_id": "00000000-0000-0000-0000-0000000002be",
+            "desired_servings": "2"
+          },
+          {
+            "recipe_id": "00000000-0000-0000-0000-0000000002bf",
+            "desired_servings": "2"
+          },
+          {
+            "recipe_id": "00000000-0000-0000-0000-0000000002c0",
+            "desired_servings": "2"
+          }
+        ],
+        "requirements": [
+          {
+            "food_id": "00000000-0000-0000-0000-000000000258",
+            "food_name": "Fixture ingredient 0",
+            "required_quantity": "100.0",
+            "canonical_unit": "g",
+            "sources": [
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002bc",
+                "recipe_name": "Fixture dinner 0",
+                "ingredient_id": "0d1e6841-18c4-437d-b95f-d4200e72fadc",
+                "scaled_quantity": "100.0",
+                "original_unit": "g",
+                "required_quantity": "100.0"
+              }
+            ],
+            "available_quantity": "30.000000",
+            "shortage_quantity": "70.000000",
+            "purchase_required": true,
+            "pantry_lots": [
+              {
+                "pantry_item_id": "00000000-0000-0000-0000-000000000320",
+                "quantity": "30.000000",
+                "original_unit": "g",
+                "available_quantity": "30.000000",
+                "expiration_date": "2026-09-18"
+              }
+            ]
+          },
+          {
+            "food_id": "00000000-0000-0000-0000-000000000259",
+            "food_name": "Fixture ingredient 1",
+            "required_quantity": "100.0",
+            "canonical_unit": "g",
+            "sources": [
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002bd",
+                "recipe_name": "Fixture dinner 1",
+                "ingredient_id": "826bf966-1d33-48b7-a34b-d8d3a97277b8",
+                "scaled_quantity": "100.0",
+                "original_unit": "g",
+                "required_quantity": "100.0"
+              }
+            ],
+            "available_quantity": "30.000000",
+            "shortage_quantity": "70.000000",
+            "purchase_required": true,
+            "pantry_lots": [
+              {
+                "pantry_item_id": "00000000-0000-0000-0000-000000000321",
+                "quantity": "30.000000",
+                "original_unit": "g",
+                "available_quantity": "30.000000",
+                "expiration_date": "2026-09-15"
+              }
+            ]
+          },
+          {
+            "food_id": "00000000-0000-0000-0000-00000000025a",
+            "food_name": "Fixture ingredient 2",
+            "required_quantity": "100.0",
+            "canonical_unit": "g",
+            "sources": [
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002be",
+                "recipe_name": "Fixture dinner 2",
+                "ingredient_id": "15c2846e-03e7-448c-a981-3fc4c4c97ea6",
+                "scaled_quantity": "100.0",
+                "original_unit": "g",
+                "required_quantity": "100.0"
+              }
+            ],
+            "available_quantity": "30.000000",
+            "shortage_quantity": "70.000000",
+            "purchase_required": true,
+            "pantry_lots": [
+              {
+                "pantry_item_id": "00000000-0000-0000-0000-000000000322",
+                "quantity": "30.000000",
+                "original_unit": "g",
+                "available_quantity": "30.000000",
+                "expiration_date": "2026-09-15"
+              }
+            ]
+          },
+          {
+            "food_id": "00000000-0000-0000-0000-00000000025b",
+            "food_name": "Fixture ingredient 3",
+            "required_quantity": "100.0",
+            "canonical_unit": "g",
+            "sources": [
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002bf",
+                "recipe_name": "Fixture dinner 3",
+                "ingredient_id": "25695bdf-829e-415b-af46-9ece14a103ca",
+                "scaled_quantity": "100.0",
+                "original_unit": "g",
+                "required_quantity": "100.0"
+              }
+            ],
+            "available_quantity": "30.000000",
+            "shortage_quantity": "70.000000",
+            "purchase_required": true,
+            "pantry_lots": [
+              {
+                "pantry_item_id": "00000000-0000-0000-0000-000000000323",
+                "quantity": "30.000000",
+                "original_unit": "g",
+                "available_quantity": "30.000000",
+                "expiration_date": "2026-09-15"
+              }
+            ]
+          },
+          {
+            "food_id": "00000000-0000-0000-0000-00000000025c",
+            "food_name": "Fixture ingredient 4",
+            "required_quantity": "100.0",
+            "canonical_unit": "g",
+            "sources": [
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002c0",
+                "recipe_name": "Fixture dinner 4",
+                "ingredient_id": "c6104bec-222d-47e1-9ccd-78995e348848",
+                "scaled_quantity": "100.0",
+                "original_unit": "g",
+                "required_quantity": "100.0"
+              }
+            ],
+            "available_quantity": "30.000000",
+            "shortage_quantity": "70.000000",
+            "purchase_required": true,
+            "pantry_lots": [
+              {
+                "pantry_item_id": "00000000-0000-0000-0000-000000000324",
+                "quantity": "30.000000",
+                "original_unit": "g",
+                "available_quantity": "30.000000",
+                "expiration_date": "2026-09-15"
+              }
+            ]
+          }
+        ],
+        "warnings": [],
+        "calculation_as_of": "2026-09-13T14:39:50.339478Z",
+        "calculation_version": "grocery-shortage-v1"
+      }
+    },
+    "knowledge": {
+      "answer": "Approved evidence is quoted in the citations below.",
+      "citations": [
+        {
+          "rank": 1,
+          "document_id": "ed17e0a2-3824-49a8-a136-ad312d413aff",
+          "chunk_id": "e66442e7-15fb-4ea1-88f4-932d51102a9b",
+          "document_title": "Original storage notes",
+          "source_name": "Original Phase 10B fixture",
+          "source_uri": null,
+          "heading_path": "Food storage",
+          "chunk_index": 0,
+          "excerpt": "This fictional food storage exercise labels containers. Safe handling is a demonstration topic, not authoritative advice.",
+          "retrieval_score": "3.074112436517101660714756233",
+          "reranking_score": "5.824112436517101660714756233",
+          "matched_terms": [
+            "food",
+            "handling",
+            "safe",
+            "storage"
+          ],
+          "score_components": {
+            "lexical": "3.074112436517101660714756233",
+            "overlap": "1",
+            "title": "0.25",
+            "heading": "0.5",
+            "phrase": "0",
+            "source": "0",
+            "term:food": "0.6131996941975497215905479428",
+            "term:handling": "0.8657269234205808309264563613",
+            "term:safe": "0.8657269234205808309264563613",
+            "term:storage": "0.7294588954783902772712955682"
+          }
+        },
+        {
+          "rank": 2,
+          "document_id": "651d3d53-5a08-4a56-a66b-d5a733566085",
+          "chunk_id": "895eaac0-63f9-4c33-bef8-f1292f03b696",
+          "document_title": "Private amber notes",
+          "source_name": "Original Phase 10B fixture",
+          "source_uri": null,
+          "heading_path": null,
+          "chunk_index": 0,
+          "excerpt": "Ambermarker household food storage notes for an original software fixture.",
+          "retrieval_score": "1.059163108159404064565491901",
+          "reranking_score": "2.059163108159404064565491901",
+          "matched_terms": [
+            "food",
+            "storage"
+          ],
+          "score_components": {
+            "lexical": "1.059163108159404064565491901",
+            "overlap": "0.5",
+            "title": "0",
+            "heading": "0",
+            "phrase": "0",
+            "source": "0",
+            "term:food": "0.5295815540797020322827459506",
+            "term:storage": "0.5295815540797020322827459506"
+          }
+        }
+      ],
+      "warnings": []
+    },
+    "agent_results": [
+      {
+        "agent": "supervisor",
+        "status": "completed",
+        "allowed_tools": [
+          "validate_scope",
+          "validate_selection"
+        ],
+        "warnings": [],
+        "failure_code": null,
+        "started_at": "2026-09-13T14:39:50.210488Z",
+        "completed_at": "2026-09-13T14:39:50.370848Z",
+        "duration_ms": "160.3429",
+        "pantry": null,
+        "recipes": null,
+        "nutrition": null,
+        "grocery": null,
+        "knowledge": null
+      },
+      {
+        "agent": "pantry",
+        "status": "completed",
+        "allowed_tools": [
+          "read_pantry_summary",
+          "read_expiring_inventory"
+        ],
+        "warnings": [],
+        "failure_code": null,
+        "started_at": "2026-09-13T14:39:50.215238Z",
+        "completed_at": "2026-09-13T14:39:50.244689Z",
+        "duration_ms": "29.4564",
+        "pantry": {
+          "available": [
+            {
+              "item_id": "00000000-0000-0000-0000-000000000320",
+              "food_id": "00000000-0000-0000-0000-000000000258",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-18"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000321",
+              "food_id": "00000000-0000-0000-0000-000000000259",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000322",
+              "food_id": "00000000-0000-0000-0000-00000000025a",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000323",
+              "food_id": "00000000-0000-0000-0000-00000000025b",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000324",
+              "food_id": "00000000-0000-0000-0000-00000000025c",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000325",
+              "food_id": "00000000-0000-0000-0000-00000000025d",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000326",
+              "food_id": "00000000-0000-0000-0000-00000000025e",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000327",
+              "food_id": "00000000-0000-0000-0000-00000000025f",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000328",
+              "food_id": "00000000-0000-0000-0000-000000000260",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000329",
+              "food_id": "00000000-0000-0000-0000-000000000261",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            }
+          ],
+          "expiring": [
+            {
+              "item_id": "00000000-0000-0000-0000-000000000320",
+              "food_id": "00000000-0000-0000-0000-000000000258",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-18"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000321",
+              "food_id": "00000000-0000-0000-0000-000000000259",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000322",
+              "food_id": "00000000-0000-0000-0000-00000000025a",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000323",
+              "food_id": "00000000-0000-0000-0000-00000000025b",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000324",
+              "food_id": "00000000-0000-0000-0000-00000000025c",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000325",
+              "food_id": "00000000-0000-0000-0000-00000000025d",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000326",
+              "food_id": "00000000-0000-0000-0000-00000000025e",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000327",
+              "food_id": "00000000-0000-0000-0000-00000000025f",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000328",
+              "food_id": "00000000-0000-0000-0000-000000000260",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            },
+            {
+              "item_id": "00000000-0000-0000-0000-000000000329",
+              "food_id": "00000000-0000-0000-0000-000000000261",
+              "quantity": "30.000000",
+              "unit": "g",
+              "expiration_date": "2026-09-15"
+            }
+          ],
+          "low_stock_food_ids": [
+            "00000000-0000-0000-0000-000000000258"
+          ],
+          "expiring_window_days": 7
+        },
+        "recipes": null,
+        "nutrition": null,
+        "grocery": null,
+        "knowledge": null
+      },
+      {
+        "agent": "recipe",
+        "status": "completed",
+        "allowed_tools": [
+          "recommend_recipes"
+        ],
+        "warnings": [],
+        "failure_code": null,
+        "started_at": "2026-09-13T14:39:50.215326Z",
+        "completed_at": "2026-09-13T14:39:50.307035Z",
+        "duration_ms": "91.712",
+        "pantry": null,
+        "recipes": {
+          "candidates": [
+            {
+              "recipe_id": "00000000-0000-0000-0000-0000000002bc",
+              "recipe_name": "Fixture dinner 0",
+              "system_recipe": false,
+              "servings": "2",
+              "cuisine": "Indian",
+              "preparation_minutes": 5,
+              "cooking_minutes": 10,
+              "coverage_percentage": "30.00000",
+              "classification": "Missing 1\u20132 ingredients",
+              "missing_ingredient_count": 1,
+              "requirements": [
+                {
+                  "food_id": "00000000-0000-0000-0000-000000000258",
+                  "food_name": "Fixture ingredient 0",
+                  "required_quantity": "100.0",
+                  "available_quantity": "30.000000",
+                  "missing_quantity": "70.000000",
+                  "unit": "g",
+                  "conversion_supported": true
+                }
+              ],
+              "missing_ingredients": [
+                {
+                  "food_id": "00000000-0000-0000-0000-000000000258",
+                  "food_name": "Fixture ingredient 0",
+                  "required_quantity": "100.0",
+                  "available_quantity": "30.000000",
+                  "missing_quantity": "70.000000",
+                  "unit": "g",
+                  "conversion_supported": true
+                }
+              ],
+              "expiring_ingredients": [
+                {
+                  "food_id": "00000000-0000-0000-0000-000000000258",
+                  "food_name": "Fixture ingredient 0",
+                  "quantity": "30.000000",
+                  "unit": "g",
+                  "earliest_expiration": "2026-09-18"
+                }
+              ],
+              "score": {
+                "coverage_points": "24.00000",
+                "expiring_points": "6.00000",
+                "total": "30.00000"
+              },
+              "explanation": "Pantry covers 30.0% of ingredient quantities for 2 servings; 1 foods need shopping. Expiring stock contributes 6.0 of 20 bonus points.",
+              "nutrition_per_serving": {
+                "calories": "100.0",
+                "protein_g": "5.0",
+                "carbohydrate_g": "10.0",
+                "fat_g": "1.5",
+                "warnings": []
+              },
+              "warnings": []
+            },
+            {
+              "recipe_id": "00000000-0000-0000-0000-0000000002bd",
+              "recipe_name": "Fixture dinner 1",
+              "system_recipe": false,
+              "servings": "2",
+              "cuisine": "Indian",
+              "preparation_minutes": 5,
+              "cooking_minutes": 11,
+              "coverage_percentage": "30.00000",
+              "classification": "Missing 1\u20132 ingredients",
+              "missing_ingredient_count": 1,
+              "requirements": [
+                {
+                  "food_id": "00000000-0000-0000-0000-000000000259",
+                  "food_name": "Fixture ingredient 1",
+                  "required_quantity": "100.0",
+                  "available_quantity": "30.000000",
+                  "missing_quantity": "70.000000",
+                  "unit": "g",
+                  "conversion_supported": true
+                }
+              ],
+              "missing_ingredients": [
+                {
+                  "food_id": "00000000-0000-0000-0000-000000000259",
+                  "food_name": "Fixture ingredient 1",
+                  "required_quantity": "100.0",
+                  "available_quantity": "30.000000",
+                  "missing_quantity": "70.000000",
+                  "unit": "g",
+                  "conversion_supported": true
+                }
+              ],
+              "expiring_ingredients": [
+                {
+                  "food_id": "00000000-0000-0000-0000-000000000259",
+                  "food_name": "Fixture ingredient 1",
+                  "quantity": "30.000000",
+                  "unit": "g",
+                  "earliest_expiration": "2026-09-15"
+                }
+              ],
+              "score": {
+                "coverage_points": "24.00000",
+                "expiring_points": "6.00000",
+                "total": "30.00000"
+              },
+              "explanation": "Pantry covers 30.0% of ingredient quantities for 2 servings; 1 foods need shopping. Expiring stock contributes 6.0 of 20 bonus points.",
+              "nutrition_per_serving": {
+                "calories": "100.0",
+                "protein_g": "5.0",
+                "carbohydrate_g": "10.0",
+                "fat_g": "1.5",
+                "warnings": []
+              },
+              "warnings": []
+            },
+            {
+              "recipe_id": "00000000-0000-0000-0000-0000000002be",
+              "recipe_name": "Fixture dinner 2",
+              "system_recipe": false,
+              "servings": "2",
+              "cuisine": "Indian",
+              "preparation_minutes": 5,
+              "cooking_minutes": 12,
+              "coverage_percentage": "30.00000",
+              "classification": "Missing 1\u20132 ingredients",
+              "missing_ingredient_count": 1,
+              "requirements": [
+                {
+                  "food_id": "00000000-0000-0000-0000-00000000025a",
+                  "food_name": "Fixture ingredient 2",
+                  "required_quantity": "100.0",
+                  "available_quantity": "30.000000",
+                  "missing_quantity": "70.000000",
+                  "unit": "g",
+                  "conversion_supported": true
+                }
+              ],
+              "missing_ingredients": [
+                {
+                  "food_id": "00000000-0000-0000-0000-00000000025a",
+                  "food_name": "Fixture ingredient 2",
+                  "required_quantity": "100.0",
+                  "available_quantity": "30.000000",
+                  "missing_quantity": "70.000000",
+                  "unit": "g",
+                  "conversion_supported": true
+                }
+              ],
+              "expiring_ingredients": [
+                {
+                  "food_id": "00000000-0000-0000-0000-00000000025a",
+                  "food_name": "Fixture ingredient 2",
+                  "quantity": "30.000000",
+                  "unit": "g",
+                  "earliest_expiration": "2026-09-15"
+                }
+              ],
+              "score": {
+                "coverage_points": "24.00000",
+                "expiring_points": "6.00000",
+                "total": "30.00000"
+              },
+              "explanation": "Pantry covers 30.0% of ingredient quantities for 2 servings; 1 foods need shopping. Expiring stock contributes 6.0 of 20 bonus points.",
+              "nutrition_per_serving": {
+                "calories": "100.0",
+                "protein_g": "5.0",
+                "carbohydrate_g": "10.0",
+                "fat_g": "1.5",
+                "warnings": []
+              },
+              "warnings": []
+            },
+            {
+              "recipe_id": "00000000-0000-0000-0000-0000000002bf",
+              "recipe_name": "Fixture dinner 3",
+              "system_recipe": false,
+              "servings": "2",
+              "cuisine": "Italian",
+              "preparation_minutes": 5,
+              "cooking_minutes": 13,
+              "coverage_percentage": "30.00000",
+              "classification": "Missing 1\u20132 ingredients",
+              "missing_ingredient_count": 1,
+              "requirements": [
+                {
+                  "food_id": "00000000-0000-0000-0000-00000000025b",
+                  "food_name": "Fixture ingredient 3",
+                  "required_quantity": "100.0",
+                  "available_quantity": "30.000000",
+                  "missing_quantity": "70.000000",
+                  "unit": "g",
+                  "conversion_supported": true
+                }
+              ],
+              "missing_ingredients": [
+                {
+                  "food_id": "00000000-0000-0000-0000-00000000025b",
+                  "food_name": "Fixture ingredient 3",
+                  "required_quantity": "100.0",
+                  "available_quantity": "30.000000",
+                  "missing_quantity": "70.000000",
+                  "unit": "g",
+                  "conversion_supported": true
+                }
+              ],
+              "expiring_ingredients": [
+                {
+                  "food_id": "00000000-0000-0000-0000-00000000025b",
+                  "food_name": "Fixture ingredient 3",
+                  "quantity": "30.000000",
+                  "unit": "g",
+                  "earliest_expiration": "2026-09-15"
+                }
+              ],
+              "score": {
+                "coverage_points": "24.00000",
+                "expiring_points": "6.00000",
+                "total": "30.00000"
+              },
+              "explanation": "Pantry covers 30.0% of ingredient quantities for 2 servings; 1 foods need shopping. Expiring stock contributes 6.0 of 20 bonus points.",
+              "nutrition_per_serving": {
+                "calories": "100.0",
+                "protein_g": "5.0",
+                "carbohydrate_g": "10.0",
+                "fat_g": "1.5",
+                "warnings": []
+              },
+              "warnings": []
+            },
+            {
+              "recipe_id": "00000000-0000-0000-0000-0000000002c0",
+              "recipe_name": "Fixture dinner 4",
+              "system_recipe": false,
+              "servings": "2",
+              "cuisine": "Italian",
+              "preparation_minutes": 5,
+              "cooking_minutes": 14,
+              "coverage_percentage": "30.00000",
+              "classification": "Missing 1\u20132 ingredients",
+              "missing_ingredient_count": 1,
+              "requirements": [
+                {
+                  "food_id": "00000000-0000-0000-0000-00000000025c",
+                  "food_name": "Fixture ingredient 4",
+                  "required_quantity": "100.0",
+                  "available_quantity": "30.000000",
+                  "missing_quantity": "70.000000",
+                  "unit": "g",
+                  "conversion_supported": true
+                }
+              ],
+              "missing_ingredients": [
+                {
+                  "food_id": "00000000-0000-0000-0000-00000000025c",
+                  "food_name": "Fixture ingredient 4",
+                  "required_quantity": "100.0",
+                  "available_quantity": "30.000000",
+                  "missing_quantity": "70.000000",
+                  "unit": "g",
+                  "conversion_supported": true
+                }
+              ],
+              "expiring_ingredients": [
+                {
+                  "food_id": "00000000-0000-0000-0000-00000000025c",
+                  "food_name": "Fixture ingredient 4",
+                  "quantity": "30.000000",
+                  "unit": "g",
+                  "earliest_expiration": "2026-09-15"
+                }
+              ],
+              "score": {
+                "coverage_points": "24.00000",
+                "expiring_points": "6.00000",
+                "total": "30.00000"
+              },
+              "explanation": "Pantry covers 30.0% of ingredient quantities for 2 servings; 1 foods need shopping. Expiring stock contributes 6.0 of 20 bonus points.",
+              "nutrition_per_serving": {
+                "calories": "100.0",
+                "protein_g": "5.0",
+                "carbohydrate_g": "10.0",
+                "fat_g": "1.5",
+                "warnings": []
+              },
+              "warnings": []
+            },
+            {
+              "recipe_id": "00000000-0000-0000-0000-0000000002c1",
+              "recipe_name": "Fixture dinner 5",
+              "system_recipe": true,
+              "servings": "2",
+              "cuisine": "Italian",
+              "preparation_minutes": 5,
+              "cooking_minutes": 15,
+              "coverage_percentage": "30.00000",
+              "classification": "Missing 1\u20132 ingredients",
+              "missing_ingredient_count": 1,
+              "requirements": [
+                {
+                  "food_id": "00000000-0000-0000-0000-00000000025d",
+                  "food_name": "Fixture ingredient 5",
+                  "required_quantity": "100.0",
+                  "available_quantity": "30.000000",
+                  "missing_quantity": "70.000000",
+                  "unit": "g",
+                  "conversion_supported": true
+                }
+              ],
+              "missing_ingredients": [
+                {
+                  "food_id": "00000000-0000-0000-0000-00000000025d",
+                  "food_name": "Fixture ingredient 5",
+                  "required_quantity": "100.0",
+                  "available_quantity": "30.000000",
+                  "missing_quantity": "70.000000",
+                  "unit": "g",
+                  "conversion_supported": true
+                }
+              ],
+              "expiring_ingredients": [
+                {
+                  "food_id": "00000000-0000-0000-0000-00000000025d",
+                  "food_name": "Fixture ingredient 5",
+                  "quantity": "30.000000",
+                  "unit": "g",
+                  "earliest_expiration": "2026-09-15"
+                }
+              ],
+              "score": {
+                "coverage_points": "24.00000",
+                "expiring_points": "6.00000",
+                "total": "30.00000"
+              },
+              "explanation": "Pantry covers 30.0% of ingredient quantities for 2 servings; 1 foods need shopping. Expiring stock contributes 6.0 of 20 bonus points.",
+              "nutrition_per_serving": {
+                "calories": "100.0",
+                "protein_g": "5.0",
+                "carbohydrate_g": "10.0",
+                "fat_g": "1.5",
+                "warnings": []
+              },
+              "warnings": []
+            }
+          ],
+          "excluded_count": 3
+        },
+        "nutrition": null,
+        "grocery": null,
+        "knowledge": null
+      },
+      {
+        "agent": "knowledge",
+        "status": "completed",
+        "allowed_tools": [
+          "retrieve_knowledge"
+        ],
+        "warnings": [],
+        "failure_code": null,
+        "started_at": "2026-09-13T14:39:50.215380Z",
+        "completed_at": "2026-09-13T14:39:50.231940Z",
+        "duration_ms": "16.5651",
+        "pantry": null,
+        "recipes": null,
+        "nutrition": null,
+        "grocery": null,
+        "knowledge": {
+          "answer": "Approved evidence is quoted in the citations below.",
+          "citations": [
+            {
+              "rank": 1,
+              "document_id": "ed17e0a2-3824-49a8-a136-ad312d413aff",
+              "chunk_id": "e66442e7-15fb-4ea1-88f4-932d51102a9b",
+              "document_title": "Original storage notes",
+              "source_name": "Original Phase 10B fixture",
+              "source_uri": null,
+              "heading_path": "Food storage",
+              "chunk_index": 0,
+              "excerpt": "This fictional food storage exercise labels containers. Safe handling is a demonstration topic, not authoritative advice.",
+              "retrieval_score": "3.074112436517101660714756233",
+              "reranking_score": "5.824112436517101660714756233",
+              "matched_terms": [
+                "food",
+                "handling",
+                "safe",
+                "storage"
+              ],
+              "score_components": {
+                "lexical": "3.074112436517101660714756233",
+                "overlap": "1",
+                "title": "0.25",
+                "heading": "0.5",
+                "phrase": "0",
+                "source": "0",
+                "term:food": "0.6131996941975497215905479428",
+                "term:handling": "0.8657269234205808309264563613",
+                "term:safe": "0.8657269234205808309264563613",
+                "term:storage": "0.7294588954783902772712955682"
+              }
+            },
+            {
+              "rank": 2,
+              "document_id": "651d3d53-5a08-4a56-a66b-d5a733566085",
+              "chunk_id": "895eaac0-63f9-4c33-bef8-f1292f03b696",
+              "document_title": "Private amber notes",
+              "source_name": "Original Phase 10B fixture",
+              "source_uri": null,
+              "heading_path": null,
+              "chunk_index": 0,
+              "excerpt": "Ambermarker household food storage notes for an original software fixture.",
+              "retrieval_score": "1.059163108159404064565491901",
+              "reranking_score": "2.059163108159404064565491901",
+              "matched_terms": [
+                "food",
+                "storage"
+              ],
+              "score_components": {
+                "lexical": "1.059163108159404064565491901",
+                "overlap": "0.5",
+                "title": "0",
+                "heading": "0",
+                "phrase": "0",
+                "source": "0",
+                "term:food": "0.5295815540797020322827459506",
+                "term:storage": "0.5295815540797020322827459506"
+              }
+            }
+          ],
+          "warnings": []
+        }
+      },
+      {
+        "agent": "nutrition",
+        "status": "completed",
+        "allowed_tools": [
+          "calculate_recipe_nutrition",
+          "get_member_nutrition_target"
+        ],
+        "warnings": [],
+        "failure_code": null,
+        "started_at": "2026-09-13T14:39:50.307213Z",
+        "completed_at": "2026-09-13T14:39:50.339266Z",
+        "duration_ms": "32.055",
+        "pantry": null,
+        "recipes": null,
+        "nutrition": {
+          "summary": {
+            "daily": [
+              {
+                "calories": "200.0",
+                "protein_g": "10.0",
+                "carbohydrate_g": "20.0",
+                "fat_g": "3.0",
+                "warnings": []
+              },
+              {
+                "calories": "200.0",
+                "protein_g": "10.0",
+                "carbohydrate_g": "20.0",
+                "fat_g": "3.0",
+                "warnings": []
+              },
+              {
+                "calories": "200.0",
+                "protein_g": "10.0",
+                "carbohydrate_g": "20.0",
+                "fat_g": "3.0",
+                "warnings": []
+              },
+              {
+                "calories": "200.0",
+                "protein_g": "10.0",
+                "carbohydrate_g": "20.0",
+                "fat_g": "3.0",
+                "warnings": []
+              },
+              {
+                "calories": "200.0",
+                "protein_g": "10.0",
+                "carbohydrate_g": "20.0",
+                "fat_g": "3.0",
+                "warnings": []
+              }
+            ],
+            "weekly": {
+              "calories": "1000.0",
+              "protein_g": "50.0",
+              "carbohydrate_g": "100.0",
+              "fat_g": "15.0",
+              "warnings": []
+            },
+            "scope": "all planned servings; selected meals only"
+          },
+          "targets": [],
+          "disclaimer": "Nutrition estimates are informational, not medical advice."
+        },
+        "grocery": null,
+        "knowledge": null
+      },
+      {
+        "agent": "grocery",
+        "status": "completed",
+        "allowed_tools": [
+          "preview_recipe_requirements",
+          "preview_grocery_shortages"
+        ],
+        "warnings": [],
+        "failure_code": null,
+        "started_at": "2026-09-13T14:39:50.307589Z",
+        "completed_at": "2026-09-13T14:39:50.355207Z",
+        "duration_ms": "47.621",
+        "pantry": null,
+        "recipes": null,
+        "nutrition": null,
+        "grocery": {
+          "requirements": {
+            "household_id": "00000000-0000-0000-0000-0000000001f5",
+            "recipes": [
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002bc",
+                "desired_servings": "2"
+              },
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002bd",
+                "desired_servings": "2"
+              },
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002be",
+                "desired_servings": "2"
+              },
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002bf",
+                "desired_servings": "2"
+              },
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002c0",
+                "desired_servings": "2"
+              }
+            ],
+            "requirements": [
+              {
+                "food_id": "00000000-0000-0000-0000-000000000258",
+                "food_name": "Fixture ingredient 0",
+                "required_quantity": "100.0",
+                "canonical_unit": "g",
+                "sources": [
+                  {
+                    "recipe_id": "00000000-0000-0000-0000-0000000002bc",
+                    "recipe_name": "Fixture dinner 0",
+                    "ingredient_id": "0d1e6841-18c4-437d-b95f-d4200e72fadc",
+                    "scaled_quantity": "100.0",
+                    "original_unit": "g",
+                    "required_quantity": "100.0"
+                  }
+                ]
+              },
+              {
+                "food_id": "00000000-0000-0000-0000-000000000259",
+                "food_name": "Fixture ingredient 1",
+                "required_quantity": "100.0",
+                "canonical_unit": "g",
+                "sources": [
+                  {
+                    "recipe_id": "00000000-0000-0000-0000-0000000002bd",
+                    "recipe_name": "Fixture dinner 1",
+                    "ingredient_id": "826bf966-1d33-48b7-a34b-d8d3a97277b8",
+                    "scaled_quantity": "100.0",
+                    "original_unit": "g",
+                    "required_quantity": "100.0"
+                  }
+                ]
+              },
+              {
+                "food_id": "00000000-0000-0000-0000-00000000025a",
+                "food_name": "Fixture ingredient 2",
+                "required_quantity": "100.0",
+                "canonical_unit": "g",
+                "sources": [
+                  {
+                    "recipe_id": "00000000-0000-0000-0000-0000000002be",
+                    "recipe_name": "Fixture dinner 2",
+                    "ingredient_id": "15c2846e-03e7-448c-a981-3fc4c4c97ea6",
+                    "scaled_quantity": "100.0",
+                    "original_unit": "g",
+                    "required_quantity": "100.0"
+                  }
+                ]
+              },
+              {
+                "food_id": "00000000-0000-0000-0000-00000000025b",
+                "food_name": "Fixture ingredient 3",
+                "required_quantity": "100.0",
+                "canonical_unit": "g",
+                "sources": [
+                  {
+                    "recipe_id": "00000000-0000-0000-0000-0000000002bf",
+                    "recipe_name": "Fixture dinner 3",
+                    "ingredient_id": "25695bdf-829e-415b-af46-9ece14a103ca",
+                    "scaled_quantity": "100.0",
+                    "original_unit": "g",
+                    "required_quantity": "100.0"
+                  }
+                ]
+              },
+              {
+                "food_id": "00000000-0000-0000-0000-00000000025c",
+                "food_name": "Fixture ingredient 4",
+                "required_quantity": "100.0",
+                "canonical_unit": "g",
+                "sources": [
+                  {
+                    "recipe_id": "00000000-0000-0000-0000-0000000002c0",
+                    "recipe_name": "Fixture dinner 4",
+                    "ingredient_id": "c6104bec-222d-47e1-9ccd-78995e348848",
+                    "scaled_quantity": "100.0",
+                    "original_unit": "g",
+                    "required_quantity": "100.0"
+                  }
+                ]
+              }
+            ],
+            "warnings": [],
+            "calculation_version": "grocery-requirements-v1"
+          },
+          "shortages": {
+            "household_id": "00000000-0000-0000-0000-0000000001f5",
+            "recipes": [
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002bc",
+                "desired_servings": "2"
+              },
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002bd",
+                "desired_servings": "2"
+              },
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002be",
+                "desired_servings": "2"
+              },
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002bf",
+                "desired_servings": "2"
+              },
+              {
+                "recipe_id": "00000000-0000-0000-0000-0000000002c0",
+                "desired_servings": "2"
+              }
+            ],
+            "requirements": [
+              {
+                "food_id": "00000000-0000-0000-0000-000000000258",
+                "food_name": "Fixture ingredient 0",
+                "required_quantity": "100.0",
+                "canonical_unit": "g",
+                "sources": [
+                  {
+                    "recipe_id": "00000000-0000-0000-0000-0000000002bc",
+                    "recipe_name": "Fixture dinner 0",
+                    "ingredient_id": "0d1e6841-18c4-437d-b95f-d4200e72fadc",
+                    "scaled_quantity": "100.0",
+                    "original_unit": "g",
+                    "required_quantity": "100.0"
+                  }
+                ],
+                "available_quantity": "30.000000",
+                "shortage_quantity": "70.000000",
+                "purchase_required": true,
+                "pantry_lots": [
+                  {
+                    "pantry_item_id": "00000000-0000-0000-0000-000000000320",
+                    "quantity": "30.000000",
+                    "original_unit": "g",
+                    "available_quantity": "30.000000",
+                    "expiration_date": "2026-09-18"
+                  }
+                ]
+              },
+              {
+                "food_id": "00000000-0000-0000-0000-000000000259",
+                "food_name": "Fixture ingredient 1",
+                "required_quantity": "100.0",
+                "canonical_unit": "g",
+                "sources": [
+                  {
+                    "recipe_id": "00000000-0000-0000-0000-0000000002bd",
+                    "recipe_name": "Fixture dinner 1",
+                    "ingredient_id": "826bf966-1d33-48b7-a34b-d8d3a97277b8",
+                    "scaled_quantity": "100.0",
+                    "original_unit": "g",
+                    "required_quantity": "100.0"
+                  }
+                ],
+                "available_quantity": "30.000000",
+                "shortage_quantity": "70.000000",
+                "purchase_required": true,
+                "pantry_lots": [
+                  {
+                    "pantry_item_id": "00000000-0000-0000-0000-000000000321",
+                    "quantity": "30.000000",
+                    "original_unit": "g",
+                    "available_quantity": "30.000000",
+                    "expiration_date": "2026-09-15"
+                  }
+                ]
+              },
+              {
+                "food_id": "00000000-0000-0000-0000-00000000025a",
+                "food_name": "Fixture ingredient 2",
+                "required_quantity": "100.0",
+                "canonical_unit": "g",
+                "sources": [
+                  {
+                    "recipe_id": "00000000-0000-0000-0000-0000000002be",
+                    "recipe_name": "Fixture dinner 2",
+                    "ingredient_id": "15c2846e-03e7-448c-a981-3fc4c4c97ea6",
+                    "scaled_quantity": "100.0",
+                    "original_unit": "g",
+                    "required_quantity": "100.0"
+                  }
+                ],
+                "available_quantity": "30.000000",
+                "shortage_quantity": "70.000000",
+                "purchase_required": true,
+                "pantry_lots": [
+                  {
+                    "pantry_item_id": "00000000-0000-0000-0000-000000000322",
+                    "quantity": "30.000000",
+                    "original_unit": "g",
+                    "available_quantity": "30.000000",
+                    "expiration_date": "2026-09-15"
+                  }
+                ]
+              },
+              {
+                "food_id": "00000000-0000-0000-0000-00000000025b",
+                "food_name": "Fixture ingredient 3",
+                "required_quantity": "100.0",
+                "canonical_unit": "g",
+                "sources": [
+                  {
+                    "recipe_id": "00000000-0000-0000-0000-0000000002bf",
+                    "recipe_name": "Fixture dinner 3",
+                    "ingredient_id": "25695bdf-829e-415b-af46-9ece14a103ca",
+                    "scaled_quantity": "100.0",
+                    "original_unit": "g",
+                    "required_quantity": "100.0"
+                  }
+                ],
+                "available_quantity": "30.000000",
+                "shortage_quantity": "70.000000",
+                "purchase_required": true,
+                "pantry_lots": [
+                  {
+                    "pantry_item_id": "00000000-0000-0000-0000-000000000323",
+                    "quantity": "30.000000",
+                    "original_unit": "g",
+                    "available_quantity": "30.000000",
+                    "expiration_date": "2026-09-15"
+                  }
+                ]
+              },
+              {
+                "food_id": "00000000-0000-0000-0000-00000000025c",
+                "food_name": "Fixture ingredient 4",
+                "required_quantity": "100.0",
+                "canonical_unit": "g",
+                "sources": [
+                  {
+                    "recipe_id": "00000000-0000-0000-0000-0000000002c0",
+                    "recipe_name": "Fixture dinner 4",
+                    "ingredient_id": "c6104bec-222d-47e1-9ccd-78995e348848",
+                    "scaled_quantity": "100.0",
+                    "original_unit": "g",
+                    "required_quantity": "100.0"
+                  }
+                ],
+                "available_quantity": "30.000000",
+                "shortage_quantity": "70.000000",
+                "purchase_required": true,
+                "pantry_lots": [
+                  {
+                    "pantry_item_id": "00000000-0000-0000-0000-000000000324",
+                    "quantity": "30.000000",
+                    "original_unit": "g",
+                    "available_quantity": "30.000000",
+                    "expiration_date": "2026-09-15"
+                  }
+                ]
+              }
+            ],
+            "warnings": [],
+            "calculation_as_of": "2026-09-13T14:39:50.339478Z",
+            "calculation_version": "grocery-shortage-v1"
+          }
+        },
+        "knowledge": null
+      }
+    ],
+    "warnings": [
+      {
+        "code": "informational_nutrition",
+        "message": "Selected-meal totals are informational, not medical advice or a complete diet.",
+        "agent": null
+      },
+      {
+        "code": "stale_read_warning",
+        "message": "Independent read snapshots may differ; pantry quantities are not reserved.",
+        "agent": null
+      },
+      {
+        "code": "stored_allergen_data",
+        "message": "Hard exclusions use stored allergen records; verify ingredient labels and missing data.",
+        "agent": null
+      }
+    ],
+    "clarifications": [],
+    "refusal_reason": null,
+    "failure_code": null,
+    "decision_summary": [
+      "Fixture dinner 0: pantry coverage 30.0%; 1 expiring ingredients; meets requested structured filters.",
+      "Fixture dinner 1: pantry coverage 30.0%; 1 expiring ingredients; meets requested structured filters.",
+      "Fixture dinner 2: pantry coverage 30.0%; 1 expiring ingredients; meets requested structured filters.",
+      "Fixture dinner 3: pantry coverage 30.0%; 1 expiring ingredients; meets requested structured filters.",
+      "Fixture dinner 4: pantry coverage 30.0%; 1 expiring ingredients; meets requested structured filters."
+    ],
+    "trace_summary": {
+      "agents_executed": 6,
+      "tool_calls": 9,
+      "duration_ms": "168.5137",
+      "partial": false,
+      "steps": [
+        {
+          "sequence_number": 0,
+          "agent_name": "supervisor",
+          "tool_name": null,
+          "status": "completed",
+          "duration_ms": "160.3399",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 1,
+          "agent_name": "supervisor",
+          "tool_name": "validate_scope",
+          "status": "completed",
+          "duration_ms": "2.2984",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 2,
+          "agent_name": "supervisor",
+          "tool_name": "validate_selection",
+          "status": "completed",
+          "duration_ms": "15.5231",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 100,
+          "agent_name": "pantry",
+          "tool_name": null,
+          "status": "completed",
+          "duration_ms": "29.451",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 101,
+          "agent_name": "pantry",
+          "tool_name": "read_pantry_summary",
+          "status": "completed",
+          "duration_ms": "22.6593",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 102,
+          "agent_name": "pantry",
+          "tool_name": "read_expiring_inventory",
+          "status": "completed",
+          "duration_ms": "6.7058",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 200,
+          "agent_name": "recipe",
+          "tool_name": null,
+          "status": "completed",
+          "duration_ms": "91.7092",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 201,
+          "agent_name": "recipe",
+          "tool_name": "recommend_recipes",
+          "status": "completed",
+          "duration_ms": "91.6651",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 300,
+          "agent_name": "knowledge",
+          "tool_name": null,
+          "status": "completed",
+          "duration_ms": "16.5598",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 301,
+          "agent_name": "knowledge",
+          "tool_name": "retrieve_knowledge",
+          "status": "completed",
+          "duration_ms": "16.5198",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 400,
+          "agent_name": "nutrition",
+          "tool_name": null,
+          "status": "completed",
+          "duration_ms": "32.0533",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 401,
+          "agent_name": "nutrition",
+          "tool_name": "calculate_recipe_nutrition",
+          "status": "completed",
+          "duration_ms": "31.772",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 500,
+          "agent_name": "grocery",
+          "tool_name": null,
+          "status": "completed",
+          "duration_ms": "47.6177",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 501,
+          "agent_name": "grocery",
+          "tool_name": "preview_recipe_requirements",
+          "status": "completed",
+          "duration_ms": "31.2584",
+          "failure_code": null
+        },
+        {
+          "sequence_number": 502,
+          "agent_name": "grocery",
+          "tool_name": "preview_grocery_shortages",
+          "status": "completed",
+          "duration_ms": "16.0821",
+          "failure_code": null
+        }
+      ],
+      "transitions": [
+        "received",
+        "interpreting",
+        "planning",
+        "agents_running",
+        "validating",
+        "completed"
+      ]
+    },
+    "calculation_versions": {
+      "recommendations": "recipe-recommendations-v1",
+      "nutrition": "meal-planning-assistant-v1",
+      "grocery": "grocery-shortage-v1",
+      "knowledge": "knowledge-retrieval-v1"
+    },
+    "orchestration_version": "multi-agent-meal-planning-v1",
+    "provider_mode": "fake-rule-based",
+    "preview_only": true
+  },
+  "domain_tables_unchanged": [
+    "allergies",
+    "dietary_preferences",
+    "food_allergens",
+    "food_dietary_tags",
+    "foods",
+    "grocery_generation_runs",
+    "grocery_item_recipe_sources",
+    "grocery_list_items",
+    "grocery_lists",
+    "grocery_purchase_events",
+    "household_members",
+    "households",
+    "knowledge_chunks",
+    "knowledge_documents",
+    "pantry_items",
+    "pantry_locations",
+    "pantry_stock_rules",
+    "pantry_transactions",
+    "recipe_creation_records",
+    "recipe_ingredients",
+    "recipe_instructions",
+    "recipes"
+  ],
+  "before_sha256": "6b6916781dd410c22627d4bdef27ccc5be75efb94ddc71fa6ebe32a660141b70",
+  "after_sha256": "6b6916781dd410c22627d4bdef27ccc5be75efb94ddc71fa6ebe32a660141b70",
+  "write_tables": [
+    "agent_runs",
+    "agent_steps"
+  ],
+  "temporary_database_removed_on_exit": true
+}

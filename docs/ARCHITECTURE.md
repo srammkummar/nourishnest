@@ -1,5 +1,20 @@
 # NourishNest architecture decisions
 
+## Phase 10B: bounded multi-agent previews
+
+The [multi-agent architecture](MULTI_AGENT_ARCHITECTURE.md) describes the new supervisor,
+five specialists, typed state machine, tool permissions, structured concurrency and
+audit migration 0011. The existing Phase 8 assistant endpoint and Phase 10A retrieval
+endpoint remain separate. This workflow always uses the offline rule-based interpreter,
+even if the older assistant is configured for Ollama.
+
+Each read worker owns a connection and ORM session, with database read-only protection.
+Only the separate trace writer persists data. Pantry summary/expiry methods that can
+write are not called. Existing recommendation and low-stock methods gain optional internal
+parameters for serving-aware scores, a seven-day expiry window, and dated low-stock reads;
+defaults and existing endpoint behavior are preserved. Deterministic services still own
+nutrition, scaling, stock conversion and shortages. Agents coordinate typed evidence.
+
 ## Phase 10A: local knowledge retrieval
 
 The [knowledge foundation guide](PHASE10A_KNOWLEDGE.md) documents migration 0010,

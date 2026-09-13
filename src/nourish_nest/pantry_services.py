@@ -337,15 +337,20 @@ class PantryService:
         self._mark_expired(household_id)
         return self.repo.expiring(household_id, self._today(), expired=True)
 
-    def low_stock(self, household_id: uuid.UUID):
+    def low_stock(self, household_id: uuid.UUID, *, as_of: date | None = None):
         self._household(household_id)
         items = self.repo.items(household_id, {PantryItemStatus.ACTIVE})
+        if as_of is not None:
+            items = [item for item in items if item.quantity > 0 and
+                     (item.expiration_date is None or item.expiration_date >= as_of)]
         low: list[PantryStockRule] = []
         for rule in self.repo.stock_rules(household_id):
             try:
                 threshold = convert_quantity(rule.threshold_quantity, rule.threshold_unit)
                 available = sum(
-                    (convert_quantity(item.quantity, item.unit).quantity for item in items if item.food_id == rule.food_id),
+                    (convert_quantity(item.quantity, item.unit).quantity for item in items
+                     if item.food_id == rule.food_id and (as_of is None or
+                     convert_quantity(item.quantity, item.unit).canonical_unit == threshold.canonical_unit)),
                     Decimal(0),
                 )
             except UnsupportedConversionError:

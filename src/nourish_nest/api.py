@@ -58,6 +58,8 @@ from nourish_nest.grocery_shortage_schemas import GroceryShortageResponse
 from nourish_nest.grocery_shortage_services import GroceryShortageService
 from nourish_nest.knowledge_schemas import RetrievalRequest, RetrievalResponse
 from nourish_nest.knowledge_services import KnowledgeService
+from nourish_nest.multi_agent_orchestrator import MultiAgentOrchestrator
+from nourish_nest.multi_agent_schemas import MultiAgentRequest, MultiAgentResponse
 from nourish_nest.nutrition import UnsupportedProfileError, calculate_nutrition_plan
 from nourish_nest.pantry_schemas import (
     PantryAdjustment,
@@ -119,6 +121,19 @@ async def recipe_mutation_error(request: Request, exc: RecipeMutationError):
 DB_DEPENDENCY = Depends(get_db)
 PROVIDER_DEPENDENCY = Depends(get_food_data_provider)
 CHAT_DEPENDENCY = Depends(get_chat_provider)
+
+
+@app.post("/v1/households/{household_id}/assistant/multi-agent-meal-plan-preview",
+          response_model=MultiAgentResponse)
+async def multi_agent_meal_plan_preview(
+    household_id: uuid.UUID, data: MultiAgentRequest, request: Request, db: Session = DB_DEPENDENCY,
+):
+    result = await MultiAgentOrchestrator(db.get_bind()).preview(
+        household_id, data, request.state.request_id)
+    if result.status == "failed":
+        raise AssistantError(result.failure_code, "The bounded workflow could not complete.",
+                             504 if "timeout" in result.failure_code else 422)
+    return result
 
 
 @app.post("/v1/households/{household_id}/knowledge/retrieve", response_model=RetrievalResponse)

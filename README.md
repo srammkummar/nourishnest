@@ -22,6 +22,11 @@ NourishNest is a production-oriented household management platform. The first wo
 
 ## Architecture principle
 
+Phase 10B adds an offline, bounded supervisor-and-specialist meal-plan preview with
+read-only tools, Phase 10A citations and durable redacted execution traces. Fake mode
+is deterministic and free; no real LLM or multi-agent framework is required.
+See [multi-agent architecture and local demo](docs/MULTI_AGENT_ARCHITECTURE.md).
+
 Phase 10A adds a read-only local knowledge endpoint and explicit admin ingestion CLI.
 It requires no LLM, embedding model, cloud service, or new dependency. See the
 [Phase 10A knowledge guide](docs/PHASE10A_KNOWLEDGE.md) for exact migration, ingestion,

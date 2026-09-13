@@ -297,12 +297,12 @@ def test_migration_round_trip(tmp_path, monkeypatch):
     try:
         config = Config("alembic.ini")
         command.upgrade(config, "20260909_0009")
-        command.upgrade(config, "head")
+        command.upgrade(config, "20260913_0010")
         engine = create_engine(url)
         assert {"knowledge_documents", "knowledge_chunks"} <= set(inspect(engine).get_table_names())
         command.downgrade(config, "-1")
         assert "knowledge_documents" not in inspect(engine).get_table_names()
-        command.upgrade(config, "head")
+        command.upgrade(config, "20260913_0010")
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "20260913_0010"
         engine.dispose()

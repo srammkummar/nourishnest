@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     knowledge_ingestion_roots: list[str] = Field(default_factory=list)
     knowledge_chunk_target: int = Field(default=180, ge=20, le=1000)
     knowledge_chunk_overlap: int = Field(default=30, ge=0, le=200)
+    multi_agent_timeout_seconds: float = Field(default=30, gt=0, le=120)
+    multi_agent_step_timeout_seconds: float = Field(default=10, gt=0, le=60)
+    multi_agent_tool_limit: int = Field(default=12, ge=1, le=12)
+    multi_agent_agent_limit: int = Field(default=6, ge=1, le=6)
 
 
 @lru_cache
