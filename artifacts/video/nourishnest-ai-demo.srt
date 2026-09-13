@@ -1,0 +1,191 @@
+1
+00:00:00,000 --> 00:00:05,525
+Meet NourishNest, a household planning application that brings recipes, pantry inventory, groceries,
+
+2
+00:00:05,525 --> 00:00:11,049
+and nutrition into one place. This walkthrough focuses on two things: how
+
+3
+00:00:11,049 --> 00:00:16,574
+AI helped us build and verify the product, and how its meal-planning
+
+4
+00:00:16,574 --> 00:00:18,876
+assistant uses carefully bounded tools.
+
+5
+00:00:19,526 --> 00:00:25,717
+The dashboard connects the everyday workflow. A household can manage members, browse
+
+6
+00:00:25,717 --> 00:00:31,907
+recipes, track pantry stock, plan meals, and prepare grocery needs. The screens
+
+7
+00:00:31,907 --> 00:00:38,097
+in this recording use synthetic demonstration data. They show the working application,
+
+8
+00:00:38,097 --> 00:00:40,677
+without exposing personal household information.
+
+9
+00:00:41,327 --> 00:00:46,797
+For AI-assisted development, we used Codex as a coding collaborator. Our latest
+
+10
+00:00:46,797 --> 00:00:52,268
+task was deliberately specific: improve image relevance and variety without redesigning the
+
+11
+00:00:52,268 --> 00:00:57,738
+interface or changing backend behavior. Codex inspected the code, created a shared
+
+12
+00:00:57,738 --> 00:01:03,208
+image resolver, added focused tests, and used browser automation to inspect the
+
+13
+00:01:03,208 --> 00:01:08,679
+result. We kept the changes reviewable and did not automatically commit or
+
+14
+00:01:08,679 --> 00:01:09,591
+publish them.
+
+15
+00:01:10,241 --> 00:01:15,908
+Here is the concrete outcome. Images are selected by recipe identity and
+
+16
+00:01:15,908 --> 00:01:21,576
+content, rather than card position. Dal maps to a legume dish, chicken
+
+17
+00:01:21,576 --> 00:01:27,244
+to chicken, and khichdi to rice. Vegetarian and vegan labels exclude meat
+
+18
+00:01:27,244 --> 00:01:32,912
+imagery. This demonstrates a useful AI workflow: give the coding agent a
+
+19
+00:01:32,912 --> 00:01:37,635
+narrow requirement, then verify its implementation against explicit acceptance criteria.
+
+20
+00:01:38,285 --> 00:01:44,031
+We used conventional engineering tools to check the AI-assisted changes. The latest
+
+21
+00:01:44,031 --> 00:01:49,778
+verification recorded 141 focused tests and 613 passing tests in the full
+
+22
+00:01:49,778 --> 00:01:55,524
+suite. Ruff checked the code, and browser checks covered two laptop sizes.
+
+23
+00:01:55,524 --> 00:02:01,270
+These are results from this repository's verification run, not a claim that
+
+24
+00:02:01,270 --> 00:02:03,665
+the application is production certified.
+
+25
+00:02:04,315 --> 00:02:09,537
+Now to the in-app assistant. We ask: plan one vegan dinner for
+
+26
+00:02:09,537 --> 00:02:14,759
+two people within thirty minutes, and show what I need to buy.
+
+27
+00:02:14,759 --> 00:02:19,981
+For a reproducible walkthrough, this run uses the application's local deterministic demo
+
+28
+00:02:19,981 --> 00:02:25,204
+provider. It is not a live language-model response. The same assistant interface
+
+29
+00:02:25,204 --> 00:02:28,250
+also supports an optional local Ollama interpreter.
+
+30
+00:02:28,900 --> 00:02:34,466
+The assistant makes its interpretation visible before presenting the meal preview. It
+
+31
+00:02:34,466 --> 00:02:40,033
+selects from saved recipes and uses pantry information, rather than inventing meals
+
+32
+00:02:40,033 --> 00:02:45,600
+or ingredients. Nutrition and grocery shortages come from the application's calculation services.
+
+33
+00:02:45,600 --> 00:02:51,166
+The preview does not reserve stock, place orders, or change the household's
+
+34
+00:02:51,166 --> 00:02:51,630
+data.
+
+35
+00:02:52,280 --> 00:02:58,123
+The assistant's tool set is deliberately small. Recommendations ranks stored recipes. Nutrition
+
+36
+00:02:58,123 --> 00:03:03,965
+summary scales and totals their nutrients. Member nutrition optionally compares an adult
+
+37
+00:03:03,965 --> 00:03:09,808
+profile's target. Grocery shortage calculates what remains to buy. The server controls
+
+38
+00:03:09,808 --> 00:03:15,650
+the arguments and permits at most four top-level tool calls. Model output
+
+39
+00:03:15,650 --> 00:03:20,519
+cannot directly write to the database or decide the arithmetic.
+
+40
+00:03:21,169 --> 00:03:27,262
+When configured with a local model, the implemented Ollama adapter interprets natural
+
+41
+00:03:27,262 --> 00:03:33,354
+language into a structured intent. Pydantic validates that intent, while deterministic Python
+
+42
+00:03:33,354 --> 00:03:39,447
+services remain responsible for calculations and saved-data access. The interface is Streamlit,
+
+43
+00:03:39,447 --> 00:03:45,540
+the API is FastAPI, and storage uses SQLAlchemy. Full RAG and LangGraph
+
+44
+00:03:45,540 --> 00:03:51,633
+multi-agent orchestration remain roadmap items; they are not part of this demonstration.
+
+45
+00:03:52,283 --> 00:03:57,574
+NourishNest shows a practical approach to building with AI: use a coding
+
+46
+00:03:57,574 --> 00:04:02,865
+assistant for scoped implementation, constrain the product assistant with validated tools, and
+
+47
+00:04:02,865 --> 00:04:08,156
+verify the result. The goal is a useful household workflow, with clear
+
+48
+00:04:08,156 --> 00:04:11,683
+evidence, visible limitations, and people staying in control.

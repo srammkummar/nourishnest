@@ -3,22 +3,12 @@
 from base64 import b64encode
 from functools import lru_cache
 from html import escape
-from pathlib import Path
 
 import streamlit as st
 
+from nourish_nest.ui_assets import ASSETS, IMAGES, page_hero_image
 from nourish_nest.ui_labels import friendly_message
 
-ASSETS = Path(__file__).resolve().parents[2] / "static" / "assets"
-IMAGES = {
-    "kitchen": ("hero/kitchen.webp", "A family preparing fresh food together in a bright kitchen"),
-    "ingredients": ("hero/ingredients.webp", "Fresh vegetables, herbs and rice ready for a nourishing meal"),
-    "pantry": ("pantry/shelves.webp", "An organized pantry with grains and ingredients in glass jars"),
-    "grocery": ("grocery/basket.webp", "A grocery basket filled with broccoli, avocado and fresh ingredients"),
-    "recipe": ("recipes/bowl.webp", "A bowl of colorful tomatoes and herbs; serving inspiration, not the exact recipe"),
-    "nutrition": ("nutrition/workspace.svg", "A calm nutrition workspace with a notebook, plate and glass of water"),
-    "assistant": ("assistant/planning.svg", "A meal-planning notebook beside a bowl and fresh leaves"),
-}
 NAV_GROUPS = {
     "Home": ("Dashboard",),
     "Plan": ("Meal Planner", "Recipes", "AI Assistant"),
@@ -28,13 +18,13 @@ NAV_GROUPS = {
 }
 NAV_PAGES = tuple(page for pages in NAV_GROUPS.values() for page in pages)
 HEADERS = {
-    "Dashboard": ("YOUR EVERYDAY, WELL NOURISHED", "kitchen", "Plan nourishing meals, use what you have, and shop with confidence."),
+    "Dashboard": ("YOUR EVERYDAY, WELL NOURISHED", "vegetables", "Plan nourishing meals, use what you have, and shop with confidence."),
     "Household": ("A PLACE FOR EVERYONE", "kitchen", "The people, preferences and routines that make this home yours."),
     "Nutrition": ("NOURISH YOUR DAY", "nutrition", "Understand your needs. Make room for balance."),
-    "Recipes": ("GOOD FOOD, WORTH SHARING", "recipe", "Your collection of everyday favorites and new possibilities."),
+    "Recipes": ("GOOD FOOD, WORTH SHARING", "pasta", "Your collection of everyday favorites and new possibilities."),
     "Pantry": ("MAKE THE MOST OF WHAT YOU HAVE", "pantry", "A little order today. Less waste and easier meals tomorrow."),
     "Grocery Lists": ("SHOP WITH CONFIDENCE", "grocery", "From meal ideas to a basket of just what you need."),
-    "Meal Planner": ("A WEEK THAT WORKS FOR YOU", "ingredients", "Bring your next seven days to the table."),
+    "Meal Planner": ("A WEEK THAT WORKS FOR YOU", "meal-prep", "Bring your next seven days to the table."),
     "AI Assistant": ("A LITTLE HELP WITH WHAT’S NEXT", "assistant", "Tell NourishNest what sounds good. Explore a plan together."),
 }
 
@@ -67,10 +57,6 @@ def illustration(key, *, compact=True):
     st.html(image_html(key, compact=compact))
 
 
-def recipe_image(cuisine=None):
-    return "ingredients" if (cuisine or "").casefold() in {"indian", "asian", "japanese", "thai"} else "recipe"
-
-
 def apply_design():
     st.html(f"<style>{local_text('theme.css')}</style>")
 
@@ -82,7 +68,8 @@ def brand():
 
 
 def page_header(page, household=None):
-    kicker, asset, subtitle = HEADERS[page]
+    kicker, _, subtitle = HEADERS[page]
+    asset = page_hero_image(page)
     title = f"Welcome home, {household.name}." if page == "Dashboard" and household else page
     st.html(
         f'<section class="nn-header {"nn-hero" if page == "Dashboard" else ""}" aria-label="{safe(page)}">'

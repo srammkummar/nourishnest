@@ -8,7 +8,8 @@ from pydantic import ValidationError
 
 from nourish_nest.api_client import APIError, UISettings
 from nourish_nest.assistant_client_models import AssistantInput, ConversationMessage
-from nourish_nest.ui_design import badge, illustration, recipe_image
+from nourish_nest.ui_assets import recipe_image
+from nourish_nest.ui_design import badge, illustration
 from nourish_nest.ui_labels import friendly_message, humanize, labels, validation_errors
 
 EXAMPLES = (
@@ -110,7 +111,7 @@ def render_result(result):
         st.subheader("Recipes behind this plan")
         for recipe in result.recommendations_used:
             with st.container(border=True):
-                illustration(recipe_image(recipe.cuisine))
+                illustration(recipe_image(recipe))
                 st.subheader(friendly_message(recipe.recipe_name))
                 st.caption("System recipe" if recipe.system_recipe else "Household recipe")
                 st.write(friendly_message(recipe.classification))

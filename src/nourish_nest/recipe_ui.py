@@ -9,7 +9,8 @@ from pydantic import ValidationError
 from nourish_nest.api_client import APIClient, APIError, Household
 from nourish_nest.planning_contracts import RecommendationRequest
 from nourish_nest.recipe_client_models import RecipeInput, RecipeNutrition, RecipeRecord, StoredFood
-from nourish_nest.ui_design import badge, illustration, recipe_image, steps
+from nourish_nest.ui_assets import recipe_image
+from nourish_nest.ui_design import badge, illustration, steps
 from nourish_nest.ui_labels import (
     food_labels,
     humanize,
@@ -305,7 +306,7 @@ def details(
     st.subheader(recipe.name)
     system = recipe.household_id is None
     st.caption("System recipe" if system else "Household recipe")
-    illustration(recipe_image(recipe.cuisine))
+    illustration(recipe_image(recipe))
     st.write(recipe.description or "No description provided.")
     st.write(
         f"Cuisine: {recipe.cuisine or 'Not specified'} · Preparation: {recipe.preparation_minutes} min · Cooking: {recipe.cooking_minutes} min · Servings: {recipe.servings}"
@@ -401,7 +402,7 @@ def recipe_cards(api, home, recipes, workspace, show_error):
     for start in range(0, min(len(recipes), 12), 3):
         for column, recipe in zip(st.columns(3), recipes[start:start + 3], strict=False):
             with column.container(border=True):
-                illustration(recipe_image(recipe.cuisine))
+                illustration(recipe_image(recipe))
                 st.subheader(recipe.name)
                 st.caption("System recipe" if recipe.household_id is None else "Household recipe")
                 st.caption(f"{recipe.cuisine or 'Everyday cooking'} · {recipe.cooking_minutes} min cooking")

@@ -10,7 +10,8 @@ from nourish_nest.api_client import APIError
 from nourish_nest.grocery_client_models import GenerationInput, RecipeSelection, RequirementsInput
 from nourish_nest.grocery_ui import item_rows, render_preview, render_warnings
 from nourish_nest.planning_contracts import RecommendationRequest
-from nourish_nest.ui_design import badge, illustration, recipe_image, week_cards
+from nourish_nest.ui_assets import recipe_image
+from nourish_nest.ui_design import badge, illustration, week_cards
 from nourish_nest.ui_labels import friendly_message, labels, technical_details, validation_errors
 
 DAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
@@ -122,7 +123,7 @@ def render_recommendations(api, home, member, workspace, prefix):
         st.info("That recipe was not returned in the eligible pantry matches. Find recipes to explore available choices; dietary filters remain in effect.")
     for recipe in selected_recipes:
         with st.container(border=True):
-            illustration(recipe_image(recipe.cuisine))
+            illustration(recipe_image(recipe))
             st.subheader(recipe.recipe_name)
             st.caption("System recipe" if recipe.system_recipe else "Household recipe")
             st.write(

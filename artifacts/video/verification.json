@@ -1,0 +1,12 @@
+{
+  "duration_seconds": 252.4,
+  "resolution": "1920x1080",
+  "frame_rate": 24,
+  "video_codec": "H.264",
+  "audio_codec": "AAC",
+  "size_bytes": 6217375,
+  "full_decode": "passed",
+  "mean_volume_db": -20.2,
+  "max_volume_db": -2.2,
+  "sampled_scenes": 10
+}

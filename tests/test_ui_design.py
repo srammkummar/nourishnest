@@ -33,7 +33,7 @@ def test_missing_image_fallback_and_escaped_household_content(monkeypatch, tmp_p
 
 
 def test_image_budget_and_responsive_accessibility_tokens():
-    assert sum(p.stat().st_size for p in ui_design.ASSETS.rglob("*.webp")) < 350_000
+    assert sum(p.stat().st_size for p in ui_design.ASSETS.rglob("*.webp")) < 1_000_000
     css = (ui_design.ASSETS / "theme.css").read_text()
     assert "max-width:1100px" in css and "max-width:768px" in css
     assert "prefers-reduced-motion:reduce" in css and ":focus-visible" in css

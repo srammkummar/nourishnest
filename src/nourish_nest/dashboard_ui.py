@@ -4,7 +4,8 @@ import streamlit as st
 
 from nourish_nest.api_client import APIError
 from nourish_nest.planning_contracts import RecommendationRequest
-from nourish_nest.ui_design import badge, illustration, recipe_image, week_cards
+from nourish_nest.ui_assets import recipe_image
+from nourish_nest.ui_design import badge, illustration, week_cards
 from nourish_nest.ui_state import navigate
 
 DAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
@@ -77,7 +78,7 @@ def render_dashboard(api, household, show_error, dashboard_cards, quick_actions)
     if recommendations:
         for column, recipe in zip(st.columns(3), recommendations.recommendations[:3], strict=False):
             with column.container(border=True):
-                illustration(recipe_image(recipe.cuisine))
+                illustration(recipe_image(recipe))
                 st.subheader(recipe.recipe_name)
                 badge(recipe.classification)
                 st.caption(f"{recipe.cooking_minutes} min cooking · {recipe.coverage_percentage}% pantry match")

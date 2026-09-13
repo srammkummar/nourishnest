@@ -1,0 +1,97 @@
+{
+  "duration_seconds": 252.33333333333334,
+  "scenes": [
+    {
+      "id": "01",
+      "title": "NourishNest",
+      "start": 0.0,
+      "duration": 19.526,
+      "frames": [
+        "01-0.png"
+      ]
+    },
+    {
+      "id": "02",
+      "title": "One household workspace",
+      "start": 19.526,
+      "duration": 21.801,
+      "frames": [
+        "02-0.png"
+      ]
+    },
+    {
+      "id": "03",
+      "title": "How AI helped us build",
+      "start": 41.327,
+      "duration": 28.914,
+      "frames": [
+        "03-0.png"
+      ]
+    },
+    {
+      "id": "04",
+      "title": "From prompt to working code",
+      "start": 70.241,
+      "duration": 28.045,
+      "frames": [
+        "04-0.png"
+      ]
+    },
+    {
+      "id": "05",
+      "title": "Verification is part of the build",
+      "start": 98.285,
+      "duration": 26.029,
+      "frames": [
+        "05-0.png"
+      ]
+    },
+    {
+      "id": "06",
+      "title": "The in-app AI Assistant",
+      "start": 124.315,
+      "duration": 24.585,
+      "frames": [
+        "06-0.png"
+      ]
+    },
+    {
+      "id": "07",
+      "title": "Grounded planning results",
+      "start": 148.9,
+      "duration": 23.38,
+      "frames": [
+        "07-0.png",
+        "07-1.png",
+        "07-2.png"
+      ]
+    },
+    {
+      "id": "08",
+      "title": "The tools behind the assistant",
+      "start": 172.28,
+      "duration": 28.889,
+      "frames": [
+        "08-0.png"
+      ]
+    },
+    {
+      "id": "09",
+      "title": "Where the language model fits",
+      "start": 201.169,
+      "duration": 31.113,
+      "frames": [
+        "09-0.png"
+      ]
+    },
+    {
+      "id": "10",
+      "title": "The takeaway",
+      "start": 232.283,
+      "duration": 20.051,
+      "frames": [
+        "10-0.png"
+      ]
+    }
+  ]
+}
