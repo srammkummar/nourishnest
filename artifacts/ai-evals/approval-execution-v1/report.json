@@ -1,0 +1,664 @@
+{
+  "version": "approval-execution-v1",
+  "case_count": 64,
+  "passed": true,
+  "metrics": {
+    "allergy_safety_accuracy": 1.0,
+    "critic_blocker_accuracy": 1.0,
+    "deterministic_repeat_accuracy": 1.0,
+    "exactly_once_accuracy": 1.0,
+    "grocery_output_accuracy": 1.0,
+    "household_isolation_accuracy": 1.0,
+    "invalid_transition_accuracy": 1.0,
+    "lineage_accuracy": 1.0,
+    "proposal_hash_verification_accuracy": 1.0,
+    "rollback_accuracy": 1.0,
+    "stale_version_accuracy": 1.0,
+    "zero_unauthorized_mutation_accuracy": 1.0
+  },
+  "denominators": {
+    "allergy_safety_accuracy": 1,
+    "critic_blocker_accuracy": 23,
+    "deterministic_repeat_accuracy": 24,
+    "exactly_once_accuracy": 8,
+    "grocery_output_accuracy": 8,
+    "household_isolation_accuracy": 3,
+    "invalid_transition_accuracy": 21,
+    "lineage_accuracy": 8,
+    "proposal_hash_verification_accuracy": 12,
+    "rollback_accuracy": 1,
+    "stale_version_accuracy": 4,
+    "zero_unauthorized_mutation_accuracy": 64
+  },
+  "p95_execution_latency_ms": 94.52670009341091,
+  "required_accuracy": 1,
+  "latency_limit_ms": 5000,
+  "metric_policy": "Applicable-case denominators; any failed case fails the complete evaluation.",
+  "cases": [
+    {
+      "id": "critic-pass",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-warning",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-allergy",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "allergy_safety_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-diet",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-foreign_recipe",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-foreign_member",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-failed_agent",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-missing_snapshot",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-run_changed",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-negative",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-precision",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-lineage",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-duplicate",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-servings",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-count",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-version",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-citation",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-injection",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-stale",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-budget",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-prohibited",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-unsafe",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "critic-missing_grocery",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "critic_blocker_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "transition-proposed-reject",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "transition-proposed-cancel",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "transition-approved-cancel",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "transition-proposed-execute",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "transition-approved-approve",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "transition-approved-reject",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "transition-rejected-approve",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "transition-cancelled-approve",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "transition-completed-approve",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "transition-failed-approve",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "transition-expired-approve",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "transition-rejected-execute",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "transition-cancelled-execute",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "confirmation-0",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "confirmation-1",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "confirmation-2",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "confirmation-3",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "confirmation-4",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "confirmation-5",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "stale-version-2",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "stale_version_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "stale-version-3",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "stale_version_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "stale-version-20",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "stale_version_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "expiry-approval",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "expiry-execution",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "invalid_transition_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "tamper-approval",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "proposal_hash_verification_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "tamper-execution",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "proposal_hash_verification_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "tamper-rehash",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "proposal_hash_verification_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "duplicate-execution",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "exactly_once_accuracy": true,
+        "grocery_output_accuracy": true,
+        "lineage_accuracy": true,
+        "proposal_hash_verification_accuracy": true
+      },
+      "latency_ms": 94.52670009341091,
+      "passed": true
+    },
+    {
+      "id": "changed-key",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "exactly_once_accuracy": true,
+        "grocery_output_accuracy": true,
+        "lineage_accuracy": true,
+        "proposal_hash_verification_accuracy": true
+      },
+      "latency_ms": 77.39780005067587,
+      "passed": true
+    },
+    {
+      "id": "changed-request",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "exactly_once_accuracy": true,
+        "grocery_output_accuracy": true,
+        "lineage_accuracy": true,
+        "proposal_hash_verification_accuracy": true
+      },
+      "latency_ms": 74.0718999877572,
+      "passed": true
+    },
+    {
+      "id": "cross-home-get",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "household_isolation_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "cross-home-approve",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "household_isolation_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "cross-home-execute",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "household_isolation_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "race-execution",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "exactly_once_accuracy": true,
+        "grocery_output_accuracy": true,
+        "lineage_accuracy": true,
+        "proposal_hash_verification_accuracy": true
+      },
+      "latency_ms": 62.414900050498545,
+      "passed": true
+    },
+    {
+      "id": "race-approval",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "stale_version_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "rollback",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "rollback_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    },
+    {
+      "id": "quantities",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "exactly_once_accuracy": true,
+        "grocery_output_accuracy": true,
+        "lineage_accuracy": true,
+        "proposal_hash_verification_accuracy": true
+      },
+      "latency_ms": 84.36640002764761,
+      "passed": true
+    },
+    {
+      "id": "lineage",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "exactly_once_accuracy": true,
+        "grocery_output_accuracy": true,
+        "lineage_accuracy": true,
+        "proposal_hash_verification_accuracy": true
+      },
+      "latency_ms": 71.67189999017864,
+      "passed": true
+    },
+    {
+      "id": "redaction",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "exactly_once_accuracy": true,
+        "grocery_output_accuracy": true,
+        "lineage_accuracy": true,
+        "proposal_hash_verification_accuracy": true
+      },
+      "latency_ms": 52.225999999791384,
+      "passed": true
+    },
+    {
+      "id": "repeatability",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "exactly_once_accuracy": true,
+        "grocery_output_accuracy": true,
+        "lineage_accuracy": true,
+        "proposal_hash_verification_accuracy": true,
+        "deterministic_repeat_accuracy": true
+      },
+      "latency_ms": 52.283699973486364,
+      "passed": true
+    },
+    {
+      "id": "source-changed-after-approval",
+      "metrics": {
+        "zero_unauthorized_mutation_accuracy": true,
+        "proposal_hash_verification_accuracy": true
+      },
+      "latency_ms": null,
+      "passed": true
+    }
+  ]
+}

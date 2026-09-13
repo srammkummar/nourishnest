@@ -123,6 +123,68 @@ PROVIDER_DEPENDENCY = Depends(get_food_data_provider)
 CHAT_DEPENDENCY = Depends(get_chat_provider)
 
 
+from nourish_nest.approval_contracts import (
+    ApprovalRequest,
+    CriticResult,
+    DecisionRequest,
+    ExecutionRequest,
+    ExecutionResponse,
+    ProposalRequest,
+    ProposalResponse,
+)
+from nourish_nest.approval_critic import CriticAgent
+from nourish_nest.approval_services import (
+    ApprovalProposalService,
+    ControlledExecutionService,
+    HumanApprovalService,
+)
+
+
+@app.get("/v1/households/{household_id}/assistant/runs/{run_id}/critic", response_model=CriticResult)
+def critic_review(household_id: uuid.UUID, run_id: uuid.UUID, db: Session = DB_DEPENDENCY):
+    return CriticAgent().review(db, household_id, run_id)
+
+
+@app.post("/v1/households/{household_id}/assistant/runs/{run_id}/proposals", response_model=ProposalResponse)
+def create_action_proposal(household_id: uuid.UUID, run_id: uuid.UUID, data: ProposalRequest,
+                          request: Request, db: Session = DB_DEPENDENCY):
+    return ApprovalProposalService(db).create(household_id, run_id, data, request.state.request_id)
+
+
+@app.get("/v1/households/{household_id}/assistant/proposals", response_model=list[ProposalResponse])
+def list_action_proposals(household_id: uuid.UUID, db: Session = DB_DEPENDENCY):
+    return ApprovalProposalService(db).list(household_id)
+
+
+@app.get("/v1/households/{household_id}/assistant/proposals/{proposal_id}", response_model=ProposalResponse)
+def get_action_proposal(household_id: uuid.UUID, proposal_id: uuid.UUID, db: Session = DB_DEPENDENCY):
+    return ApprovalProposalService(db).get(household_id, proposal_id)
+
+
+@app.post("/v1/households/{household_id}/assistant/proposals/{proposal_id}/approve", response_model=ProposalResponse)
+def approve_action_proposal(household_id: uuid.UUID, proposal_id: uuid.UUID, data: ApprovalRequest,
+                            request: Request, db: Session = DB_DEPENDENCY):
+    return HumanApprovalService(db).decide(household_id, proposal_id, "approved", data, request.state.request_id)
+
+
+@app.post("/v1/households/{household_id}/assistant/proposals/{proposal_id}/reject", response_model=ProposalResponse)
+def reject_action_proposal(household_id: uuid.UUID, proposal_id: uuid.UUID, data: DecisionRequest,
+                           request: Request, db: Session = DB_DEPENDENCY):
+    return HumanApprovalService(db).decide(household_id, proposal_id, "rejected", data, request.state.request_id)
+
+
+@app.post("/v1/households/{household_id}/assistant/proposals/{proposal_id}/cancel", response_model=ProposalResponse)
+def cancel_action_proposal(household_id: uuid.UUID, proposal_id: uuid.UUID, data: DecisionRequest,
+                           request: Request, db: Session = DB_DEPENDENCY):
+    return HumanApprovalService(db).decide(household_id, proposal_id, "cancelled", data, request.state.request_id)
+
+
+@app.post("/v1/households/{household_id}/assistant/proposals/{proposal_id}/execute", response_model=ExecutionResponse)
+def execute_action_proposal(household_id: uuid.UUID, proposal_id: uuid.UUID, data: ExecutionRequest,
+                            request: Request, db: Session = DB_DEPENDENCY):
+    return ControlledExecutionService(db).execute(household_id, proposal_id, data, request.state.request_id)
+
+
 @app.post("/v1/households/{household_id}/assistant/multi-agent-meal-plan-preview",
           response_model=MultiAgentResponse)
 async def multi_agent_meal_plan_preview(

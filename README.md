@@ -1,5 +1,7 @@
 # NourishNest
 
+Phase 10C adds an offline **AI-assisted, human-approved** grocery workflow: deterministic critic review, immutable proposals, explicit approval, and separately triggered atomic grocery creation. Agents remain read-only. See [Human approval and controlled execution](docs/HUMAN_APPROVAL_AND_EXECUTION.md) for the API, local demo, audit model and authentication limitations.
+
 NourishNest is a production-oriented household management platform. The first working vertical slice calculates evidence-based adult calorie and macro targets and generates a structured daily nutrition plan. The architecture is ready to expand into meal planning, grocery optimization, pantry inventory, chores, RAG, and multi-agent orchestration.
 
 ## Current capabilities

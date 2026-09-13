@@ -111,27 +111,7 @@ class GroceryGenerationService:
                 preview = GroceryShortageService(self.session).preview(
                     household_id, GroceryRequirementsRequest(recipes=data.recipes)
                 )
-                run = GroceryGenerationRun(
-                    household_id=household_id, grocery_list_id=list_id, idempotency_key=data.idempotency_key,
-                    request_hash=request_hash, calculation_version="grocery-generation-v1",
-                    created_at=preview.calculation_as_of,
-                )
-                self.session.add(run)
-                for requirement in preview.requirements:
-                    if not requirement.purchase_required or requirement.shortage_quantity <= 0:
-                        continue
-                    item = GroceryListItem(
-                        grocery_list_id=list_id, generation_run=run, food_id=requirement.food_id,
-                        display_name=requirement.food_name, required_quantity=_persistable(requirement.shortage_quantity),
-                        required_unit=requirement.canonical_unit, purchased_quantity=Decimal(0), checked=False,
-                        source_type=GroceryItemSourceType.RECIPE,
-                    )
-                    item.recipe_sources = [GroceryItemRecipeSource(
-                        recipe_id=source.recipe_id, recipe_ingredient_id=source.ingredient_id,
-                        required_quantity=_persistable(source.required_quantity), canonical_unit=requirement.canonical_unit,
-                    ) for source in requirement.sources]
-                    self.session.add(item)
-                self.session.flush()
+                run = self.persist_shortages(household_id, list_id, preview, data.idempotency_key, request_hash)
                 response = self._response(listing, run, False, preview.warnings)
                 self.session.commit()
                 return response
@@ -151,3 +131,29 @@ class GroceryGenerationService:
         except Exception:
             self.session.rollback()
             raise
+
+    def persist_shortages(self, household_id, list_id, preview, key, request_hash):
+        """Internal unit-of-work boundary. Caller owns validation and transaction.
+
+        Shared by normal generation and the controlled executor; never a tool or API.
+        The executor passes the immutable approved quantities, not a fresh pantry calculation.
+        """
+        if preview.household_id != household_id or self.repo.get_list(household_id, list_id) is None:
+            raise NotFoundError("Grocery list not found")
+        run = GroceryGenerationRun(household_id=household_id, grocery_list_id=list_id,
+            idempotency_key=key, request_hash=request_hash, calculation_version="grocery-generation-v1",
+            created_at=preview.calculation_as_of)
+        self.session.add(run)
+        for requirement in preview.requirements:
+            if not requirement.purchase_required or requirement.shortage_quantity <= 0:
+                continue
+            item = GroceryListItem(grocery_list_id=list_id, generation_run=run, food_id=requirement.food_id,
+                display_name=requirement.food_name, required_quantity=_persistable(requirement.shortage_quantity),
+                required_unit=requirement.canonical_unit, purchased_quantity=Decimal(0), checked=False,
+                source_type=GroceryItemSourceType.RECIPE)
+            item.recipe_sources = [GroceryItemRecipeSource(recipe_id=source.recipe_id,
+                recipe_ingredient_id=source.ingredient_id, required_quantity=_persistable(source.required_quantity),
+                canonical_unit=requirement.canonical_unit) for source in requirement.sources]
+            self.session.add(item)
+        self.session.flush()
+        return run

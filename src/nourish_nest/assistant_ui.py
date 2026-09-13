@@ -184,6 +184,14 @@ def render_result(result):
 
 
 def render_assistant(api, household, show_error):
+    if household is not None:
+        st.session_state.setdefault("approval_workflow", st.session_state.get("approval_workflow_saved", False))
+        mode = st.toggle("AI-assisted, human-approved grocery workflow", key="approval_workflow")
+        st.session_state["approval_workflow_saved"] = mode
+        if mode:
+            from nourish_nest.approval_ui import render_approval
+            render_approval(api, household, show_error)
+            return
     st.write("Describe the meals you want, then review a meal-planning preview. Nothing will be saved or purchased.")
     st.caption("Nutrition is informational, not medical advice. Personal allergy checks use the selected member's saved profile.")
     if household is None:

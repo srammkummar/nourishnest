@@ -49,7 +49,7 @@ def run_smoke(output: Path):
         assert data["interpretation"]["prioritize_expiring"]
         assert data["pantry_summary"]["expiring"] and data["knowledge"]["citations"]
         assert data["nutrition_summary"] and data["grocery_shortages"]["shortages"]["requirements"]
-        assert before == after and set(writes) <= {"agent_runs", "agent_steps"}
+        assert before == after and set(writes) <= {"agent_runs", "agent_steps", "agent_run_snapshots"}
         report = {"passed": True, "request": {"message": SMOKE_MESSAGE, "include_knowledge": True},
                   "response": data, "domain_tables_unchanged": sorted(before),
                   "before_sha256": sha256(json.dumps(before, sort_keys=True).encode()).hexdigest(),

@@ -24,8 +24,9 @@ class StaleGroceryVersionError(RuntimeError):
 
 
 class GroceryService:
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, *, commit: bool = True):
         self.session = session
+        self.commit = commit
         self.repo = GroceryRepository(session)
         self.households = HouseholdRepository(session)
 
@@ -33,12 +34,15 @@ class GroceryService:
     def _write(self) -> Iterator[None]:
         try:
             yield
-            self.session.commit()
+            if self.commit:
+                self.session.commit()
         except StaleDataError as exc:
-            self.session.rollback()
+            if self.commit:
+                self.session.rollback()
             raise StaleGroceryVersionError("Grocery record version is stale") from exc
         except Exception:
-            self.session.rollback()
+            if self.commit:
+                self.session.rollback()
             raise
 
     def _household(self, household_id: uuid.UUID) -> None:

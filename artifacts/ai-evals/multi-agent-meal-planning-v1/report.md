@@ -21,7 +21,7 @@ Passed: True; cases: 54
 | nutrition_accuracy | 1.0000 | 1 |
 | shortage_accuracy | 1.0000 | 1 |
 | fault_handling_accuracy | 1.0000 | 1 |
-| p95 latency (ms) | 139.4156 | <= 5000 |
+| p95 latency (ms) | 245.5197 | <= 5000 |
 
 Each metric uses its applicable cases (reported denominators). Completion covers expected-success cases. Latency covers completed runs including optional failures.
 

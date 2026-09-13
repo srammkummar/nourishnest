@@ -1,5 +1,9 @@
 # NourishNest architecture decisions
 
+## Phase 10C: explicit approval and controlled grocery execution
+
+[Human approval and execution](HUMAN_APPROVAL_AND_EXECUTION.md) adds a read-only critic, durable redacted run snapshots, immutable hashed proposals, versioned human decisions, and a deterministic executor. Migration 0012 adds four scoped audit/approval tables. Only the executor creates grocery lists and generated shortage items, using the existing grocery services in one transaction. Agents remain read-only; existing routes retain their behavior. The new Streamlit workflow is opt-in, with separate preview, review, approval and execution controls. Authentication and inventory reservation remain out of scope.
+
 ## Phase 10B: bounded multi-agent previews
 
 The [multi-agent architecture](MULTI_AGENT_ARCHITECTURE.md) describes the new supervisor,

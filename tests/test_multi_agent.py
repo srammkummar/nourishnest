@@ -254,7 +254,7 @@ def test_api_smoke_and_no_domain_mutations(client, engine):
     assert data["status"] == "completed" and len(data["meal_plan"]) == 5
     assert data["knowledge"]["citations"] and data["trace_summary"]["tool_calls"] == 9
     assert before == domain_snapshot(engine)
-    assert writes and all("agent_runs" in sql or "agent_steps" in sql for sql in writes)
+    assert writes and all(any(name in sql for name in ("agent_runs", "agent_steps", "agent_run_snapshots")) for sql in writes)
 
 
 @pytest.mark.parametrize("payload", [{"message": " "}, {"message": "x"*2001},
@@ -281,13 +281,13 @@ def test_0011_migration_roundtrip(tmp_path, monkeypatch):
     monkeypatch.setattr(get_settings(), "database_url", url)
     config = Config("alembic.ini")
     command.upgrade(config, "20260913_0010")
-    command.upgrade(config, "head")
+    command.upgrade(config, "20260913_0011")
     engine = create_engine(url)
     assert {"agent_runs", "agent_steps"} <= set(inspect(engine).get_table_names())
     command.downgrade(config, "-1")
     assert "agent_runs" not in inspect(engine).get_table_names()
     assert "knowledge_documents" in inspect(engine).get_table_names()
-    command.upgrade(config, "head")
+    command.upgrade(config, "20260913_0011")
     with engine.connect() as connection:
         assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "20260913_0011"
     engine.dispose()

@@ -1,5 +1,9 @@
 # Phase 10B: bounded multi-agent meal planning
 
+## Phase 10C extension
+
+Completed runs now persist a redacted, hashed `agent_run_snapshots` record alongside their audit trace. No prompt or document body is stored. A separate read-only critic reviews this evidence; human approval and the deterministic executor live outside the agent tool registry. No agent gains write permissions. See [Human approval and controlled execution](HUMAN_APPROVAL_AND_EXECUTION.md) for lifecycle, transaction and concurrency diagrams, API/UI workflow, and limitations. Older runs without snapshots cannot be executed and require a fresh preview.
+
 This application-controlled workflow runs completely offline in deterministic, free
 fake/rule-based mode. No real LLM, Ollama, embedding model or multi-agent framework is
 required or invoked. It produces informational meal previews, not medical advice or a

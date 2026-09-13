@@ -129,6 +129,89 @@ class AgentStep(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
 
+class AgentRunSnapshot(Base):
+    __tablename__ = "agent_run_snapshots"
+    run_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("agent_runs.id", ondelete="CASCADE"), primary_key=True)
+    household_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("households.id", ondelete="CASCADE"), index=True)
+    snapshot_json: Mapped[dict] = mapped_column(JSON)
+    snapshot_hash: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class AgentActionProposal(Base):
+    __tablename__ = "agent_action_proposals"
+    __table_args__ = (
+        CheckConstraint("action_type = 'create_grocery_list'", name="ck_proposal_action"),
+        CheckConstraint("status IN ('proposed','approved','rejected','cancelled','executing','completed','failed','expired')",
+                        name="ck_proposal_status"),
+        CheckConstraint("version >= 1 AND warning_count >= 0", name="ck_proposal_counters"),
+        CheckConstraint("length(payload_hash) = 64", name="ck_proposal_hash"),
+        Index("ix_proposal_scope_status", "household_id", "status"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    household_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("households.id", ondelete="CASCADE"))
+    agent_run_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("agent_runs.id", ondelete="CASCADE"), index=True)
+    action_type: Mapped[str] = mapped_column(String(32), default="create_grocery_list")
+    status: Mapped[str] = mapped_column(String(16), default="proposed")
+    title: Mapped[str] = mapped_column(String(200))
+    canonical_payload_json: Mapped[dict] = mapped_column(JSON)
+    payload_hash: Mapped[str] = mapped_column(String(64))
+    critic_result_json: Mapped[dict] = mapped_column(JSON)
+    warning_count: Mapped[int] = mapped_column(Integer)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    rejected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    execution_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    execution_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    result_reference_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
+    failure_code: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+    __mapper_args__: ClassVar[dict] = {"version_id_col": version, "version_id_generator": False}
+
+
+class AgentApprovalEvent(Base):
+    __tablename__ = "agent_approval_events"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    proposal_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("agent_action_proposals.id", ondelete="CASCADE"), index=True)
+    household_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("households.id", ondelete="CASCADE"), index=True)
+    event_type: Mapped[str] = mapped_column(String(32))
+    previous_status: Mapped[str | None] = mapped_column(String(16))
+    new_status: Mapped[str] = mapped_column(String(16))
+    expected_version: Mapped[int] = mapped_column(Integer)
+    resulting_version: Mapped[int] = mapped_column(Integer)
+    request_id: Mapped[str] = mapped_column(String(64))
+    idempotency_key: Mapped[str | None] = mapped_column(String(64))
+    safe_metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class AgentActionExecution(Base):
+    __tablename__ = "agent_action_executions"
+    __table_args__ = (
+        UniqueConstraint("proposal_id", name="uq_execution_proposal"),
+        UniqueConstraint("household_id", "idempotency_key", name="uq_execution_key"),
+        CheckConstraint("action_type = 'create_grocery_list'", name="ck_execution_action"),
+        CheckConstraint("status IN ('executing','completed','failed')", name="ck_execution_status"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    proposal_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("agent_action_proposals.id", ondelete="CASCADE"))
+    household_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("households.id", ondelete="CASCADE"), index=True)
+    action_type: Mapped[str] = mapped_column(String(32), default="create_grocery_list")
+    payload_hash: Mapped[str] = mapped_column(String(64))
+    request_hash: Mapped[str] = mapped_column(String(64))
+    idempotency_key: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(16))
+    grocery_list_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
+    result_summary_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    failure_code: Mapped[str | None] = mapped_column(String(64))
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
 class KnowledgeChunk(Base):
     __tablename__ = "knowledge_chunks"
     __table_args__ = (

@@ -311,6 +311,37 @@ class APIClient:
     def households(self) -> list[Household]:
         return self._request("GET", "/v1/households", TypeAdapter(list[Household]))
 
+    def multi_agent_preview(self, home, message, member_ids):
+        from nourish_nest.approval_contracts import ApprovalPreview
+        return self._request("POST", f"/v1/households/{home}/assistant/multi-agent-meal-plan-preview",
+            TypeAdapter(ApprovalPreview), body={"message": message, "member_ids": member_ids},
+            read_only_preview=True, timeout=httpx.Timeout(40))
+
+    def critic_review(self, home, run):
+        from nourish_nest.approval_contracts import CriticResult
+        return self._request("GET", f"/v1/households/{home}/assistant/runs/{run}/critic", TypeAdapter(CriticResult))
+
+    def create_proposal(self, home, run, data):
+        from nourish_nest.approval_contracts import ProposalResponse
+        return self._request("POST", f"/v1/households/{home}/assistant/runs/{run}/proposals",
+            TypeAdapter(ProposalResponse), body=data.model_dump(mode="json"))
+
+    def approval_decision(self, home, proposal, decision, data):
+        from nourish_nest.approval_contracts import ProposalResponse
+        if decision not in {"approve", "reject", "cancel"}:
+            raise ValueError("Unsupported approval decision")
+        return self._request("POST", f"/v1/households/{home}/assistant/proposals/{proposal}/{decision}",
+            TypeAdapter(ProposalResponse), body=data.model_dump(mode="json"))
+
+    def execute_proposal(self, home, proposal, data):
+        from nourish_nest.approval_contracts import ExecutionResponse
+        return self._request("POST", f"/v1/households/{home}/assistant/proposals/{proposal}/execute",
+            TypeAdapter(ExecutionResponse), body=data.model_dump(mode="json"))
+
+    def get_proposal(self, home, proposal):
+        from nourish_nest.approval_contracts import ProposalResponse
+        return self._request("GET", f"/v1/households/{home}/assistant/proposals/{proposal}", TypeAdapter(ProposalResponse))
+
     def create_household(
         self, name: str, timezone: str = "UTC", currency: str = "USD"
     ) -> Household:

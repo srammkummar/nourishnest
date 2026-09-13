@@ -21,7 +21,7 @@
     "shortage_accuracy": "1",
     "fault_handling_accuracy": "1"
   },
-  "p95_orchestration_latency_ms": "139.4156",
+  "p95_orchestration_latency_ms": "245.5197",
   "thresholds": {
     "intent_accuracy": "1",
     "agent_selection_accuracy": "1",
@@ -105,7 +105,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "178.9042",
+      "duration_ms": "179.6287",
       "failed_metrics": []
     },
     {
@@ -148,7 +148,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "101.011",
+      "duration_ms": "97.733",
       "failed_metrics": []
     },
     {
@@ -192,7 +192,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "118.9414",
+      "duration_ms": "127.8077",
       "failed_metrics": []
     },
     {
@@ -236,7 +236,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "121.0964",
+      "duration_ms": "106.3679",
       "failed_metrics": []
     },
     {
@@ -280,7 +280,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "139.4156",
+      "duration_ms": "147.2893",
       "failed_metrics": []
     },
     {
@@ -324,7 +324,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "120.6356",
+      "duration_ms": "129.504",
       "failed_metrics": []
     },
     {
@@ -367,7 +367,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "98.019",
+      "duration_ms": "108.0077",
       "failed_metrics": []
     },
     {
@@ -411,7 +411,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "101.6605",
+      "duration_ms": "111.9147",
       "failed_metrics": []
     },
     {
@@ -454,7 +454,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "92.1722",
+      "duration_ms": "99.6301",
       "failed_metrics": []
     },
     {
@@ -497,7 +497,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "109.0087",
+      "duration_ms": "133.6909",
       "failed_metrics": []
     },
     {
@@ -539,7 +539,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "92.8062",
+      "duration_ms": "131.5281",
       "failed_metrics": []
     },
     {
@@ -582,7 +582,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "95.4853",
+      "duration_ms": "131.6967",
       "failed_metrics": []
     },
     {
@@ -625,7 +625,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "96.8873",
+      "duration_ms": "124.4359",
       "failed_metrics": []
     },
     {
@@ -669,7 +669,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "104.1955",
+      "duration_ms": "137.5322",
       "failed_metrics": []
     },
     {
@@ -712,7 +712,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "111.8944",
+      "duration_ms": "189.0122",
       "failed_metrics": []
     },
     {
@@ -755,7 +755,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "94.9378",
+      "duration_ms": "164.0306",
       "failed_metrics": []
     },
     {
@@ -798,7 +798,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "91.9973",
+      "duration_ms": "170.2522",
       "failed_metrics": []
     },
     {
@@ -841,7 +841,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "90.4229",
+      "duration_ms": "177.0941",
       "failed_metrics": []
     },
     {
@@ -884,7 +884,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "92.6919",
+      "duration_ms": "105.4529",
       "failed_metrics": []
     },
     {
@@ -927,7 +927,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "98.6504",
+      "duration_ms": "200.5516",
       "failed_metrics": []
     },
     {
@@ -963,7 +963,7 @@
         "fault_handling_accuracy"
       ],
       "status": "clarification_required",
-      "duration_ms": "34.4227",
+      "duration_ms": "51.63",
       "failed_metrics": []
     },
     {
@@ -999,7 +999,7 @@
         "fault_handling_accuracy"
       ],
       "status": "clarification_required",
-      "duration_ms": "44.1727",
+      "duration_ms": "74.8301",
       "failed_metrics": []
     },
     {
@@ -1035,7 +1035,7 @@
         "fault_handling_accuracy"
       ],
       "status": "clarification_required",
-      "duration_ms": "84.6418",
+      "duration_ms": "73.4004",
       "failed_metrics": []
     },
     {
@@ -1071,7 +1071,7 @@
         "fault_handling_accuracy"
       ],
       "status": "clarification_required",
-      "duration_ms": "51.0965",
+      "duration_ms": "79.4179",
       "failed_metrics": []
     },
     {
@@ -1107,7 +1107,7 @@
         "fault_handling_accuracy"
       ],
       "status": "clarification_required",
-      "duration_ms": "71.915",
+      "duration_ms": "20.3357",
       "failed_metrics": []
     },
     {
@@ -1143,7 +1143,7 @@
         "fault_handling_accuracy"
       ],
       "status": "clarification_required",
-      "duration_ms": "115.717",
+      "duration_ms": "125.9372",
       "failed_metrics": []
     },
     {
@@ -1179,7 +1179,7 @@
         "fault_handling_accuracy"
       ],
       "status": "clarification_required",
-      "duration_ms": "112.9976",
+      "duration_ms": "94.9736",
       "failed_metrics": []
     },
     {
@@ -1215,7 +1215,7 @@
         "fault_handling_accuracy"
       ],
       "status": "clarification_required",
-      "duration_ms": "92.1359",
+      "duration_ms": "20.2918",
       "failed_metrics": []
     },
     {
@@ -1251,7 +1251,7 @@
         "fault_handling_accuracy"
       ],
       "status": "clarification_required",
-      "duration_ms": "100.1291",
+      "duration_ms": "41.6398",
       "failed_metrics": []
     },
     {
@@ -1287,7 +1287,7 @@
         "fault_handling_accuracy"
       ],
       "status": "clarification_required",
-      "duration_ms": "72.6029",
+      "duration_ms": "37.1678",
       "failed_metrics": []
     },
     {
@@ -1323,7 +1323,7 @@
         "fault_handling_accuracy"
       ],
       "status": "refused",
-      "duration_ms": "73.8961",
+      "duration_ms": "41.5173",
       "failed_metrics": []
     },
     {
@@ -1359,7 +1359,7 @@
         "fault_handling_accuracy"
       ],
       "status": "refused",
-      "duration_ms": "75.2428",
+      "duration_ms": "66.1914",
       "failed_metrics": []
     },
     {
@@ -1395,7 +1395,7 @@
         "fault_handling_accuracy"
       ],
       "status": "refused",
-      "duration_ms": "76.978",
+      "duration_ms": "57.7302",
       "failed_metrics": []
     },
     {
@@ -1431,7 +1431,7 @@
         "fault_handling_accuracy"
       ],
       "status": "refused",
-      "duration_ms": "81.2847",
+      "duration_ms": "49.4768",
       "failed_metrics": []
     },
     {
@@ -1467,7 +1467,7 @@
         "fault_handling_accuracy"
       ],
       "status": "refused",
-      "duration_ms": "83.8586",
+      "duration_ms": "66.4416",
       "failed_metrics": []
     },
     {
@@ -1503,7 +1503,7 @@
         "fault_handling_accuracy"
       ],
       "status": "refused",
-      "duration_ms": "86.8458",
+      "duration_ms": "50.2882",
       "failed_metrics": []
     },
     {
@@ -1539,7 +1539,7 @@
         "fault_handling_accuracy"
       ],
       "status": "refused",
-      "duration_ms": "102.4618",
+      "duration_ms": "85.8363",
       "failed_metrics": []
     },
     {
@@ -1575,7 +1575,7 @@
         "fault_handling_accuracy"
       ],
       "status": "refused",
-      "duration_ms": "92.7234",
+      "duration_ms": "23.3458",
       "failed_metrics": []
     },
     {
@@ -1611,7 +1611,7 @@
         "fault_handling_accuracy"
       ],
       "status": "refused",
-      "duration_ms": "95.849",
+      "duration_ms": "83.2474",
       "failed_metrics": []
     },
     {
@@ -1647,7 +1647,7 @@
         "fault_handling_accuracy"
       ],
       "status": "refused",
-      "duration_ms": "97.9302",
+      "duration_ms": "26.8752",
       "failed_metrics": []
     },
     {
@@ -1683,7 +1683,7 @@
         "fault_handling_accuracy"
       ],
       "status": "refused",
-      "duration_ms": "15.592",
+      "duration_ms": "33.5357",
       "failed_metrics": []
     },
     {
@@ -1787,7 +1787,7 @@
         "fault_handling_accuracy"
       ],
       "status": "failed",
-      "duration_ms": "12.8581",
+      "duration_ms": "33.6746",
       "failed_metrics": []
     },
     {
@@ -1823,7 +1823,7 @@
         "fault_handling_accuracy"
       ],
       "status": "failed",
-      "duration_ms": "14.2933",
+      "duration_ms": "33.695",
       "failed_metrics": []
     },
     {
@@ -1866,7 +1866,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "93.5302",
+      "duration_ms": "133.1295",
       "failed_metrics": []
     },
     {
@@ -1902,7 +1902,7 @@
         "fault_handling_accuracy"
       ],
       "status": "failed",
-      "duration_ms": "15.9732",
+      "duration_ms": "42.1174",
       "failed_metrics": []
     },
     {
@@ -1938,7 +1938,7 @@
         "fault_handling_accuracy"
       ],
       "status": "failed",
-      "duration_ms": "252.0208",
+      "duration_ms": "232.9775",
       "failed_metrics": []
     },
     {
@@ -1974,7 +1974,7 @@
         "fault_handling_accuracy"
       ],
       "status": "failed",
-      "duration_ms": "221.2772",
+      "duration_ms": "220.9128",
       "failed_metrics": []
     },
     {
@@ -2010,7 +2010,7 @@
         "fault_handling_accuracy"
       ],
       "status": "failed",
-      "duration_ms": "11.7009",
+      "duration_ms": "29.2201",
       "failed_metrics": []
     },
     {
@@ -2046,7 +2046,7 @@
         "fault_handling_accuracy"
       ],
       "status": "failed",
-      "duration_ms": "19.3251",
+      "duration_ms": "20.6245",
       "failed_metrics": []
     },
     {
@@ -2082,7 +2082,7 @@
         "fault_handling_accuracy"
       ],
       "status": "failed",
-      "duration_ms": "15.684",
+      "duration_ms": "22.2378",
       "failed_metrics": []
     },
     {
@@ -2126,7 +2126,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "116.6745",
+      "duration_ms": "449.7749",
       "failed_metrics": []
     },
     {
@@ -2170,7 +2170,7 @@
         "fault_handling_accuracy"
       ],
       "status": "completed",
-      "duration_ms": "116.7163",
+      "duration_ms": "245.5197",
       "failed_metrics": []
     }
   ]

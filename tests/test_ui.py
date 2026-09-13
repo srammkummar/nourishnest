@@ -265,6 +265,8 @@ def test_dashboard_failure_not_zero_and_pantries_not_retried(monkeypatch):
 
 def test_ui_import_boundary():
     allowed = {
+        "nourish_nest.approval_ui",
+        "nourish_nest.approval_contracts",
         "nourish_nest.ui_assets",
         "nourish_nest.ui_design",
         "nourish_nest.dashboard_ui",
@@ -289,6 +291,8 @@ def test_ui_import_boundary():
         *(
             ROOT / "src" / "nourish_nest" / f"{name}.py"
             for name in (
+                "approval_ui",
+                "approval_contracts",
                 "ui_assets",
                 "ui_design",
                 "dashboard_ui",

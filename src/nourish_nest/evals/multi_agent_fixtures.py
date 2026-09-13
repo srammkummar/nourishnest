@@ -14,8 +14,6 @@ from nourish_nest.database import Base
 from nourish_nest.knowledge_ingestion import ingest_document
 from nourish_nest.knowledge_schemas import DocumentInput
 from nourish_nest.models import (
-    AgentRun,
-    AgentStep,
     Food,
     FoodAllergen,
     FoodDietaryTagRecord,
@@ -104,5 +102,4 @@ def evaluation_database():
 def domain_snapshot(engine):
     with engine.connect() as connection:
         return {table.name: sorted([tuple(str(v) for v in row) for row in connection.execute(table.select())])
-                for table in Base.metadata.sorted_tables if table not in
-                {AgentRun.__table__, AgentStep.__table__}}
+                for table in Base.metadata.sorted_tables if not table.name.startswith("agent_")}

@@ -1,0 +1,252 @@
+{
+  "passed": true,
+  "proposal": {
+    "id": "91e3824d-fbf1-4657-a0af-0948a9a29ce4",
+    "household_id": "00000000-0000-0000-0000-0000000001f5",
+    "agent_run_id": "1e84ab6d-9d7e-486b-944b-0d26cd600980",
+    "action_type": "create_grocery_list",
+    "status": "proposed",
+    "title": "AI-assisted weekly grocery list",
+    "canonical_payload_json": {
+      "action": "create_grocery_list",
+      "calculation_as_of": "2026-09-13T15:17:34.766975+00:00",
+      "calculation_versions": {
+        "grocery": "grocery-shortage-v1",
+        "knowledge": "knowledge-retrieval-v1",
+        "nutrition": "meal-planning-assistant-v1",
+        "recommendations": "recipe-recommendations-v1"
+      },
+      "created_at": "2026-09-13T15:17:34.882027+00:00",
+      "expires_at": "2026-09-13T15:47:34.882027+00:00",
+      "household_id": "00000000-0000-0000-0000-0000000001f5",
+      "list_name": "Offline smoke weekly meals",
+      "recipes": [
+        {
+          "desired_servings": "2",
+          "recipe_id": "00000000-0000-0000-0000-0000000002bc",
+          "recipe_name": "Fixture dinner 0",
+          "slot": "dinner"
+        },
+        {
+          "desired_servings": "2",
+          "recipe_id": "00000000-0000-0000-0000-0000000002bd",
+          "recipe_name": "Fixture dinner 1",
+          "slot": "dinner"
+        },
+        {
+          "desired_servings": "2",
+          "recipe_id": "00000000-0000-0000-0000-0000000002be",
+          "recipe_name": "Fixture dinner 2",
+          "slot": "dinner"
+        },
+        {
+          "desired_servings": "2",
+          "recipe_id": "00000000-0000-0000-0000-0000000002bf",
+          "recipe_name": "Fixture dinner 3",
+          "slot": "dinner"
+        },
+        {
+          "desired_servings": "2",
+          "recipe_id": "00000000-0000-0000-0000-0000000002c0",
+          "recipe_name": "Fixture dinner 4",
+          "slot": "dinner"
+        }
+      ],
+      "shortages": [
+        {
+          "available_quantity": "30",
+          "canonical_unit": "g",
+          "food_id": "00000000-0000-0000-0000-000000000258",
+          "food_name": "Fixture ingredient 0",
+          "purchase_required": true,
+          "required_quantity": "100",
+          "shortage_quantity": "70",
+          "sources": [
+            {
+              "ingredient_id": "e44985be-e0da-427b-95a2-a4937f53e579",
+              "original_unit": "g",
+              "recipe_id": "00000000-0000-0000-0000-0000000002bc",
+              "recipe_name": "Fixture dinner 0",
+              "required_quantity": "100",
+              "scaled_quantity": "100"
+            }
+          ]
+        },
+        {
+          "available_quantity": "30",
+          "canonical_unit": "g",
+          "food_id": "00000000-0000-0000-0000-000000000259",
+          "food_name": "Fixture ingredient 1",
+          "purchase_required": true,
+          "required_quantity": "100",
+          "shortage_quantity": "70",
+          "sources": [
+            {
+              "ingredient_id": "b2fb42d4-f2a8-4769-859d-bf874bafcc3c",
+              "original_unit": "g",
+              "recipe_id": "00000000-0000-0000-0000-0000000002bd",
+              "recipe_name": "Fixture dinner 1",
+              "required_quantity": "100",
+              "scaled_quantity": "100"
+            }
+          ]
+        },
+        {
+          "available_quantity": "30",
+          "canonical_unit": "g",
+          "food_id": "00000000-0000-0000-0000-00000000025a",
+          "food_name": "Fixture ingredient 2",
+          "purchase_required": true,
+          "required_quantity": "100",
+          "shortage_quantity": "70",
+          "sources": [
+            {
+              "ingredient_id": "0fa6845b-30b5-4b39-8628-fb00d022b6b5",
+              "original_unit": "g",
+              "recipe_id": "00000000-0000-0000-0000-0000000002be",
+              "recipe_name": "Fixture dinner 2",
+              "required_quantity": "100",
+              "scaled_quantity": "100"
+            }
+          ]
+        },
+        {
+          "available_quantity": "30",
+          "canonical_unit": "g",
+          "food_id": "00000000-0000-0000-0000-00000000025b",
+          "food_name": "Fixture ingredient 3",
+          "purchase_required": true,
+          "required_quantity": "100",
+          "shortage_quantity": "70",
+          "sources": [
+            {
+              "ingredient_id": "9e5528e9-3abd-41b8-afb7-d210b5e6202d",
+              "original_unit": "g",
+              "recipe_id": "00000000-0000-0000-0000-0000000002bf",
+              "recipe_name": "Fixture dinner 3",
+              "required_quantity": "100",
+              "scaled_quantity": "100"
+            }
+          ]
+        },
+        {
+          "available_quantity": "30",
+          "canonical_unit": "g",
+          "food_id": "00000000-0000-0000-0000-00000000025c",
+          "food_name": "Fixture ingredient 4",
+          "purchase_required": true,
+          "required_quantity": "100",
+          "shortage_quantity": "70",
+          "sources": [
+            {
+              "ingredient_id": "9a39e0a0-68e8-4a35-b6ac-349cb2ba02d7",
+              "original_unit": "g",
+              "recipe_id": "00000000-0000-0000-0000-0000000002c0",
+              "recipe_name": "Fixture dinner 4",
+              "required_quantity": "100",
+              "scaled_quantity": "100"
+            }
+          ]
+        }
+      ],
+      "source_run_id": "1e84ab6d-9d7e-486b-944b-0d26cd600980",
+      "source_snapshot_hash": "74c619278de65c4308a246719c4f0306df5fc8ff859368b100a47c5e7ed70937",
+      "warnings": [
+        "informational_nutrition",
+        "stale_read_warning",
+        "stored_allergen_data"
+      ]
+    },
+    "payload_hash": "4ed7290ea9a234897f5278083c590cbfc61c7446e578210f26d62c3f41353bbd",
+    "critic_result_json": {
+      "decision": "pass_with_warnings",
+      "blocking_issues": [],
+      "warnings": [
+        "informational_nutrition",
+        "stale_read_warning",
+        "stored_allergen_data"
+      ],
+      "verified_constraints": [
+        "Source run and snapshot integrity",
+        "Household and member ownership",
+        "Read-only agent/tool budgets",
+        "Stored allergies and dietary constraints",
+        "Meal count and servings",
+        "Distinct accessible recipes",
+        "Representable quantities and grocery lineage",
+        "Calculation versions",
+        "Citation integrity and scope",
+        "Action allowlist and preview age"
+      ],
+      "unverifiable_constraints": [
+        "Ingredient labels and missing allergen metadata require human verification.",
+        "Nutrition adequacy and medical suitability are not verified.",
+        "Pantry inventory is not reserved; approval identity is not authenticated."
+      ],
+      "checked_calculation_versions": {
+        "grocery": "grocery-shortage-v1",
+        "knowledge": "knowledge-retrieval-v1",
+        "nutrition": "meal-planning-assistant-v1",
+        "recommendations": "recipe-recommendations-v1"
+      },
+      "critic_version": "approval-critic-v1"
+    },
+    "warning_count": 3,
+    "version": 1,
+    "expires_at": "2026-09-13T15:47:34.882027Z",
+    "result_reference_id": null,
+    "failure_code": null
+  },
+  "execution": {
+    "proposal_id": "91e3824d-fbf1-4657-a0af-0948a9a29ce4",
+    "status": "completed",
+    "grocery_list_id": "58e76669-223f-4576-81f7-5b29aa49df9c",
+    "list_name": "Offline smoke weekly meals",
+    "item_count": 5,
+    "generation_run_id": "535f1b51-94bd-4987-ac7b-2ab197a45de6",
+    "failure_code": null,
+    "replayed": false
+  },
+  "replay": {
+    "proposal_id": "91e3824d-fbf1-4657-a0af-0948a9a29ce4",
+    "status": "completed",
+    "grocery_list_id": "58e76669-223f-4576-81f7-5b29aa49df9c",
+    "list_name": "Offline smoke weekly meals",
+    "item_count": 5,
+    "generation_run_id": "535f1b51-94bd-4987-ac7b-2ab197a45de6",
+    "failure_code": null,
+    "replayed": true
+  },
+  "domain_before_hash": "641ce1e6ebd6344cf01913db9e230de977480d049447f85679b8fb81371ba62c",
+  "after_proposal_hash": "641ce1e6ebd6344cf01913db9e230de977480d049447f85679b8fb81371ba62c",
+  "after_approval_hash": "641ce1e6ebd6344cf01913db9e230de977480d049447f85679b8fb81371ba62c",
+  "after_execution_hash": "092f226c367f843021ce2dc2c14d0132baee60809e2ecf7a45677274f9e807eb",
+  "after_replay_hash": "092f226c367f843021ce2dc2c14d0132baee60809e2ecf7a45677274f9e807eb",
+  "changed_domain_tables": [
+    "grocery_lists",
+    "grocery_generation_runs",
+    "grocery_list_items",
+    "grocery_item_recipe_sources"
+  ],
+  "unchanged_domain_tables": [
+    "foods",
+    "households",
+    "food_allergens",
+    "food_dietary_tags",
+    "household_members",
+    "knowledge_documents",
+    "pantry_locations",
+    "pantry_stock_rules",
+    "recipes",
+    "allergies",
+    "dietary_preferences",
+    "knowledge_chunks",
+    "pantry_items",
+    "recipe_creation_records",
+    "recipe_ingredients",
+    "recipe_instructions",
+    "pantry_transactions",
+    "grocery_purchase_events"
+  ],
+  "temporary_database": true
+}

@@ -79,3 +79,6 @@ class TraceRecorder:
                 duration_ms=r.duration_ms, failure_code=r.failure_code,
             ) for r in self.ordered()]
             session.add(run)
+            session.flush()
+            from nourish_nest.approval_snapshot import persist_snapshot
+            persist_snapshot(session, run, state)
