@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><rect width="1920" height="1080" fill="#F6F4ED"/>
+<text x="80" y="135" font-family="Segoe UI,sans-serif" font-size="58" fill="#233C32">The human controls the write</text>
+<text x="80" y="208" font-family="Segoe UI,sans-serif" font-size="29" fill="#245642">Critic → immutable proposal → approve → execute → audit</text>
+<rect x="80" y="320" width="395" height="130" rx="20" fill="#DCE8D1"/>
+<text x="103" y="370" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">1. Critic review</text>
+<path d="M482 385 L527 385" stroke="#245642" stroke-width="5"/><polygon points="527,385 512,375 512,395" fill="#245642"/>
+<rect x="535" y="320" width="395" height="130" rx="20" fill="#DCE8D1"/>
+<text x="558" y="370" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">2. Hashed proposal</text>
+<path d="M937 385 L982 385" stroke="#245642" stroke-width="5"/><polygon points="982,385 967,375 967,395" fill="#245642"/>
+<rect x="990" y="320" width="395" height="130" rx="20" fill="#DCE8D1"/>
+<text x="1013" y="370" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">3. Human approval</text>
+<path d="M1392 385 L1437 385" stroke="#245642" stroke-width="5"/><polygon points="1437,385 1422,375 1422,395" fill="#245642"/>
+<rect x="1445" y="320" width="395" height="130" rx="20" fill="#DCE8D1"/>
+<text x="1468" y="370" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">4. Execute</text>
+<rect x="80" y="560" width="820" height="150" rx="20" fill="#DCE8D1"/>
+<text x="103" y="610" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Review exact quantities. Approval alone leaves</text>
+<text x="103" y="650" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">domain data unchanged.</text>
+<rect x="1020" y="560" width="820" height="150" rx="20" fill="#DCE8D1"/>
+<text x="1043" y="610" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Transaction + version checks. Same retry key returns</text>
+<text x="1043" y="650" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">the same result.</text>
+<rect x="80" y="805" width="1760" height="76" rx="20" fill="#DCE8D1"/>
+<text x="103" y="855" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Audit links the decision and controlled write • No purchasing or pantry consumption</text>
+</svg>

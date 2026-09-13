@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><rect width="1920" height="1080" fill="#F6F4ED"/>
+<text x="80" y="135" font-family="Segoe UI,sans-serif" font-size="58" fill="#233C32">Grounded knowledge, visible evidence</text>
+<text x="80" y="208" font-family="Segoe UI,sans-serif" font-size="29" fill="#245642">Deterministic local retrieval — no embeddings</text>
+<rect x="80" y="300" width="520" height="140" rx="20" fill="#DCE8D1"/>
+<text x="103" y="350" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Original local documents</text>
+<rect x="700" y="300" width="520" height="140" rx="20" fill="#DCE8D1"/>
+<text x="723" y="350" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Hash + deterministic chunks</text>
+<rect x="1320" y="300" width="520" height="140" rx="20" fill="#DCE8D1"/>
+<text x="1343" y="350" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Household-scoped BM25</text>
+<rect x="80" y="600" width="520" height="140" rx="20" fill="#DCE8D1"/>
+<text x="103" y="650" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Deterministic reranking</text>
+<rect x="700" y="600" width="520" height="140" rx="20" fill="#DCE8D1"/>
+<text x="723" y="650" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Exact excerpts + citations</text>
+<rect x="1320" y="600" width="520" height="140" rx="20" fill="#DCE8D1"/>
+<text x="1343" y="650" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Warning-aware evidence</text>
+<path d="M615 370 L682 370" stroke="#245642" stroke-width="5"/><polygon points="682,370 667,360 667,380" fill="#245642"/>
+<path d="M1235 370 L1302 370" stroke="#245642" stroke-width="5"/><polygon points="1302,370 1287,360 1287,380" fill="#245642"/>
+<path d="M615 670 L682 670" stroke="#245642" stroke-width="5"/><polygon points="682,670 667,660 667,680" fill="#245642"/>
+<path d="M1235 670 L1302 670" stroke="#245642" stroke-width="5"/><polygon points="1302,670 1287,660 1287,680" fill="#245642"/>
+<path d="M1580 455 L340 580" stroke="#245642" stroke-width="5"/><polygon points="340,580 330,565 350,565" fill="#245642"/>
+<rect x="80" y="810" width="1760" height="72" rx="20" fill="#DCE8D1"/>
+<text x="103" y="860" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Lexical retrieval, not embeddings • Document instructions are never executed</text>
+</svg>

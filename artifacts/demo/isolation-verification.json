@@ -1,0 +1,253 @@
+{
+  "normal_database_unchanged": true,
+  "before": {
+    "exists": true,
+    "tables": {
+      "agent_action_executions": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "agent_action_proposals": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "agent_approval_events": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "agent_run_snapshots": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "agent_runs": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "agent_steps": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "alembic_version": {
+        "count": 1,
+        "hash": "17742f038c719c97682cb4f177027caab210bdfb37164816a1751cce8e998080"
+      },
+      "allergies": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dietary_preferences": {
+        "count": 4,
+        "hash": "888eb9d991d5a72348a29a86e483747097c306a25309168060398750ef5b8e5c"
+      },
+      "food_allergens": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "food_dietary_tags": {
+        "count": 10,
+        "hash": "f7ba3ebeed97f77f141c44f46ca7f421cb16f6a73aa660ed8b09272797e36ec2"
+      },
+      "foods": {
+        "count": 16,
+        "hash": "b2d16b424fc828805b54d69ac6438b77a2e4cb8bd996acd582bdda20e4905019"
+      },
+      "grocery_generation_runs": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "grocery_item_recipe_sources": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "grocery_list_items": {
+        "count": 1,
+        "hash": "b0ebca77e1db554350dacfcca17735e55d015fe5d27ab027ba93960de7d78fcc"
+      },
+      "grocery_lists": {
+        "count": 1,
+        "hash": "c4f7c5101f5077eb030b820be9687320c50f597e7904adb8faf525016b6085c4"
+      },
+      "grocery_purchase_events": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "household_members": {
+        "count": 2,
+        "hash": "74e8bfd318ee46dbaabf82852d8af6e3dfcf177578720f298a7163358e372654"
+      },
+      "households": {
+        "count": 2,
+        "hash": "a6f33e97ad5085f49eb830d2bfeeb06917d35dd968840b98135dbc6008c7c5df"
+      },
+      "knowledge_chunks": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "knowledge_documents": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "pantry_items": {
+        "count": 2,
+        "hash": "2b30b539c876bcdc17cead58698e9c49254068873ae618f0ab2b2e9bc762bb70"
+      },
+      "pantry_locations": {
+        "count": 3,
+        "hash": "cf0224a485dbf77ecb2fe890d3573d7526eb53e8700b0187d18d2b1fe06a61fa"
+      },
+      "pantry_stock_rules": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "pantry_transactions": {
+        "count": 2,
+        "hash": "e4b9a99f5846bfe5969a68aa752825414e4186ad75373c4532a307d8d4dbe3c1"
+      },
+      "recipe_creation_records": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "recipe_ingredients": {
+        "count": 22,
+        "hash": "be548656e86d8d0440049f5f4b13083c05bcc0f26bb882840ab44f37887229b9"
+      },
+      "recipe_instructions": {
+        "count": 6,
+        "hash": "399b8454d03a86c198bfdd41a58579fd6b659ed2a535331537cbda3e886ec3cc"
+      },
+      "recipes": {
+        "count": 6,
+        "hash": "6a4e50636d0c87017a1ba11a8e810d7836fe2f9279ea0eb0f25d9fd46774ded4"
+      }
+    },
+    "hash": "c1fc40f8a27ac0e61dbda5c1afaed66fc648476c45e4cb416f60e4435b04186b"
+  },
+  "after": {
+    "exists": true,
+    "tables": {
+      "agent_action_executions": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "agent_action_proposals": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "agent_approval_events": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "agent_run_snapshots": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "agent_runs": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "agent_steps": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "alembic_version": {
+        "count": 1,
+        "hash": "17742f038c719c97682cb4f177027caab210bdfb37164816a1751cce8e998080"
+      },
+      "allergies": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "dietary_preferences": {
+        "count": 4,
+        "hash": "888eb9d991d5a72348a29a86e483747097c306a25309168060398750ef5b8e5c"
+      },
+      "food_allergens": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "food_dietary_tags": {
+        "count": 10,
+        "hash": "f7ba3ebeed97f77f141c44f46ca7f421cb16f6a73aa660ed8b09272797e36ec2"
+      },
+      "foods": {
+        "count": 16,
+        "hash": "b2d16b424fc828805b54d69ac6438b77a2e4cb8bd996acd582bdda20e4905019"
+      },
+      "grocery_generation_runs": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "grocery_item_recipe_sources": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "grocery_list_items": {
+        "count": 1,
+        "hash": "b0ebca77e1db554350dacfcca17735e55d015fe5d27ab027ba93960de7d78fcc"
+      },
+      "grocery_lists": {
+        "count": 1,
+        "hash": "c4f7c5101f5077eb030b820be9687320c50f597e7904adb8faf525016b6085c4"
+      },
+      "grocery_purchase_events": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "household_members": {
+        "count": 2,
+        "hash": "74e8bfd318ee46dbaabf82852d8af6e3dfcf177578720f298a7163358e372654"
+      },
+      "households": {
+        "count": 2,
+        "hash": "a6f33e97ad5085f49eb830d2bfeeb06917d35dd968840b98135dbc6008c7c5df"
+      },
+      "knowledge_chunks": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "knowledge_documents": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "pantry_items": {
+        "count": 2,
+        "hash": "2b30b539c876bcdc17cead58698e9c49254068873ae618f0ab2b2e9bc762bb70"
+      },
+      "pantry_locations": {
+        "count": 3,
+        "hash": "cf0224a485dbf77ecb2fe890d3573d7526eb53e8700b0187d18d2b1fe06a61fa"
+      },
+      "pantry_stock_rules": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "pantry_transactions": {
+        "count": 2,
+        "hash": "e4b9a99f5846bfe5969a68aa752825414e4186ad75373c4532a307d8d4dbe3c1"
+      },
+      "recipe_creation_records": {
+        "count": 0,
+        "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "recipe_ingredients": {
+        "count": 22,
+        "hash": "be548656e86d8d0440049f5f4b13083c05bcc0f26bb882840ab44f37887229b9"
+      },
+      "recipe_instructions": {
+        "count": 6,
+        "hash": "399b8454d03a86c198bfdd41a58579fd6b659ed2a535331537cbda3e886ec3cc"
+      },
+      "recipes": {
+        "count": 6,
+        "hash": "6a4e50636d0c87017a1ba11a8e810d7836fe2f9279ea0eb0f25d9fd46774ded4"
+      }
+    },
+    "hash": "c1fc40f8a27ac0e61dbda5c1afaed66fc648476c45e4cb416f60e4435b04186b"
+  },
+  "temporary_database_removed": true,
+  "servers_stopped": true,
+  "ai_provider": "fake",
+  "food_provider": "fake",
+  "external_calls": 0,
+  "network_verification": "Fake-provider configuration and local assets; no packet capture performed"
+}

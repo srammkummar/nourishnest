@@ -1,0 +1,16 @@
+# Presenter talking points
+
+- Lead with household value, then spend the longest section on bounded agent coordination and approval. A natural pace is approximately 136 words per minute.
+- Product AI tools: the supervisor and five specialists use typed tool contracts, permissions, shared evidence, bounded execution, safe read concurrency and traces. The observed preview used six agents and nine calls within a twelve-call ceiling.
+- Grounding: deterministic ingestion, content hashes, chunking, household-scoped BM25 retrieval, reranking and exact citations. This is lexical RAG, not vector/embedding search. The injection fixture is untrusted evidence and produces a warning.
+- Calculation ownership: versioned services calculate calorie/macronutrient estimates, unit conversion, recipe scaling, FEFO availability, shortages and grocery generation. AI coordination does not invent nutritional values or bypass transactions.
+- Human control: critic review, immutable proposal hash, explicit confirmation, separate execution, optimistic concurrency and same-key replay. Exactly-once behavior is scoped to the same proposal/key, not a universal distributed-delivery guarantee.
+- Be precise about the demo: the fake rule-based provider is not a generative LLM; no model was run. Ollama is optional and unused. USDA is a structured food-data adapter, not RAG evidence, and was not called live.
+- Explain the build in layers: Streamlit, FastAPI, application services, deterministic engines, SQLAlchemy and Alembic. Local SQLite is shown. PostgreSQL is a deployment target; do not claim a production deployment, production authentication or clinical validation.
+- AI-assisted development: this recording kit was prepared with Codex-assisted repository inspection, Python/Pillow authoring, browser automation and verification. Do not claim that every historical application change was AI-generated or name unverified tools as project dependencies. Development assistance is distinct from the in-product fake provider.
+- The profile-selection serialization defect remains in production code. The demonstrated approval request uses explicit constraints with no saved profiles selected. Individual saved preferences are shown separately on Household. Do not imply that the failing selector worked.
+- The critic passed with warnings: informational nutrition, stale reads and stored allergen data. Labels need review. Approval identity is not authenticated; selection of a household is not login. Plans do not reserve pantry items.
+- The main UI execution created eight grocery items with zero purchases. A separate API fixture demonstrated successful same-key replay. Both belong to disposable demo data, which was removed afterward.
+- Quality: source counts from the recorded phase reports. RAG 36 cases, multi-agent 54, approval 64. Last full suite: 864 passed, one failed; corrected check followed by 24 affected passes. Do not call that a fresh all-green 865-test run. This task runs only focused demo checks because production code is unchanged.
+
+For questions, distinguish what was demonstrated, what repository tests cover, and what remains a deployment requirement. Close with: “Grounded. Explainable. Human-approved.”

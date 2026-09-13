@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><rect width="1920" height="1080" fill="#F6F4ED"/>
+<text x="80" y="135" font-family="Segoe UI,sans-serif" font-size="58" fill="#233C32">A bounded team of specialists</text>
+<text x="80" y="208" font-family="Segoe UI,sans-serif" font-size="29" fill="#245642">Six agents • Explicit permissions • At most 12 tool calls</text>
+<rect x="600" y="260" width="720" height="92" rx="20" fill="#DCE8D1"/>
+<text x="623" y="310" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Supervisor · Typed intent + plan</text>
+<path d="M960 358 L340 432" stroke="#245642" stroke-width="5"/><polygon points="340,432 330,417 350,417" fill="#245642"/>
+<rect x="80" y="440" width="520" height="105" rx="20" fill="#DCE8D1"/>
+<text x="103" y="490" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Pantry specialist</text>
+<path d="M960 358 L960 432" stroke="#245642" stroke-width="5"/><polygon points="960,432 950,417 970,417" fill="#245642"/>
+<rect x="700" y="440" width="520" height="105" rx="20" fill="#DCE8D1"/>
+<text x="723" y="490" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Recipe specialist</text>
+<path d="M960 358 L1580 432" stroke="#245642" stroke-width="5"/><polygon points="1580,432 1570,417 1590,417" fill="#245642"/>
+<rect x="1320" y="440" width="520" height="105" rx="20" fill="#DCE8D1"/>
+<text x="1343" y="490" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Knowledge specialist</text>
+<rect x="300" y="635" width="590" height="110" rx="20" fill="#DCE8D1"/>
+<text x="323" y="685" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Nutrition specialist · Calculated</text>
+<text x="323" y="725" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">totals</text>
+<rect x="1030" y="635" width="590" height="110" rx="20" fill="#DCE8D1"/>
+<text x="1053" y="685" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Grocery specialist · Consolidated</text>
+<text x="1053" y="725" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">shortages</text>
+<path d="M960 555 L595 620" stroke="#245642" stroke-width="5"/><polygon points="595,620 585,605 605,605" fill="#245642"/>
+<path d="M905 690 L1010 690" stroke="#245642" stroke-width="5"/><polygon points="1010,690 995,680 995,700" fill="#245642"/>
+<rect x="80" y="810" width="1760" height="72" rx="20" fill="#DCE8D1"/>
+<text x="103" y="860" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Typed shared evidence • Safe parallel reads • 9 observed calls / 12 maximum</text>
+</svg>

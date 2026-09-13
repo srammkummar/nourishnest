@@ -1,0 +1,193 @@
+{
+  "stage": "completed",
+  "domain_tables": {
+    "alembic_version": {
+      "count": 1,
+      "hash": "17742f038c719c97682cb4f177027caab210bdfb37164816a1751cce8e998080"
+    },
+    "allergies": {
+      "count": 2,
+      "hash": "73e365353e87e71455ee899ac32881d48a1219d3d30540ba92990e1d50c23d9e"
+    },
+    "dietary_preferences": {
+      "count": 2,
+      "hash": "1e974d57dcbf3298b5412a9620be91a47ef7599343af272f0bfc2fda9f5f442a"
+    },
+    "food_allergens": {
+      "count": 12,
+      "hash": "614c7327ab15b5463dc1fdd999c057ba001113d0a5f1bf0ef89f45bcb8d988a8"
+    },
+    "food_dietary_tags": {
+      "count": 19,
+      "hash": "186e521086f781dd1555115043c6070e68c095854f139f04e6ecf655f9f56fac"
+    },
+    "foods": {
+      "count": 10,
+      "hash": "b080a19709929c5f84597980d2a8574007a0b62d6961b28a3adb9e5d514fc3a7"
+    },
+    "grocery_generation_runs": {
+      "count": 1,
+      "hash": "28bf1a8465af95bf6b4d24614ae3e8bf831ee9a954b2cd429da293d38c61246a"
+    },
+    "grocery_item_recipe_sources": {
+      "count": 15,
+      "hash": "abba7e608d93144d73a2921a450b4394f3873fe89c305d1e3ca2ce336e313570"
+    },
+    "grocery_list_items": {
+      "count": 8,
+      "hash": "4afb7750cc2849daa6bad03d4cc5e3b47c1be8f6632410d9927c5c714b544e76"
+    },
+    "grocery_lists": {
+      "count": 1,
+      "hash": "7019eee4ccc3ff29041e97a6b39540327ee013839774e02a51f61fb2d80e275f"
+    },
+    "grocery_purchase_events": {
+      "count": 0,
+      "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "household_members": {
+      "count": 2,
+      "hash": "2054c628d3abe86a1910f06fbc3b500f0365f9dc85f405691f132bdfe5ea9f5c"
+    },
+    "households": {
+      "count": 1,
+      "hash": "0a01e7971903004f43c0743120d6a379e098c53d71fdb774839680cf05541ad7"
+    },
+    "knowledge_chunks": {
+      "count": 4,
+      "hash": "16e1bb24d1ff7940154e2f256901ceaa6ce927ffa2e360e354fcb83fa88ebd1d"
+    },
+    "knowledge_documents": {
+      "count": 2,
+      "hash": "6768aeadb78e5cb515331b828f8e8c7f49cbbed5e3987c6ec8948a1d60d56981"
+    },
+    "pantry_items": {
+      "count": 11,
+      "hash": "2494136b7cf81faa77f252fa41a39f65eed94eba5b5183bd4ace6e0df5dde3d6"
+    },
+    "pantry_locations": {
+      "count": 3,
+      "hash": "bc10f0d090f7dbcd2a129d01db3ddff41b3336b74ad7882e470163ebdc6d0ac8"
+    },
+    "pantry_stock_rules": {
+      "count": 1,
+      "hash": "a2fa76bbd444e9228a094af027a4e58a5b32ff891616e56d59c0b2996017ec6c"
+    },
+    "pantry_transactions": {
+      "count": 0,
+      "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "recipe_creation_records": {
+      "count": 0,
+      "hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "recipe_ingredients": {
+      "count": 20,
+      "hash": "ff35fca93477a39435b140db2ee0bba7b5247bef58dc4e771e63ca59fc605d5c"
+    },
+    "recipe_instructions": {
+      "count": 14,
+      "hash": "53ac15aa03f227dfd15272b848a4d52ddf38856e4b5d47a34cb304b63e5b259a"
+    },
+    "recipes": {
+      "count": 7,
+      "hash": "d7aa5ec093d1c236fca603bb2d03e3d9174942867560b512d7579a4dd38a336c"
+    }
+  },
+  "run": {
+    "status": "completed",
+    "provider_mode": "fake-rule-based",
+    "selected_agents_json": "[\"supervisor\", \"pantry\", \"recipe\", \"knowledge\", \"nutrition\", \"grocery\"]",
+    "tool_call_count": 9
+  },
+  "steps": [
+    {
+      "agent_name": "supervisor",
+      "tool_name": null,
+      "status": "completed"
+    },
+    {
+      "agent_name": "supervisor",
+      "tool_name": "validate_scope",
+      "status": "completed"
+    },
+    {
+      "agent_name": "supervisor",
+      "tool_name": "validate_selection",
+      "status": "completed"
+    },
+    {
+      "agent_name": "pantry",
+      "tool_name": null,
+      "status": "completed"
+    },
+    {
+      "agent_name": "pantry",
+      "tool_name": "read_pantry_summary",
+      "status": "completed"
+    },
+    {
+      "agent_name": "pantry",
+      "tool_name": "read_expiring_inventory",
+      "status": "completed"
+    },
+    {
+      "agent_name": "recipe",
+      "tool_name": null,
+      "status": "completed"
+    },
+    {
+      "agent_name": "recipe",
+      "tool_name": "recommend_recipes",
+      "status": "completed"
+    },
+    {
+      "agent_name": "knowledge",
+      "tool_name": null,
+      "status": "completed"
+    },
+    {
+      "agent_name": "knowledge",
+      "tool_name": "retrieve_knowledge",
+      "status": "completed"
+    },
+    {
+      "agent_name": "nutrition",
+      "tool_name": null,
+      "status": "completed"
+    },
+    {
+      "agent_name": "nutrition",
+      "tool_name": "calculate_recipe_nutrition",
+      "status": "completed"
+    },
+    {
+      "agent_name": "grocery",
+      "tool_name": null,
+      "status": "completed"
+    },
+    {
+      "agent_name": "grocery",
+      "tool_name": "preview_recipe_requirements",
+      "status": "completed"
+    },
+    {
+      "agent_name": "grocery",
+      "tool_name": "preview_grocery_shortages",
+      "status": "completed"
+    }
+  ],
+  "proposal_hash": "31e15531aaaabc3af99514292309fa2cba0954540616538b9a927c0a2027149b",
+  "proposal_status": "completed",
+  "changed_domain_tables": [
+    "grocery_generation_runs",
+    "grocery_item_recipe_sources",
+    "grocery_list_items",
+    "grocery_lists"
+  ],
+  "replayed": true,
+  "replay_changed_domain_data": false,
+  "item_count": 8,
+  "same_grocery_list": true,
+  "replay_method": "Separate API fixture after the UI capture, with a known raw key"
+}

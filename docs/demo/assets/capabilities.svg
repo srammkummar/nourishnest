@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<rect width="1920" height="1080" fill="#F6F4ED"/>
+<text x="80" y="120" font-family="Segoe UI,sans-serif" font-size="58" fill="#233C32">One household, connected workflows</text>
+<text x="80" y="200" font-family="Segoe UI,sans-serif" font-size="29" fill="#245642">Everyday value, supported by accountable automation</text>
+<rect x="80" y="270" width="556" height="190" rx="22" fill="#DCE8D1"/>
+<text x="115" y="325" font-family="Segoe UI,sans-serif" font-size="33" fill="#233C32">Household profiles</text>
+<rect x="670" y="270" width="556" height="190" rx="22" fill="#DCE8D1"/>
+<text x="705" y="325" font-family="Segoe UI,sans-serif" font-size="33" fill="#233C32">Nutrition estimates</text>
+<rect x="1260" y="270" width="556" height="190" rx="22" fill="#DCE8D1"/>
+<text x="1295" y="325" font-family="Segoe UI,sans-serif" font-size="33" fill="#233C32">Recipe collection</text>
+<rect x="80" y="480" width="556" height="190" rx="22" fill="#DCE8D1"/>
+<text x="115" y="535" font-family="Segoe UI,sans-serif" font-size="33" fill="#233C32">Pantry awareness</text>
+<rect x="670" y="480" width="556" height="190" rx="22" fill="#DCE8D1"/>
+<text x="705" y="535" font-family="Segoe UI,sans-serif" font-size="33" fill="#233C32">Weekly meal planning</text>
+<rect x="1260" y="480" width="556" height="190" rx="22" fill="#DCE8D1"/>
+<text x="1295" y="535" font-family="Segoe UI,sans-serif" font-size="33" fill="#233C32">Grocery preparation</text>
+<rect x="80" y="690" width="556" height="190" rx="22" fill="#DCE8D1"/>
+<text x="115" y="745" font-family="Segoe UI,sans-serif" font-size="33" fill="#233C32">Grounded knowledge</text>
+<rect x="670" y="690" width="556" height="190" rx="22" fill="#DCE8D1"/>
+<text x="705" y="745" font-family="Segoe UI,sans-serif" font-size="33" fill="#233C32">Specialist agents</text>
+<rect x="1260" y="690" width="556" height="190" rx="22" fill="#DCE8D1"/>
+<text x="1295" y="745" font-family="Segoe UI,sans-serif" font-size="33" fill="#233C32">Human approval + audit</text>
+</svg>

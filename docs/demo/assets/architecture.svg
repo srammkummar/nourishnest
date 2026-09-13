@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><rect width="1920" height="1080" fill="#F6F4ED"/>
+<text x="80" y="135" font-family="Segoe UI,sans-serif" font-size="58" fill="#233C32">How we built it</text>
+<text x="80" y="208" font-family="Segoe UI,sans-serif" font-size="29" fill="#245642">Layered services keep responsibilities explicit</text>
+<rect x="80" y="270" width="890" height="86" rx="20" fill="#DCE8D1"/>
+<text x="103" y="320" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Streamlit · Household experience</text>
+<path d="M525 358 L525 388" stroke="#245642" stroke-width="5"/><polygon points="525,388 515,373 535,373" fill="#245642"/>
+<rect x="80" y="390" width="890" height="86" rx="20" fill="#DCE8D1"/>
+<text x="103" y="440" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">FastAPI · Typed request contracts</text>
+<path d="M525 478 L525 508" stroke="#245642" stroke-width="5"/><polygon points="525,508 515,493 535,493" fill="#245642"/>
+<rect x="80" y="510" width="890" height="86" rx="20" fill="#DCE8D1"/>
+<text x="103" y="560" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Application services · Business rules</text>
+<path d="M525 598 L525 628" stroke="#245642" stroke-width="5"/><polygon points="525,628 515,613 535,613" fill="#245642"/>
+<rect x="80" y="630" width="890" height="86" rx="20" fill="#DCE8D1"/>
+<text x="103" y="680" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Deterministic engines · Calculations</text>
+<path d="M525 718 L525 748" stroke="#245642" stroke-width="5"/><polygon points="525,748 515,733 535,733" fill="#245642"/>
+<rect x="80" y="750" width="890" height="86" rx="20" fill="#DCE8D1"/>
+<text x="103" y="800" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">SQLAlchemy + Alembic · Persistence</text>
+<rect x="1110" y="270" width="720" height="130" rx="20" fill="#DCE8D1"/>
+<text x="1133" y="320" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Agent coordination: supervisor + five</text>
+<text x="1133" y="360" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">specialists</text>
+<rect x="1110" y="465" width="720" height="130" rx="20" fill="#DCE8D1"/>
+<text x="1133" y="515" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Knowledge: chunks → BM25 → rerank →</text>
+<text x="1133" y="555" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">citations</text>
+<rect x="1110" y="660" width="720" height="170" rx="20" fill="#DCE8D1"/>
+<text x="1133" y="710" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Structured USDA adapter; optional Ollama.</text>
+<text x="1133" y="750" font-family="Segoe UI,sans-serif" font-size="31" fill="#233C32">Both unused in this offline demo.</text>
+</svg>

@@ -1,0 +1,283 @@
+1
+00:00:00,000 --> 00:00:04,390
+Welcome to NourishNest, an agentic AI household nutrition platform.
+
+2
+00:00:04,390 --> 00:00:13,659
+It connects everyday food decisions with explainable software: what is available, what could become dinner, and what needs buying.
+
+3
+00:00:13,659 --> 00:00:20,000
+This demonstration follows a fictional family from pantry awareness to human-approved meal planning.
+
+4
+00:00:20,000 --> 00:00:21,875
+Nine capabilities work together.
+
+5
+00:00:21,875 --> 00:00:24,688
+Household profiles capture preferences and allergies.
+
+6
+00:00:24,688 --> 00:00:30,781
+Nutrition provides estimates, recipes organize ingredients, and the pantry tracks stock and freshness.
+
+7
+00:00:30,781 --> 00:00:35,938
+Planning brings meals into a week, while grocery preparation identifies shortages.
+
+8
+00:00:35,938 --> 00:00:38,750
+Local knowledge retrieval adds cited context.
+
+9
+00:00:38,750 --> 00:00:44,375
+Specialist agents coordinate these services, and human approval controls the final action.
+
+10
+00:00:44,375 --> 00:00:50,000
+The result is a connected workflow with clear explanations and visible boundaries.
+
+11
+00:00:50,000 --> 00:00:52,113
+We built NourishNest in layers.
+
+12
+00:00:52,113 --> 00:00:58,028
+Streamlit presents the experience, FastAPI exposes typed contracts, and application services own business operations.
+
+13
+00:00:58,028 --> 00:01:04,366
+Deterministic engines calculate nutrition, convert units, scale recipes, allocate pantry quantities, and generate grocery needs.
+
+14
+00:01:04,366 --> 00:01:07,746
+SQLAlchemy and Alembic manage persistence and schema evolution.
+
+15
+00:01:07,746 --> 00:01:11,549
+Above those services sit bounded orchestration and local retrieval.
+
+16
+00:01:11,549 --> 00:01:16,620
+This recording uses a rule-based fake provider, not a generative language model.
+
+17
+00:01:16,620 --> 00:01:20,000
+Optional Ollama and live USDA access are unused.
+
+18
+00:01:20,000 --> 00:01:23,750
+Meet Maya and Daniel in the fictional Greenwood Family.
+
+19
+00:01:23,750 --> 00:01:27,500
+Their saved profiles include vegetarian preferences and peanut allergies.
+
+20
+00:01:27,500 --> 00:01:31,250
+The dashboard connects stock, upcoming meals, and shopping progress.
+
+21
+00:01:31,250 --> 00:01:37,083
+Nutrition estimates come from saved measurements and the versioned calculator, rather than generated prose.
+
+22
+00:01:37,083 --> 00:01:42,917
+Their interest in protein is a planning aspiration, not a promise of nutritional adequacy.
+
+23
+00:01:42,917 --> 00:01:50,000
+All demonstration food values are illustrative, and the application keeps individual dietary suitability subject to human review.
+
+24
+00:01:50,000 --> 00:01:57,437
+The recipe collection includes a curry, rice dishes, soup, salad, a tofu stir-fry, and an oat breakfast.
+
+25
+00:01:57,437 --> 00:02:01,812
+Images provide varied serving inspiration, while saved ingredients drive calculations.
+
+26
+00:02:01,812 --> 00:02:06,625
+The pantry has ten foods across refrigerator, freezer, and dry storage.
+
+27
+00:02:06,625 --> 00:02:13,188
+Spinach has two separately dated lots, so quantity alone does not tell the whole story.
+
+28
+00:02:13,188 --> 00:02:19,312
+Freshness signals highlight items worth checking soon, and a tofu threshold flags low stock.
+
+29
+00:02:19,312 --> 00:02:25,000
+First-expiring-first-out logic uses dated inventory when calculating availability; browsing never silently consumes food.
+
+30
+00:02:25,000 --> 00:02:29,167
+In Meal Planner, recommendations explain pantry coverage and missing ingredients.
+
+31
+00:02:29,167 --> 00:02:34,167
+We place two portions of lentil and tomato soup into Monday dinner.
+
+32
+00:02:34,167 --> 00:02:38,333
+Changing servings changes the required ingredient quantities and calculated nutrition.
+
+33
+00:02:38,333 --> 00:02:43,750
+The weekly board is session-local, so it is distinct from durable grocery records.
+
+34
+00:02:43,750 --> 00:02:48,333
+Preparing grocery needs combines planned portions and subtracts usable pantry availability.
+
+35
+00:02:48,333 --> 00:02:55,000
+These are point-in-time estimates: a plan does not reserve stock, consume ingredients, or mark anything purchased.
+
+36
+00:02:55,000 --> 00:02:59,884
+For local knowledge, we ask how cooked rice should be stored safely.
+
+37
+00:02:59,884 --> 00:03:05,174
+An original fictional household note is ingested deterministically, hashed, and split into chunks.
+
+38
+00:03:05,174 --> 00:03:12,093
+BM25 retrieves lexical candidates, reranking orders the evidence, and citations preserve the exact excerpt and source heading.
+
+39
+00:03:12,093 --> 00:03:15,349
+The note deliberately supplies no authoritative storage limits.
+
+40
+00:03:15,349 --> 00:03:18,605
+A separate injection exercise produces an untrusted-instructions warning.
+
+41
+00:03:18,605 --> 00:03:22,267
+Retrieval respects household scope and never executes document instructions.
+
+42
+00:03:22,267 --> 00:03:30,000
+This foundation uses lexical retrieval, not embeddings, and neither RAG nor USDA structured food data replaces deterministic nutrition math.
+
+43
+00:03:30,000 --> 00:03:40,083
+Now the central agentic workflow: create five vegetarian dinners for two adults, prioritize food expiring this week, stay under thirty-five minutes, avoid
+
+44
+00:03:40,083 --> 00:03:42,375
+peanuts, and show grocery shortages.
+
+45
+00:03:42,375 --> 00:03:47,875
+The supervisor translates supported wording into typed intent and an execution plan.
+
+46
+00:03:47,875 --> 00:03:53,375
+Pantry, recipe, and knowledge specialists gather independent evidence with safe read concurrency.
+
+47
+00:03:53,375 --> 00:03:57,958
+Nutrition calculates selected-meal totals, and the grocery specialist consolidates shortages.
+
+48
+00:03:57,958 --> 00:04:03,000
+Six agents operate within explicit tool permissions and a twelve-call ceiling.
+
+49
+00:04:03,000 --> 00:04:10,333
+Typed shared state carries evidence between stages, and the trace records which agent used which tool.
+
+50
+00:04:10,333 --> 00:04:13,542
+Unsupported requests can require clarification or refusal.
+
+51
+00:04:13,542 --> 00:04:18,583
+The output is a reviewable preview, with constraints and warnings visible.
+
+52
+00:04:18,583 --> 00:04:25,000
+It has not created a shopping list, reserved pantry stock, or made a purchase.
+
+53
+00:04:25,000 --> 00:04:31,553
+The critic checks the preview against constraints and current deterministic calculations, surfacing what remains unverifiable.
+
+54
+00:04:31,553 --> 00:04:36,796
+A proposal freezes the exact list and quantities under a payload hash.
+
+55
+00:04:36,796 --> 00:04:40,728
+The person reviews that payload and explicitly approves it.
+
+56
+00:04:40,728 --> 00:04:45,971
+Approval alone does not create the list: execution is a separate action.
+
+57
+00:04:45,971 --> 00:04:51,214
+Optimistic concurrency rejects stale versions, and transaction boundaries protect against partial writes.
+
+58
+00:04:51,214 --> 00:04:57,767
+Replaying the same execution key returns the same completed result instead of creating another list.
+
+59
+00:04:57,767 --> 00:05:02,136
+The audit trail links the preview, decision, and controlled execution.
+
+60
+00:05:02,136 --> 00:05:10,000
+This local foundation does not authenticate the approving person's identity, and pantry stock and purchase status remain unchanged.
+
+61
+00:05:10,000 --> 00:05:13,243
+Quality evidence spans retrieval, orchestration, and controlled execution.
+
+62
+00:05:13,243 --> 00:05:18,514
+Recorded evaluations cover thirty-six RAG cases, fifty-four multi-agent cases, and sixty-four approval cases.
+
+63
+00:05:18,514 --> 00:05:27,432
+The last full suite recorded eight hundred sixty-four passes and one failure; that check was corrected, and twenty-four affected tests then passed.
+
+64
+00:05:27,432 --> 00:05:31,081
+These are fixture results, not a blanket production guarantee.
+
+65
+00:05:31,081 --> 00:05:36,351
+Request identifiers, typed contracts, rollback tests, migrations, and concurrency checks support the foundation.
+
+66
+00:05:36,351 --> 00:05:40,000
+SQLite is demonstrated locally; PostgreSQL remains a deployment target.
+
+67
+00:05:40,000 --> 00:05:51,429
+NourishNest demonstrates how agentic AI can safely coordinate household nutrition workflows while deterministic services retain control of calculations and writes.
+
+68
+00:05:51,429 --> 00:05:58,286
+It brings household context, grounded evidence, and accountable action into one experience.
+
+69
+00:05:58,286 --> 00:05:58,857
+Grounded.
+
+70
+00:05:58,857 --> 00:05:59,429
+Explainable.
+
+71
+00:05:59,429 --> 00:06:00,000
+Human-approved.

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<rect width="1920" height="1080" fill="#F6F4ED"/>
+<text x="80" y="120" font-family="Segoe UI,sans-serif" font-size="58" fill="#233C32">Turn inspiration into a plan</text>
+<text x="80" y="200" font-family="Segoe UI,sans-serif" font-size="29" fill="#245642">Portions → requirements → pantry coverage → shortages</text>
+<rect x="80" y="270" width="1760" height="130" rx="22" fill="#DCE8D1"/>
+<text x="115" y="325" font-family="Segoe UI,sans-serif" font-size="33" fill="#233C32">Two dinner portions</text>
+<rect x="80" y="420" width="1760" height="130" rx="22" fill="#DCE8D1"/>
+<text x="115" y="475" font-family="Segoe UI,sans-serif" font-size="33" fill="#233C32">Explainable pantry coverage</text>
+<rect x="80" y="570" width="1760" height="130" rx="22" fill="#DCE8D1"/>
+<text x="115" y="625" font-family="Segoe UI,sans-serif" font-size="33" fill="#233C32">Session-local weekly plan</text>
+<rect x="80" y="720" width="1760" height="130" rx="22" fill="#DCE8D1"/>
+<text x="115" y="775" font-family="Segoe UI,sans-serif" font-size="33" fill="#233C32">Planning does not reserve or consume stock</text>
+</svg>

@@ -1,0 +1,22 @@
+{
+  "duration_seconds": 360,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "target_fps": 30,
+  "audio": false,
+  "burned_captions": true,
+  "narration_words": 818,
+  "frames": 71,
+  "mp4_created": true,
+  "ffmpeg_available": true,
+  "method": "FFmpeg encoding of 71 captured/illustrated captioned frames",
+  "video_file": "nourishnest-product-technical-demo.mp4",
+  "video_bytes": 7404660,
+  "fps": 30,
+  "codec": "H.264",
+  "pixel_format": "yuv420p",
+  "full_decode_passed": true,
+  "representative_frames": 11
+}
